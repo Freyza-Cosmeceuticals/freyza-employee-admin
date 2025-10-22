@@ -1,13 +1,7 @@
 <script lang="ts">
-import type { Session, SupabaseClient } from "@supabase/supabase-js"
-import type { Snippet } from "svelte"
+import Navbar from "$lib/components/resuable/Navbar.svelte"
 
-interface Props {
-  data: { session: Session; supabase: SupabaseClient }
-  children: Snippet<[]>
-}
-
-let { data, children }: Props = $props()
+let { data, children } = $props()
 let { supabase } = $derived(data)
 
 const logout = async () => {
@@ -18,12 +12,8 @@ const logout = async () => {
 }
 </script>
 
-<header>
-  <nav>
-    <a href="/">Home</a>
-  </nav>
-  <button onclick={logout}>Logout</button>
-</header>
+<Navbar />
+
 <main>
   {@render children()}
 </main>

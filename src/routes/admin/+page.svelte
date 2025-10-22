@@ -1,8 +1,9 @@
 <script lang="ts">
-import type { PageProps } from "../$types"
-
-let { data }: PageProps = $props()
+let { data } = $props()
 let { supabase, user } = $derived(data)
 </script>
 
-<h1>Private page for user: {user?.email}</h1>
+<div class="grid place-content-center">
+  <h1>Welcome</h1>
+  <h2>Private page for user: {user?.email}</h2>
+</div>

@@ -1,16 +1,13 @@
 <script lang="ts">
 import "../app.css"
+
 import favicon from "$lib/assets/favicon.svg"
-import { onMount, type Snippet } from "svelte"
+import { onMount } from "svelte"
 import { invalidate } from "$app/navigation"
-import type { Session, SupabaseClient } from "@supabase/supabase-js"
 
-interface Props {
-  data: { session: Session; supabase: SupabaseClient }
-  children: Snippet<[]>
-}
+import { ModeWatcher } from "mode-watcher"
 
-let { data, children }: Props = $props()
+let { data, children } = $props()
 let { session, supabase } = $derived(data)
 
 onMount(() => {
@@ -27,5 +24,7 @@ onMount(() => {
 <svelte:head>
   <link rel="icon" href={favicon} />
 </svelte:head>
+
+<ModeWatcher />
 
 {@render children?.()}
