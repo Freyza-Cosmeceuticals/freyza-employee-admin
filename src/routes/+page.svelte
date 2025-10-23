@@ -1,15 +1,21 @@
 <script lang="ts">
+import { buttonVariants } from "@/components/ui/button"
 </script>
 
-<div class="grid min-h-svh w-full grid-cols-1 place-content-center gap-8">
-  <h1 class="text-center">Freyza Cosmeceuticals Employee System</h1>
+<svelte:head>
+  <title>Freyza Cosmeceuticals Employee System</title>
+  <meta name="description" content="Freyza Cosmeceuticals Employee System" />
+</svelte:head>
 
-  <a href="/auth" class="text-center">
-    <button>
-      <span class="font-bold"> Admin Login </span>
-    </button>
+<div
+  class="mx-auto grid h-[80svh] w-full max-w-2xl grid-cols-1 place-content-center gap-8 text-center"
+>
+  <h1 class="text-3xl font-bold">Freyza Cosmeceuticals Employee System</h1>
+
+  <a href="/auth" class={buttonVariants({ variant: "default", size: "lg" })}>
+    <span class="font-bold"> Admin Login </span>
   </a>
-  <a href="/" class="text-center">
+  <a href="/" class={buttonVariants({ variant: "secondary", size: "sm" })}>
     <button>Download Freyza Employee App</button>
   </a>
 </div>

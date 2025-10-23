@@ -6,6 +6,7 @@ import { onMount } from "svelte"
 import { invalidate } from "$app/navigation"
 
 import { ModeWatcher } from "mode-watcher"
+import Navbar from "@/components/resuable/Navbar.svelte"
 
 let { data, children } = $props()
 let { session, supabase } = $derived(data)
@@ -25,6 +26,12 @@ onMount(() => {
   <link rel="icon" href={favicon} />
 </svelte:head>
 
+<!-- Root Layout -->
+
 <ModeWatcher />
 
-{@render children?.()}
+<Navbar />
+
+<main>
+  {@render children?.()}
+</main>
