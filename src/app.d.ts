@@ -1,4 +1,3 @@
-import type { PrismaClient } from "@prisma/client"
 import type { Session, SupabaseClient, User } from "@supabase/supabase-js"
 
 // See https://svelte.dev/docs/kit/types#app.d.ts
@@ -18,8 +17,6 @@ declare global {
     // interface PageState {}
     // interface Platform {}
   }
-
-  var prisma: PrismaClient
 }
 
 export {}

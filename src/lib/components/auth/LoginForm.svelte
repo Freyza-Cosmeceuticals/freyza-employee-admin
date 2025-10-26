@@ -1,29 +1,35 @@
-<form method="POST" action="?/login" class="space-y-4">
-  <div>
-    <label for="email" class="block text-sm font-medium">Email</label>
-    <input
-      type="email"
-      id="email"
-      name="email"
-      required
-      class="mt-1 block w-full rounded-md shadow-sm focus:outline-none"
-      placeholder="Enter email"
-    />
-  </div>
+<script lang="ts">
+import * as Card from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+</script>
 
-  <div>
-    <label for="password" class="block text-sm font-medium">Password</label>
-    <input
-      type="password"
-      id="password"
-      name="password"
-      required
-      class="mt-1 block w-full rounded-md shadow-sm focus:outline-none"
-      placeholder="Enter password"
-    />
-  </div>
+<Card.Root class="w-sm">
+  <Card.Header>
+    <Card.Title>Admin Login</Card.Title>
+    <Card.Description>Login to Freyza Employee Admin</Card.Description>
+  </Card.Header>
+  <Card.Content>
+    <form method="POST" action="?/login">
+      <div class="flex flex-col gap-6">
+        <div class="grid gap-2">
+          <Label for="email">Email</Label>
+          <Input id="email" type="email" name="email" required placeholder="email@example.com" />
+        </div>
 
-  <div class="flex gap-4">
-    <button type="submit" class="w-full rounded-md px-4 py-2 focus:outline-none"> Login </button>
-  </div>
-</form>
+        <div class="grid gap-2">
+          <div class="flex items-center">
+            <Label for="password">Password</Label>
+            <a href="##" class="ml-auto inline-block text-sm underline-offset-4 hover:underline">
+              Forgot your password?
+            </a>
+          </div>
+          <Input id="password" type="password" name="password" placeholder="password123" required />
+        </div>
+      </div>
+      <Button type="submit" class="mt-8 w-full">Login</Button>
+    </form>
+  </Card.Content>
+  <!-- <Card.Footer></Card.Footer> -->
+</Card.Root>

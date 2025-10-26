@@ -1,5 +1,8 @@
 <script lang="ts">
 import { buttonVariants } from "@/components/ui/button"
+
+let { data } = $props()
+let { session } = $derived(data)
 </script>
 
 <svelte:head>
@@ -12,10 +15,16 @@ import { buttonVariants } from "@/components/ui/button"
 >
   <h1 class="text-3xl font-bold">Freyza Cosmeceuticals Employee System</h1>
 
-  <a href="/auth" class={buttonVariants({ variant: "default", size: "lg" })}>
-    <span class="font-bold"> Admin Login </span>
-  </a>
-  <a href="/" class={buttonVariants({ variant: "secondary", size: "sm" })}>
-    <button>Download Freyza Employee App</button>
-  </a>
+  {#if session !== null}
+    <a href="/admin" class={buttonVariants({ variant: "default", size: "lg" })}>
+      <span class="font-semibold"> Goto Admin Dashboard </span>
+    </a>
+  {:else}
+    <a href="/auth" class={buttonVariants({ variant: "default", size: "lg" })}>
+      <span class="font-semibold"> Admin Login </span>
+    </a>
+    <a href="/" class={buttonVariants({ variant: "secondary", size: "sm" })}>
+      <button>Download Freyza Employee App</button>
+    </a>
+  {/if}
 </div>

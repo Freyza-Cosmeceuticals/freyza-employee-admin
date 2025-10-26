@@ -1,19 +1,18 @@
 <script lang="ts">
-import Navbar from "$lib/components/resuable/Navbar.svelte"
+import * as Sidebar from "@/components/ui/sidebar"
+import AppSidebar from "@/components/dashboard/AppSidebar.svelte"
+import AppNavbar from "@/components/dashboard/AppNavbar.svelte"
 
 let { data, children } = $props()
-let { supabase } = $derived(data)
-
-const logout = async () => {
-  const { error } = await supabase.auth.signOut()
-  if (error) {
-    console.error(error)
-  }
-}
+let { supabase, session, user } = $derived(data)
 </script>
 
-<Navbar />
-
-<main>
-  {@render children()}
-</main>
+<Sidebar.Provider>
+  <AppSidebar />
+  <Sidebar.Inset>
+    <AppNavbar {supabase} {session} {user} />
+    <main>
+      {@render children?.()}
+    </main>
+  </Sidebar.Inset>
+</Sidebar.Provider>
