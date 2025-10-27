@@ -27,15 +27,15 @@ let { supabase, user, userProfile, employees } = $derived(data)
     <Card.Root class="mx-auto w-full max-w-xl">
       <Card.Header>
         <Card.Title>My Employees</Card.Title>
-        <Card.Description>
-          Your top
-          {#await employees}
-            <Skeleton class="inline-block h-2.5 w-8" />
-          {:then data}
+        {#await employees}
+          <Skeleton class="inline-block h-2.5 w-8" />
+        {:then data}
+          <Card.Description>
+            Your top
             {data.length}
-          {/await}
-          Employees
-        </Card.Description>
+            Employees
+          </Card.Description>
+        {/await}
         <Card.Action>
           <Button variant="link" href={resolve("/admin/employees")}>View All</Button>
         </Card.Action>
@@ -56,11 +56,11 @@ let { supabase, user, userProfile, employees } = $derived(data)
     <Card.Root class="mx-auto w-full max-w-xl">
       <Card.Header>
         <Card.Title>Expenses</Card.Title>
-        <Card.Description>
+        <Skeleton class="inline-block h-2.5 w-8" />
+        <!-- <Card.Description>
           Your top
-          <Skeleton class="inline-block h-2.5 w-8" />
           Expenses
-        </Card.Description>
+        </Card.Description> -->
         <Card.Action>
           <Button href={resolve("/admin")}>View All</Button>
         </Card.Action>

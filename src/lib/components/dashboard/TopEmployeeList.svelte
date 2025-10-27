@@ -1,27 +1,48 @@
 <script lang="ts">
 import * as Empty from "@/components/ui/empty"
-import type { User } from "@prisma/client"
+import { type User, UserStatus } from "@prisma/client"
 import AddEmployeeButton from "./AddEmployeeButton.svelte"
 import * as Item from "@/components/ui/item"
-import Eye from "@lucide/svelte/icons/eye"
+import * as Avatar from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import type { ItemVariant } from "../ui/item/item.svelte"
 
 interface Props {
+  variant?: ItemVariant
   employees: User[]
 }
 
-let { employees }: Props = $props()
+let { variant = "default", employees }: Props = $props()
 </script>
+
+{#snippet employeeStatus(status: UserStatus)}
+  {#if status === UserStatus.ACTIVE}
+    <Badge variant="default">Active</Badge>
+  {:else if status === UserStatus.UNCONFIRMED}
+    <Badge variant="destructive">Unconfirmed</Badge>
+  {:else if status === UserStatus.REVOKED}
+    <Badge variant="outline">Revoked</Badge>
+  {/if}
+{/snippet}
 
 <!-- Wrapped in Card.Content -->
 <Item.Group>
   {#each employees as emp, i (emp.id)}
-    <Item.Root>
+    <Item.Root {variant}>
+      <Item.Media variant="icon">
+        <Avatar.Root class="size-10">
+          <Avatar.Image src="https://github.com/harshnarayanjha.png" />
+          <Avatar.Fallback>{emp.name.substring(0, 1)}</Avatar.Fallback>
+        </Avatar.Root>
+      </Item.Media>
       <Item.Content class="gap-1">
-        <Item.Title>{emp.name}</Item.Title>
+        <Item.Title class="line-clamp-1">{emp.name}</Item.Title>
         <Item.Description>{emp.location}</Item.Description>
-        <Item.Actions>
-          <a href="##"><Eye /></a>
-        </Item.Actions>
+      </Item.Content>
+      <Item.Content class="flex-none text-center">
+        <Item.Description>
+          {@render employeeStatus(emp.status)}
+        </Item.Description>
       </Item.Content>
     </Item.Root>
     {#if i !== employees.length - 1}

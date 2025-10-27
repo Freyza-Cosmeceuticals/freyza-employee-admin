@@ -17,7 +17,7 @@ import UserRound from "@lucide/svelte/icons/user-round"
           <Sidebar.MenuItem>
             <Sidebar.MenuButton>
               {#snippet child({ props })}
-                <a href="##" {...props}>
+                <a href="/admin/employees" {...props}>
                   <UserRound />
                   <span>Employees</span>
                 </a>
