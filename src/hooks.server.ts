@@ -26,6 +26,15 @@ const supabase: Handle = async ({ event, resolve }) => {
     },
   })
 
+  if ("suppressGetSessionWarning" in event.locals.supabase.auth) {
+    // @ts-expect-error - suppressGetSessionWarning is not part of the official API
+    event.locals.supabase.auth.suppressGetSessionWarning = true
+  } else {
+    console.warn(
+      "SupabaseAuthClient#suppressGetSessionWarning was removed. See https://github.com/supabase/supabase-js/issues/1709.",
+    )
+  }
+
   /**
    * Unlike `supabase.auth.getSession()`, which returns the session _without_
    * validating the JWT, this function also calls `getUser()` to validate the
@@ -68,10 +77,10 @@ const authGuard: Handle = async ({ event, resolve }) => {
   event.locals.user = user
 
   if (!event.locals.session && event.url.pathname.startsWith("/admin")) {
-    redirect(303, "/auth?next=" + event.url.pathname)
+    redirect(303, "/auth?redirectTo=" + event.url.pathname)
   }
 
-  if (event.locals.session && event.url.pathname === "/auth") {
+  if (event.locals.session && event.url.pathname.startsWith("/auth")) {
     redirect(303, "/admin")
   }
 

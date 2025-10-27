@@ -4,7 +4,7 @@ import type { Session, SupabaseClient } from "@supabase/supabase-js"
 import { buttonVariants } from "@/components/ui/button"
 import ColorModeToggle from "./ColorModeToggle.svelte"
 import type { User } from "@supabase/supabase-js"
-import AccountDropdown from "./AccountDropdown.svelte"
+// import AccountDropdown from "./AccountDropdown.svelte"
 
 interface Props {
   session: Session | null
@@ -33,7 +33,7 @@ const { session, user, supabase }: Props = $props()
       <!-- Make sure to not show Login button on login page -->
       {#if page.url.pathname !== "/auth"}
         {#if session !== null && user !== null}
-          <AccountDropdown {session} {user} {supabase} />
+          <!-- <AccountDropdown {session} {user} {supabase} /> -->
         {:else}
           <a
             href="/auth"

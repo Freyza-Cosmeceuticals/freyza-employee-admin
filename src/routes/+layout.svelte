@@ -36,7 +36,7 @@ onMount(() => {
 <ModeWatcher />
 
 <!-- Admin has it's own navbar -->
-{#if page.url.pathname !== "/admin"}
+{#if !page.url.pathname.startsWith("/admin")}
   <Navbar {session} {user} {supabase} />
 {/if}
 
