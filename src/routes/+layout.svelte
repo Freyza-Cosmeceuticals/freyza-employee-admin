@@ -6,12 +6,10 @@ import { onMount } from "svelte"
 import { invalidate } from "$app/navigation"
 
 import { ModeWatcher } from "mode-watcher"
-import Navbar from "@/components/reusable/Navbar.svelte"
-import { page } from "$app/state"
 import { SUPABASE_AUTH_TAG } from "@/constants"
 
 let { data, children } = $props()
-let { session, user, supabase } = $derived(data)
+let { session, supabase } = $derived(data)
 
 onMount(() => {
   const { data } = supabase.auth.onAuthStateChange((changeEvent, newSession) => {
@@ -32,14 +30,6 @@ onMount(() => {
 </svelte:head>
 
 <!-- Root Layout -->
-
 <ModeWatcher />
 
-<!-- Admin has it's own navbar -->
-{#if !page.url.pathname.startsWith("/admin")}
-  <Navbar {session} {user} {supabase} />
-{/if}
-
-<main>
-  {@render children?.()}
-</main>
+{@render children?.()}
