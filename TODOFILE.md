@@ -1,3 +1,4 @@
 [x] allow admin login/logout
 [x] list employees
-[ ] allow adding employees
+[x] allow adding employees
+[ ] model everything
