@@ -20,34 +20,201 @@ enum UserRole {
 }
 
 enum UserStatus {
-  UNCONFIRMED
   ACTIVE
   REVOKED
 }
 
-model User {
-  id        String     @id @default(uuid())
-  name      String     @db.VarChar(100)
-  role      UserRole
-  status    UserStatus
-  location  String?    @db.VarChar(100)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @default(now()) @updatedAt
-
-  expenses Expense[]
+enum EmployeeTier {
+  FSO // field sales officer
+  TABM // training area business manager
+  ASM // area sales manager
 }
 
-model Expense {
-  id       String    @id @default(uuid())
-  userId   String
-  user     User      @relation(fields: [userId], references: [id])
-  date     DateTime
-  location String    @db.VarChar(100)
-  distance Float
-  cost     Float
+enum DayType {
+  WORK
+  HOLIDAY
+  LEAVE
+}
+
+enum VisitType {
+  DOCTOR
+  STOCKIST
+  CHEMIST
+}
+
+enum ReportStatus {
+  SAVED
+  LOCKED
+}
+
+model User {
+  id String @id @default(uuid())
+
+  name  String @db.VarChar(100)
+  phone String @unique @db.VarChar(15)
+
+  // can be ADMIN (null, null, [], [], plansCreated) or EMPLOYEE (tier, hq, travelPlans, dailyReports, [])
+  role   UserRole
+  status UserStatus
+
+  tier EmployeeTier?
+  hq   Location?     @relation("EmpHq", fields: [hqId], references: [id], onDelete: Restrict)
+  hqId String?
+
+  joiningDate DateTime  @db.Date
+  resignDate  DateTime? @db.Date
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  /// @relations
+
+  // if EMPLOYEE
+  travelPlans  TravelPlan[]  @relation("TravelPlans")
+  dailyReports DailyReport[] @relation("ReportsCreated")
+
+  // if ADMIN
+  plansCreated TravelPlan[] @relation("PlansCreated")
+
+  @@map("user")
+}
+
+model Location {
+  id          String  @id @default(uuid())
+  name        String  @unique @db.VarChar(25)
+  operational Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  /// @relations
+  employees   User[]  @relation("EmpHq")
+  routeAsSrc  Route[] @relation("RouteSrcLoc")
+  routeAsDest Route[] @relation("RouteDestLoc")
+
+  @@map("location")
+}
+
+model TravelPlan {
+  id String @id @default(uuid())
+
+  // employee is particular TP is for
+  employee   User   @relation("TravelPlans", fields: [employeeId], references: [id], onDelete: Restrict)
+  employeeId String
+
+  // DateTime as 1st of that month/year
+  month DateTime @db.Date
+
+  // which ADMIN created this TP
+  createdBy   User   @relation("PlansCreated", fields: [createdById], references: [id], onDelete: Restrict)
+  createdById String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  /// @relations
+  planEntries TravelPlanEntry[] @relation("TP")
+
+  @@unique([employeeId, month])
+  @@map("travelPlan")
+}
+
+model TravelPlanEntry {
+  id String @id @default(uuid())
+
+  // TP this entry is for
+  tp   TravelPlan @relation("TP", fields: [tpId], references: [id], onDelete: Cascade)
+  tpId String
+
+  // date of this Day Plan, sequentially from 1st to last day on month
+  date    DateTime @db.Date
+  // WORK (route), HOLIDAY (null), LEAVE (null)
+  dayType DayType  @default(WORK)
+
+  // route taken for this day
+  route   Route?  @relation("TPERoute", fields: [routeId], references: [id], onDelete: Restrict)
+  routeId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([tpId, date])
+  @@map("travelPlanEntry")
+}
+
+model DailyReport {
+  id String @id @default(uuid())
+
+  // report by this employee
+  employee   User   @relation("ReportsCreated", fields: [employeeId], references: [id], onDelete: Restrict)
+  employeeId String
+
+  date    DateTime @db.Date
+  // WORK (route, ta, da, totalExpense, locked), HOLIDAY (null, null, null, null, true, now()), LEAVE (null, null, null, null, true, now())
+  dayType DayType  @default(WORK)
+
+  route   Route?  @relation("DRRoute", fields: [routeId], references: [id], onDelete: Restrict)
+  routeId String?
+
+  ta           Float? @db.DoublePrecision
+  da           Float? @db.DoublePrecision
+  totalExpense Float? @db.DoublePrecision
+
   locked   Boolean   @default(false)
   lockedAt DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
+
+  /// @relations
+  visits Visit[] @relation("VisitsDone")
+
+  @@unique([employeeId, date])
+  @@map("dailyReport")
+}
+
+model Visit {
+  id String @id @default(uuid())
+
+  // report this visit is a part of
+  report   DailyReport @relation("VisitsDone", fields: [reportId], references: [id], onDelete: Cascade)
+  reportId String
+
+  // visit to whom
+  visitType VisitType
+
+  // GPS coordinates at which visit was marked
+  latitude  Float
+  longitude Float
+
+  // distance from the point of interest in meters
+  distanceMetersFromPOI Int
+
+  // doctor, doctorId, stockist, stockistId, chemist, chemistId
+  // related fields
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@map("visit")
+}
+
+model Route {
+  id String @id @default(uuid())
+
+  srcLoc   Location @relation("RouteSrcLoc", fields: [srcLocId], references: [id], onDelete: Restrict)
+  srcLocId String
+
+  destLoc   Location @relation("RouteDestLoc", fields: [destLocId], references: [id], onDelete: Restrict)
+  destLocId String
+
+  // fixed distance
+  distanceKm Int
+
+  /// @relations
+  travelPlans  TravelPlanEntry[] @relation("TPERoute")
+  dailyReports DailyReport[]     @relation("DRRoute")
+
+  @@unique([srcLocId, destLocId])
+  @@map("route")
 }
