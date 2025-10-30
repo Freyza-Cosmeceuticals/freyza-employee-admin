@@ -2,7 +2,7 @@
 import { Skeleton } from "@/components/ui/skeleton"
 import * as Card from "@/components/ui/card"
 import AdminProfileCard from "@/components/dashboard/AdminProfileCard.svelte"
-import TopEmployeeList from "@/components/dashboard/TopEmployeeList.svelte"
+import EmployeeList from "@/components/dashboard/EmployeeList.svelte"
 import { Button } from "@/components/ui/button"
 import { resolve } from "$app/paths"
 
@@ -44,7 +44,7 @@ let { supabase, user, userProfile, employees } = $derived(data)
         {#await employees}
           <Skeleton class="h-12 w-full" />
         {:then data}
-          <TopEmployeeList employees={data} />
+          <EmployeeList employees={data} />
         {:catch error}
           <p>
             Error loading employees: {error}

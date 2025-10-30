@@ -1,12 +1,11 @@
 <script lang="ts">
 import AddEmployeeButton from "@/components/dashboard/AddEmployeeButton.svelte"
-import TopEmployeeList from "@/components/dashboard/TopEmployeeList.svelte"
+import EmployeeList from "@/components/dashboard/EmployeeList.svelte"
 import * as Card from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import type { PageServerLoad } from "./$types.js"
 
 let { data } = $props()
-let { employees }: PageServerLoad = $derived(data)
+let { employees } = $derived(data)
 </script>
 
 <svelte:head>
@@ -29,7 +28,7 @@ let { employees }: PageServerLoad = $derived(data)
     {#await employees}
       <Skeleton class="h-12 w-full" />
     {:then data}
-      <TopEmployeeList variant="outline" employees={data} />
+      <EmployeeList variant="outline" employees={data} />
     {:catch error}
       <p class="text-center text-lg font-medium text-gray-500">
         An error occurred while fetching employees.

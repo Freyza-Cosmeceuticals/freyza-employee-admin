@@ -1,5 +1,5 @@
 import prisma from "@/server/db/prisma"
-import type { Employee, EmployeeCreate, UserCreate } from "@/types"
+import type { Employee, EmployeeCreate, EmployeeWithHQ, UserCreate } from "@/types"
 import { Prisma, UserRole, UserStatus, type User } from "@prisma/client"
 import { requireAdminAuth } from "./common"
 
@@ -57,7 +57,10 @@ export async function createEmployee(
   }
 }
 
-export async function getAllEmployees(locals: App.Locals, limitN?: number): Promise<User[]> {
+export async function getAllEmployees(
+  locals: App.Locals,
+  limitN?: number,
+): Promise<EmployeeWithHQ[]> {
   const { user, session } = requireAdminAuth(locals)
 
   try {
@@ -65,6 +68,9 @@ export async function getAllEmployees(locals: App.Locals, limitN?: number): Prom
       where: {
         role: UserRole.EMPLOYEE,
         status: UserStatus.ACTIVE,
+      },
+      include: {
+        hq: true,
       },
       orderBy: {
         createdAt: "desc",

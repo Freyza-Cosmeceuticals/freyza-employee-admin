@@ -6,10 +6,11 @@ import * as Item from "@/components/ui/item"
 import * as Avatar from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import type { ItemVariant } from "../ui/item/item.svelte"
+import type { EmployeeWithHQ } from "@/types"
 
 interface Props {
   variant?: ItemVariant
-  employees: User[]
+  employees: EmployeeWithHQ[]
 }
 
 let { variant = "default", employees }: Props = $props()
@@ -17,11 +18,9 @@ let { variant = "default", employees }: Props = $props()
 
 {#snippet employeeStatus(status: UserStatus)}
   {#if status === UserStatus.ACTIVE}
-    <Badge variant="default">Active</Badge>
-  {:else if status === UserStatus.UNCONFIRMED}
-    <Badge variant="destructive">Unconfirmed</Badge>
+    <Badge variant="secondary">Active</Badge>
   {:else if status === UserStatus.REVOKED}
-    <Badge variant="outline">Revoked</Badge>
+    <Badge variant="destructive">Revoked</Badge>
   {/if}
 {/snippet}
 
@@ -37,11 +36,12 @@ let { variant = "default", employees }: Props = $props()
       </Item.Media>
       <Item.Content class="gap-1">
         <Item.Title class="line-clamp-1">{emp.name}</Item.Title>
-        <Item.Description>{emp.location}</Item.Description>
+        <Item.Description>{emp.hq?.name}</Item.Description>
       </Item.Content>
       <Item.Content class="flex-none text-center">
         <Item.Description>
-          {@render employeeStatus(emp.status)}
+          <Badge variant="default">{emp.tier}</Badge>
+          <!-- {@render employeeStatus(emp.status)} -->
         </Item.Description>
       </Item.Content>
     </Item.Root>
