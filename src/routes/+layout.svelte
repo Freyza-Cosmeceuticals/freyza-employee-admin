@@ -6,6 +6,7 @@ import { onMount } from "svelte"
 import { invalidate } from "$app/navigation"
 
 import { ModeWatcher } from "mode-watcher"
+import { Toaster } from "$lib/components/ui/sonner"
 import { SUPABASE_AUTH_TAG } from "@/constants"
 
 let { data, children } = $props()
@@ -31,5 +32,7 @@ onMount(() => {
 
 <!-- Root Layout -->
 <ModeWatcher />
+
+<Toaster />
 
 {@render children?.()}

@@ -1,39 +1,24 @@
 import { form, getRequestEvent } from "$app/server"
-import { createUser } from "@/server/db/user"
+import { createEmployee } from "@/server/db/user"
 import { supabaseAdmin } from "@/server/supabaseAdmin"
-import { UserRole, UserStatus, type User } from "@prisma/client"
-import { error } from "@sveltejs/kit"
+import type { EmployeeCreate } from "@/types"
+import { EmployeeTier, UserRole, UserStatus, type User } from "@prisma/client"
 import { z } from "zod"
+import { requireAdminAuth } from "./common"
 
 const addEmployeeSchema = z.object({
   name: z.string().min(3).max(20),
-  email: z.email(),
   phone: z.string().min(10).max(15),
-  location: z.string().min(3).max(50),
+  tier: z.enum(EmployeeTier),
+  hqId: z.string(),
+  joiningDate: z.coerce.date<string>(),
+
+  email: z.email(),
 })
 
-function requireAuth() {
-  const { locals } = getRequestEvent()
-
-  if (!locals.user || !locals.session) {
-    console.error("Unauthorized call to employee remote function")
-    error(401, "Unauthorized")
-  }
-
-  return locals
-}
-
 export const addEmployee = form(addEmployeeSchema, async employee => {
-  const locals = requireAuth()
-  const { supabase, session, user } = locals
-
-  if (
-    user?.user_metadata.role !== UserRole.ADMIN &&
-    user?.user_metadata.status !== UserStatus.ACTIVE
-  ) {
-    console.error("Unauthorized call to employee remote function")
-    error(403, "Forbidden")
-  }
+  const { locals } = getRequestEvent()
+  const { user, session, supabase } = requireAdminAuth(locals)
 
   console.debug("Adding Employee with data", employee)
 
@@ -43,32 +28,36 @@ export const addEmployee = form(addEmployeeSchema, async employee => {
     email_confirm: true,
     user_metadata: {
       role: UserRole.EMPLOYEE,
-      status: UserStatus.UNCONFIRMED,
+      status: UserStatus.ACTIVE,
       name: employee.name,
-      location: employee.location,
     },
   })
 
   if (!potentialEmployee.data.user) {
     console.error(potentialEmployee.error)
-    error(500, "Failed to create employee")
+    return { success: false, data: null, message: potentialEmployee.error?.message }
   }
 
-  const employeeData = {
+  const employeeData: EmployeeCreate = {
     id: potentialEmployee.data.user.id,
     name: employee.name,
     phone: employee.phone,
-    location: employee.location,
     role: UserRole.EMPLOYEE,
-    status: UserStatus.UNCONFIRMED,
+    status: UserStatus.ACTIVE,
+    tier: employee.tier,
+    hqId: employee.hqId,
+    joiningDate: employee.joiningDate,
+    resignDate: null,
   }
 
-  const employeeProfile = await createUser(locals, employeeData)
+  const { data: employeeProfile, error } = await createEmployee(locals, employeeData)
 
   if (!employeeProfile) {
-    console.error("Failed to create employee profile")
-    error(500, "Failed to create employee")
+    console.error("Failed to create employee profile", error)
+    return { success: false, data: null, message: error }
   }
 
   console.debug("Successfully added employee", employeeProfile)
+
+  return { data: employeeProfile, success: true, message: "Employee added successfully" }
 })

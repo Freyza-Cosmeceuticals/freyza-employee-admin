@@ -1,15 +1,12 @@
 import prisma from "@/server/db/prisma"
-import { UserRole, UserStatus, type User } from "@prisma/client"
-import { redirect } from "@sveltejs/kit"
+import type { Employee, EmployeeCreate, UserCreate } from "@/types"
+import { Prisma, UserRole, UserStatus, type User } from "@prisma/client"
+import { requireAdminAuth } from "./common"
 
-export async function getUser({ user, session }: App.Locals): Promise<User | null> {
-  if (!user) {
-    console.error("Oh current user is non-existent, return")
-    redirect(303, "/login")
-  }
+export async function getUser(locals: App.Locals): Promise<User | null> {
+  const { user, session } = requireAdminAuth(locals, false)
 
   console.debug("Trying to getUser associated to the current user")
-
   try {
     const userProfile: User | null = await prisma.user.findFirst({
       where: {
@@ -25,57 +22,49 @@ export async function getUser({ user, session }: App.Locals): Promise<User | nul
   }
 }
 
-export async function createUser(
-  { user, session }: App.Locals,
-  userData: Omit<User, "createdAt" | "updatedAt">,
-): Promise<User | null> {
-  if (!user) {
-    console.error("Oh current user is non-existent, return")
-    redirect(303, "/login")
-  }
+export async function createEmployee(
+  locals: App.Locals,
+  employeeData: EmployeeCreate,
+): Promise<{ data: Employee; error: null } | { data: null; error: string }> {
+  const { user, session } = requireAdminAuth(locals)
 
-  console.debug("Creating user profile with data", userData)
+  console.debug("Creating employee profile with data", employeeData)
 
   try {
-    const userProfile: User | null = await prisma.user.create({
+    const employeeProfile: Employee | null = await prisma.user.create({
       data: {
-        id: userData.id,
-        name: userData.name,
-        role: userData.role,
-        status: userData.status,
-        location: userData.location,
+        id: employeeData.id,
+        name: employeeData.name,
+        phone: employeeData.phone,
+        role: employeeData.role,
+        status: employeeData.status,
+        tier: employeeData.tier,
+        hqId: employeeData.hqId,
+        joiningDate: employeeData.joiningDate,
       },
     })
 
-    console.debug(userProfile ? "Created successfully" : "Unable to create")
-    return userProfile
+    console.debug(employeeProfile ? "Created successfully" : "Unable to create")
+    return { data: employeeProfile, error: null }
   } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError) {
+      console.error(e)
+      return { data: null, error: e.message }
+    }
+
     console.error(e)
-    return null
+    return { data: null, error: "An unknown error has occurred" }
   }
 }
 
-export async function getAllEmployees(
-  { user, session }: App.Locals,
-  limitN?: number,
-): Promise<User[]> {
-  if (!user) {
-    console.error("Oh current user is non-existent, return")
-    redirect(303, "/login")
-  }
+export async function getAllEmployees(locals: App.Locals, limitN?: number): Promise<User[]> {
+  const { user, session } = requireAdminAuth(locals)
 
   try {
     const employees = await prisma.user.findMany({
       where: {
         role: UserRole.EMPLOYEE,
-        OR: [
-          {
-            status: UserStatus.UNCONFIRMED,
-          },
-          {
-            status: UserStatus.ACTIVE,
-          },
-        ],
+        status: UserStatus.ACTIVE,
       },
       orderBy: {
         createdAt: "desc",
