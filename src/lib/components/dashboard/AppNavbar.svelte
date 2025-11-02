@@ -2,7 +2,7 @@
 import type { Session, SupabaseClient } from "@supabase/supabase-js"
 import ColorModeToggle from "@/components/reusable/ColorModeToggle.svelte"
 import type { User } from "@supabase/supabase-js"
-// import AccountDropdown from "@/components/reusable/AccountDropdown.svelte"
+import AccountDropdown from "@/components/reusable/AccountDropdown.svelte"
 import * as Sidebar from "@/components/ui/sidebar"
 
 interface Props {
@@ -29,7 +29,7 @@ const { session, user, supabase }: Props = $props()
 
     <div class="flex flex-row gap-2">
       {#if session !== null && user !== null}
-        <!-- <AccountDropdown {session} {user} {supabase} /> -->
+        <AccountDropdown {session} {user} {supabase} />
       {/if}
       <ColorModeToggle />
     </div>

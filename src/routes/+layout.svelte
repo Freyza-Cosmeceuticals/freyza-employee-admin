@@ -33,6 +33,6 @@ onMount(() => {
 <!-- Root Layout -->
 <ModeWatcher />
 
-<Toaster />
+<Toaster richColors />
 
 {@render children?.()}

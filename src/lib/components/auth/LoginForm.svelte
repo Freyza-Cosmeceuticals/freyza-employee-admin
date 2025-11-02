@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { enhance } from "$app/forms"
 import Loader from "@lucide/svelte/icons/loader"
-import type { ActionData } from "../../../routes/auth/$types"
+import type { ActionData } from "../../../routes/(unauthenticated)/auth/$types"
+import { toast } from "svelte-sonner"
 
 interface Props {
   form: ActionData
@@ -27,10 +28,46 @@ let loading = $state(false)
       action="?/login"
       use:enhance={({ formData, cancel }) => {
         loading = true
+        const id = toast.loading("Logging in...", {
+          description: "Don't worry we will get you there",
+          position: "top-center",
+        })
 
         return async ({ result, update }) => {
-          loading = false
-          await update()
+          if (result.type === "failure") {
+            // handle same page failures
+            toast.error(String(result.data?.message) ?? "Some error occurred", {
+              id,
+              position: "top-center",
+              description: "",
+            })
+
+            loading = false
+            await update()
+          } else if (result.type === "error") {
+            // +error.svelte error
+            toast.error("Some unknown error occurred", {
+              id,
+              position: "top-center",
+              description: "Please try again",
+            })
+
+            loading = false
+            await update()
+          } else {
+            // it's redirect or success
+            toast.loading("Just a little longer...", {
+              id,
+              position: "top-center",
+              description: "",
+              duration: 30000,
+            })
+
+            loading = false
+            await update()
+
+            toast.success("Welcome back!", { id, position: "top-center", description: "" })
+          }
         }
       }}
     >
