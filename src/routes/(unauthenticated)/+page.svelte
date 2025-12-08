@@ -1,4 +1,5 @@
 <script lang="ts">
+import { resolve } from "$app/paths"
 import { buttonVariants } from "@/components/ui/button"
 
 let { data } = $props()
@@ -16,7 +17,7 @@ let { session } = $derived(data)
   <h1 class="text-3xl font-bold">Freyza Cosmeceuticals Employee System</h1>
 
   {#if session !== null}
-    <a href="/admin" class={buttonVariants({ variant: "default", size: "lg" })}>
+    <a href={resolve("/admin")} class={buttonVariants({ variant: "default", size: "lg" })}>
       <span class="font-semibold"> Goto Admin Dashboard </span>
     </a>
   {:else}

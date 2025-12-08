@@ -31,6 +31,7 @@ let loading = $state(false)
         const id = toast.loading("Logging in...", {
           description: "Don't worry we will get you there",
           position: "top-center",
+          duration: 15000,
         })
 
         return async ({ result, update }) => {
@@ -40,6 +41,7 @@ let loading = $state(false)
               id,
               position: "top-center",
               description: "",
+              duration: undefined,
             })
 
             loading = false
@@ -50,6 +52,7 @@ let loading = $state(false)
               id,
               position: "top-center",
               description: "Please try again",
+              duration: undefined,
             })
 
             loading = false
@@ -66,7 +69,12 @@ let loading = $state(false)
             loading = false
             await update()
 
-            toast.success("Welcome back!", { id, position: "top-center", description: "" })
+            toast.success("Welcome back!", {
+              id,
+              position: "top-center",
+              description: "",
+              duration: undefined,
+            })
           }
         }
       }}

@@ -1,5 +1,6 @@
 import { EmployeeTier } from "@db/browser"
 
+export const TIMEZONE = "Asia/Kolkata"
 export const SUPABASE_AUTH_TAG = "supabase:auth"
 
 export const EMPLOYEE_TIERS: { value: EmployeeTier; label: string }[] = [

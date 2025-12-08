@@ -1,11 +1,16 @@
 <script lang="ts">
 import * as Sidebar from "@/components/ui/sidebar"
-import UserRound from "@lucide/svelte/icons/user-round"
+import UserRoundIcon from "@lucide/svelte/icons/user-round"
+import NotebookTabsIcon from "@lucide/svelte/icons/notebook-tabs"
+import CalendarDaysIcon from "@lucide/svelte/icons/calendar-days"
+import MapPinIcon from "@lucide/svelte/icons/map-pin"
+import RouteIcon from "@lucide/svelte/icons/route"
+import { resolve } from "$app/paths"
 </script>
 
 <Sidebar.Root collapsible="icon">
   <Sidebar.Header>
-    <a href="/admin" class="truncate p-2">
+    <a href={resolve("/admin")} class="truncate p-2">
       <span class="truncate font-semibold">Freyza Cosmeceuticals</span>
     </a>
   </Sidebar.Header>
@@ -17,8 +22,8 @@ import UserRound from "@lucide/svelte/icons/user-round"
           <Sidebar.MenuItem>
             <Sidebar.MenuButton>
               {#snippet child({ props })}
-                <a href="/admin/employees" {...props}>
-                  <UserRound />
+                <a href={resolve("/admin/employees")} {...props}>
+                  <UserRoundIcon />
                   <span>Employees</span>
                 </a>
               {/snippet}
@@ -28,8 +33,50 @@ import UserRound from "@lucide/svelte/icons/user-round"
             <Sidebar.MenuButton>
               {#snippet child({ props })}
                 <a href="##" {...props}>
-                  <UserRound />
-                  <span>Expenses</span>
+                  <NotebookTabsIcon />
+                  <span>Daily Reports</span>
+                </a>
+              {/snippet}
+            </Sidebar.MenuButton>
+          </Sidebar.MenuItem>
+        </Sidebar.Menu>
+      </Sidebar.GroupContent>
+
+      <Sidebar.GroupLabel>Plan</Sidebar.GroupLabel>
+      <Sidebar.GroupContent>
+        <Sidebar.Menu>
+          <Sidebar.MenuItem>
+            <Sidebar.MenuButton>
+              {#snippet child({ props })}
+                <a href={resolve("/admin/travelplan")} {...props}>
+                  <CalendarDaysIcon />
+                  <span>Travel Plans</span>
+                </a>
+              {/snippet}
+            </Sidebar.MenuButton>
+          </Sidebar.MenuItem>
+        </Sidebar.Menu>
+      </Sidebar.GroupContent>
+
+      <Sidebar.GroupLabel>Manage</Sidebar.GroupLabel>
+      <Sidebar.GroupContent>
+        <Sidebar.Menu>
+          <Sidebar.MenuItem>
+            <Sidebar.MenuButton>
+              {#snippet child({ props })}
+                <a href="##" {...props}>
+                  <MapPinIcon />
+                  <span>Locations</span>
+                </a>
+              {/snippet}
+            </Sidebar.MenuButton>
+          </Sidebar.MenuItem>
+          <Sidebar.MenuItem>
+            <Sidebar.MenuButton>
+              {#snippet child({ props })}
+                <a href="##" {...props}>
+                  <RouteIcon />
+                  <span>Routes</span>
                 </a>
               {/snippet}
             </Sidebar.MenuButton>
