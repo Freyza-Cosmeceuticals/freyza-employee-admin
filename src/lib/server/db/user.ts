@@ -1,6 +1,6 @@
 import prisma from "@/server/db/prisma"
-import type { Employee, EmployeeCreate, EmployeeWithHQ, UserCreate } from "@/types"
-import { Prisma, UserRole, UserStatus, type User } from "@prisma/client"
+import type { Employee, EmployeeCreate, EmployeeWithHQ } from "@/types"
+import { Prisma, UserRole, UserStatus, type User } from "@db/client"
 import { requireAdminAuth } from "./common"
 
 export async function getUser(locals: App.Locals): Promise<User | null> {

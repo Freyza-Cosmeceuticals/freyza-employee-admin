@@ -1,6 +1,6 @@
 <script lang="ts">
 import * as Card from "@/components/ui/card"
-import type { User } from "@prisma/client"
+import type { User } from "@db/browser"
 import AddEmployeeButton from "./AddEmployeeButton.svelte"
 
 interface Props {

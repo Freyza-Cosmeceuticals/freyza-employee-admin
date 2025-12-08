@@ -1,4 +1,4 @@
-import { EmployeeTier } from "@prisma/client"
+import { EmployeeTier } from "@db/browser"
 
 export const SUPABASE_AUTH_TAG = "supabase:auth"
 

@@ -1,7 +1,5 @@
-import { PrismaClient } from "@prisma/client"
 import { type LocationCreate, type RouteCreate } from "$lib/types"
-
-const prisma = new PrismaClient()
+import prisma from "../db/prisma"
 
 type LocationCreateWithID = LocationCreate & { id: string }
 type RouteCreateWithID = RouteCreate & { id: string }

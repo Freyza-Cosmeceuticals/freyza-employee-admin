@@ -1,4 +1,4 @@
-import { UserRole, UserStatus } from "@prisma/client"
+import { UserRole, UserStatus } from "@db/client"
 import { error } from "@sveltejs/kit"
 
 /**

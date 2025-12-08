@@ -1,6 +1,6 @@
 <script lang="ts">
 import * as Empty from "@/components/ui/empty"
-import { type User, UserStatus } from "@prisma/client"
+import { UserStatus } from "@db/browser"
 import AddEmployeeButton from "./AddEmployeeButton.svelte"
 import * as Item from "@/components/ui/item"
 import * as Avatar from "@/components/ui/avatar"

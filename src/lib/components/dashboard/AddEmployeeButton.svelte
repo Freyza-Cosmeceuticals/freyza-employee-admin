@@ -1,6 +1,6 @@
 <script lang="ts">
 import { type RemoteFormIssue } from "@sveltejs/kit"
-import type { Location, EmployeeTier } from "@prisma/client"
+import type { Location, EmployeeTier } from "@db/browser"
 import { toast } from "svelte-sonner"
 import { Button } from "@/components/ui/button"
 import * as Dialog from "@/components/ui/dialog"

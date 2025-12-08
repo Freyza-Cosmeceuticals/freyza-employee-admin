@@ -15,6 +15,7 @@ const config = {
 
     alias: {
       "@/*": "./src/lib/*",
+      "@db/*": "./src/lib/generated/prisma/*",
     },
 
     experimental: {

@@ -2,7 +2,7 @@ import { form, getRequestEvent } from "$app/server"
 import { createEmployee } from "@/server/db/user"
 import { supabaseAdmin } from "@/server/supabaseAdmin"
 import type { EmployeeCreate } from "@/types"
-import { EmployeeTier, UserRole, UserStatus, type User } from "@prisma/client"
+import { EmployeeTier, UserRole, UserStatus, type User } from "@db/client"
 import { z } from "zod"
 import { requireAdminAuth } from "./common"
 

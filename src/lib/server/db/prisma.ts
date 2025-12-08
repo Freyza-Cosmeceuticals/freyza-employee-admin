@@ -1,4 +1,8 @@
-import { PrismaClient } from "@prisma/client"
+import { PrismaClient } from "@db/client"
+import { PrismaPg } from "@prisma/adapter-pg"
+import { DATABASE_URL } from "$env/static/private"
 
-const prisma = new PrismaClient()
+const adapter = new PrismaPg({ connectionString: DATABASE_URL })
+const prisma = new PrismaClient({ adapter })
+
 export default prisma

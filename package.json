@@ -10,8 +10,9 @@
     "prepare": "svelte-kit sync || echo ''",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-    "db:migrate": "bunx prisma generate && env $(cat .env.local) bunx prisma migrate dev",
-    "db:migrate-create": "bunx prisma generate && env $(cat .env.local) bunx prisma migrate dev --create-only"
+    "db:generate": "bun --env-file=.env.local prisma generate",
+    "db:migrate": "bun run db:generate && bun --env-file=.env.local prisma migrate dev",
+    "db:migrate-create": "bun run db:generate && bun --env-file=.env.local prisma migrate dev --create-only"
   },
   "devDependencies": {
     "@internationalized/date": "^3.10.0",
@@ -27,7 +28,7 @@
     "bits-ui": "^2.14.4",
     "clsx": "^2.1.1",
     "formsnap": "^2.0.1",
-    "prisma": "^6.18.0",
+    "prisma": "^7.1.0",
     "svelte": "^5.45.6",
     "svelte-check": "^4.3.4",
     "svelte-sonner": "^1.0.7",
@@ -40,7 +41,8 @@
     "vite": "^7.2.7"
   },
   "dependencies": {
-    "@prisma/client": "^6.18.0",
+    "@prisma/adapter-pg": "^7.1.0",
+    "@prisma/client": "^7.1.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.86.2",
     "luxon": "^3.7.2",

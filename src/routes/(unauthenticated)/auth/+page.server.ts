@@ -3,7 +3,7 @@ import { error, fail, redirect } from "@sveltejs/kit"
 import type { Actions } from "./$types"
 import { zfd } from "zod-form-data"
 import z from "zod"
-import { UserRole, UserStatus } from "@prisma/client"
+import { UserRole, UserStatus } from "@db/client"
 
 export const actions: Actions = {
   // signup: async ({ request, locals: { supabase } }) => {

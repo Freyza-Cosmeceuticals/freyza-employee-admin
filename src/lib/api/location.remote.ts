@@ -1,7 +1,7 @@
 import { getRequestEvent, query } from "$app/server"
 import { requireAdminAuth } from "./common"
 import { getAllLocations } from "@/server/db/location"
-import type { Location } from "@prisma/client"
+import type { Location } from "@db/client"
 
 /**
  * Fetch all locations

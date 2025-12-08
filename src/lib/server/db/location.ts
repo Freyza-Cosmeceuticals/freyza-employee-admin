@@ -1,4 +1,4 @@
-import type { Location } from "@prisma/client"
+import type { Location } from "@db/client"
 import { requireAdminAuth } from "./common"
 import prisma from "@/server/db/prisma"
 
