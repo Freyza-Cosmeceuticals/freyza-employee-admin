@@ -1,31 +1,49 @@
 <script lang="ts">
-import Calendar from "@/components/ui/calendar/calendar.svelte"
-import Popover from "@/components/ui/popover/popover.svelte"
-import PopoverTrigger from "@/components/ui/popover/popover-trigger.svelte"
-import PopoverContent from "@/components/ui/popover/popover-content.svelte"
-import { isWeekend, parseDate, type DateValue } from "@internationalized/date"
-import { DateTime } from "luxon"
 import type { addTravelPlan } from "@/api/travelplan.remote"
-import { DayType, type Route } from "@/generated/prisma/browser"
-import * as Select from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+import Calendar from "@/components/ui/calendar/calendar.svelte"
+import PopoverContent from "@/components/ui/popover/popover-content.svelte"
+import PopoverTrigger from "@/components/ui/popover/popover-trigger.svelte"
+import Popover from "@/components/ui/popover/popover.svelte"
+import * as Select from "@/components/ui/select"
+import { DayType } from "@/generated/prisma/browser"
+import type { RouteWithName } from "@/types"
+import { isWeekend, parseDate, type DateValue } from "@internationalized/date"
+import Holidays from "date-holidays"
+import { DateTime } from "luxon"
+import RouteSelectComboBox from "../RouteSelectComboBox.svelte"
 
 interface Props {
   month: DateTime
-  days: DateTime[]
+  days: DateTime<true>[]
   dayTypes: string[]
-  routes: Route[]
+  routes: RouteWithName[]
   planEntries: typeof addTravelPlan.fields.planEntries
   disabled: boolean
+  onInput: () => void
 }
 
-let { month, days, dayTypes, routes, planEntries, disabled }: Props = $props()
+let { month, days, dayTypes, routes, planEntries, disabled, onInput }: Props = $props()
+
 let selectedMonth = $derived(parseDate(month.toISODate()!))
 
 let openPopovers = $state<Record<string, boolean>>({})
 
+const getInitialDays = () => {
+  var hd = new Holidays("IN")
+
+  return Object.fromEntries(
+    days.map((day, idx) => {
+      // 6 is saturday, 7 is sunday
+      if (day.weekday === 6 || day.weekday === 7) return [idx, DayType.HOLIDAY]
+      if (hd.isHoliday(day.toJSDate())) return [idx, DayType.HOLIDAY]
+      return [idx, DayType.WORK]
+    }),
+  )
+}
+
 // form submission values
-let selectedDayTypes = $state<Record<number, DayType>>({})
+let selectedDayTypes = $state<Record<number, DayType>>(getInitialDays())
 let selectedRoutes = $state<Record<number, string | null>>({})
 
 const getDateKey = (date: DateValue): string =>
@@ -42,6 +60,7 @@ const formatDateDisplay = (date: DateValue): string =>
 // $inspect(selectedDayTypes)
 // $inspect(openPopovers)
 // $inspect(days)
+// $inspect(planEntries.allIssues()).with(console.log)
 </script>
 
 {#snippet dayTypeBadge(dt: DayType)}
@@ -56,11 +75,13 @@ const formatDateDisplay = (date: DateValue): string =>
   {/if}
 {/snippet}
 
-{#snippet routeBadge(route: Route | null)}
+{#snippet routeBadge(route: RouteWithName | null)}
   {#if route}
-    <Badge class="bg-freyza-route w-full rounded-sm">{route.distanceKm}</Badge>
+    <Badge class="bg-freyza-route w-full rounded-sm">
+      {`${route.srcLoc.name.substring(0, 3)} → ${route.destLoc.name.substring(0, 3)}`}</Badge
+    >
   {:else}
-    <Badge variant="destructive" class="w-full rounded-sm">NO ROUTE</Badge>
+    <Badge variant="destructive" class="bg-freyza-invalid-route w-full rounded-sm">NO ROUTE</Badge>
   {/if}
 {/snippet}
 
@@ -83,10 +104,11 @@ const formatDateDisplay = (date: DateValue): string =>
       {@const thisDayType = selectedDayTypes[i] ?? DayType.WORK}
       {@const thisRouteId = selectedRoutes[i] ?? null}
       {@const thisRoute = routes.find((r) => r.id === thisRouteId) ?? null}
+      {@const hasErrors = (planEntries[i].allIssues()?.length ?? 0) > 0}
 
       {#if !outsideMonth}
-        <input hidden {...planEntries[i].date.as("date")} value={days[i].toISODate()} />
-        <input hidden {...planEntries[i].dayType.as("text")} value={thisDayType} />
+        <input {...planEntries[i].date.as("hidden", days[i].toISODate())} />
+        <input {...planEntries[i].dayType.as("hidden", thisDayType)} />
         <input hidden {...planEntries[i].routeId.as("text")} value={thisRouteId} />
       {/if}
 
@@ -106,10 +128,19 @@ const formatDateDisplay = (date: DateValue): string =>
             // "rounded-md",
             "border-border border border-s-0 border-t-0",
             "disabled:pointer-events-none disabled:opacity-40",
+            hasErrors && "hover:bg-destructive/20",
+            // "outline-destructive/50 hover:bg-destructive/20 outline-2 -outline-offset-1",
           ]}
           disabled={outsideMonth}
         >
-          <strong class="mb-2">{day.day}</strong>
+          <!-- error overlay outline, under probation, change date color looks more nice -->
+          {#if hasErrors && false}
+            <div
+              class="outline-destructive/50 hover:bg-destructive/20 absolute top-2 left-2 h-[calc(100%-var(--spacing)*4)] w-[calc(100%-var(--spacing)*4)] rounded-md outline-2"
+            ></div>
+          {/if}
+
+          <strong class={["mb-2", hasErrors && "text-destructive"]}>{day.day}</strong>
           {#if !outsideMonth}
             {@render dayTypeBadge(thisDayType)}
             {#if thisDayType === DayType.WORK}
@@ -130,7 +161,7 @@ const formatDateDisplay = (date: DateValue): string =>
             <div class="space-y-4 p-4">
               <Select.Root
                 type="single"
-                {disabled}
+                onValueChange={() => onInput()}
                 bind:value={
                   () => thisDayType,
                   (value) => {
@@ -140,6 +171,7 @@ const formatDateDisplay = (date: DateValue): string =>
                     }
                   }
                 }
+                {disabled}
                 required
               >
                 <Select.Trigger>
@@ -153,28 +185,23 @@ const formatDateDisplay = (date: DateValue): string =>
               </Select.Root>
 
               {#if thisDayType === DayType.WORK}
-                <Select.Root
-                  type="single"
-                  {disabled}
+                {#each planEntries[i].routeId.issues() as issue}
+                  <p class="text-destructive ms-2 text-sm">
+                    {issue.message}
+                  </p>
+                {/each}
+
+                <RouteSelectComboBox
+                  {routes}
                   bind:value={
                     () => thisRouteId ?? undefined,
                     (value) => {
                       selectedRoutes[i] = value ?? null
                     }
                   }
-                  required
-                >
-                  <Select.Trigger>
-                    {thisRoute?.id.substring(0, 5).toUpperCase() || "Select a Route"}
-                  </Select.Trigger>
-                  <Select.Content>
-                    {#each routes as rt (rt.id)}
-                      <Select.Item value={rt.id}>
-                        {rt.srcLocId.substring(0, 5)} to {rt.destLocId.substring(0, 5)} ({rt.distanceKm}km)
-                      </Select.Item>
-                    {/each}
-                  </Select.Content>
-                </Select.Root>
+                  {disabled}
+                  onValueChange={() => onInput()}
+                />
               {:else}
                 <p class="text-muted-foreground text-sm">No Route to be selected</p>
               {/if}

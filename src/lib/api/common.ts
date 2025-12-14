@@ -4,7 +4,7 @@ import { error } from "@sveltejs/kit"
 /**
  * Guard Function to check for Auth, optionally non-Admin, otherwise throw 403 Forbidden
  */
-export function requireAdminAuth(locals: App.Locals, admin: boolean = true) {
+export function requireAuthMaybeAdmin(locals: App.Locals, admin: boolean = true) {
   const { user, supabase, session } = locals
 
   if (!user || !session) {

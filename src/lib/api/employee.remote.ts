@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/server/supabaseAdmin"
 import type { EmployeeCreate } from "@/types"
 import { EmployeeTier, UserRole, UserStatus, type User } from "@db/client"
 import { z } from "zod"
-import { requireAdminAuth } from "./common"
+import { requireAuthMaybeAdmin } from "./common"
 
 const addEmployeeSchema = z.object({
   name: z.string().min(3).max(20),
@@ -18,7 +18,7 @@ const addEmployeeSchema = z.object({
 
 export const addEmployee = form(addEmployeeSchema, async employee => {
   const { locals } = getRequestEvent()
-  const { user, session, supabase } = requireAdminAuth(locals)
+  const { user, session, supabase } = requireAuthMaybeAdmin(locals)
 
   console.debug("Adding Employee with data", employee)
 

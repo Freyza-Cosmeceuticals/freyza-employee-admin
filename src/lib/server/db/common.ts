@@ -4,7 +4,10 @@ import { error } from "@sveltejs/kit"
 /**
  * Guard Function to check for Auth, optionally non-Admin, otherwise throw 403 Forbidden
  */
-export function requireAdminAuth({ user, session, supabase }: App.Locals, admin: boolean = true) {
+export function requireAuthMaybeAdmin(
+  { user, session, supabase }: App.Locals,
+  admin: boolean = true,
+) {
   if (!user) {
     console.error("Oh current user is non-existent, return")
     error(403, "Forbidden")

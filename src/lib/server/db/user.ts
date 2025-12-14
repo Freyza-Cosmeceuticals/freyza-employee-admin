@@ -1,10 +1,10 @@
 import prisma from "@/server/db/prisma"
 import type { Employee, EmployeeCreate, EmployeeWithHQ } from "@/types"
 import { Prisma, UserRole, UserStatus, type User } from "@db/client"
-import { requireAdminAuth } from "./common"
+import { requireAuthMaybeAdmin } from "./common"
 
 export async function getUser(locals: App.Locals): Promise<User | null> {
-  const { user, session } = requireAdminAuth(locals, false)
+  const { user, session } = requireAuthMaybeAdmin(locals, false)
 
   console.debug("Trying to getUser associated to the current user")
   try {
@@ -26,12 +26,12 @@ export async function createEmployee(
   locals: App.Locals,
   employeeData: EmployeeCreate,
 ): Promise<{ data: Employee; error: null } | { data: null; error: string }> {
-  const { user, session } = requireAdminAuth(locals)
+  const { user, session } = requireAuthMaybeAdmin(locals)
 
   console.debug("Creating employee profile with data", employeeData)
 
   try {
-    const employeeProfile: Employee | null = await prisma.user.create({
+    const employeeProfile = await prisma.user.create({
       data: {
         id: employeeData.id,
         name: employeeData.name,
@@ -44,7 +44,7 @@ export async function createEmployee(
       },
     })
 
-    console.debug(employeeProfile ? "Created successfully" : "Unable to create")
+    console.debug("Created successfully")
     return { data: employeeProfile, error: null }
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError) {
@@ -61,7 +61,7 @@ export async function getAllEmployees(
   locals: App.Locals,
   limitN?: number,
 ): Promise<EmployeeWithHQ[]> {
-  const { user, session } = requireAdminAuth(locals)
+  const { user, session } = requireAuthMaybeAdmin(locals)
 
   try {
     const employees = await prisma.user.findMany({

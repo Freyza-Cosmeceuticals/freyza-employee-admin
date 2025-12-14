@@ -1,5 +1,5 @@
 import type { Location } from "@db/client"
-import { requireAdminAuth } from "./common"
+import { requireAuthMaybeAdmin } from "./common"
 import prisma from "@/server/db/prisma"
 
 /**
@@ -7,7 +7,7 @@ import prisma from "@/server/db/prisma"
  * Does not require ADMIN
  */
 export async function getAllLocations(locals: App.Locals): Promise<Location[]> {
-  const { user, session } = requireAdminAuth(locals, false)
+  const { user, session } = requireAuthMaybeAdmin(locals, false)
 
   try {
     const locations: Location[] = await prisma.location.findMany({

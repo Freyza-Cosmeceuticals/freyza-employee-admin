@@ -1,4 +1,6 @@
 <script lang="ts">
+import { goto } from "$app/navigation"
+import { resolve } from "$app/paths"
 import { addTravelPlan } from "@/api/travelplan.remote.js"
 import PlanCalendar from "@/components/dashboard/travelplan/PlanCalendar.svelte"
 import { Button } from "@/components/ui/button"
@@ -7,7 +9,8 @@ import * as Select from "@/components/ui/select"
 import { Spinner } from "@/components/ui/spinner/index.js"
 import { DayType } from "@db/browser"
 import type { RemoteFormIssue } from "@sveltejs/kit"
-import { Interval } from "luxon"
+import { DateTime, Interval } from "luxon"
+import { toast } from "svelte-sonner"
 
 let { data } = $props()
 let { user, employees, routes, today } = $derived(data)
@@ -50,9 +53,42 @@ const dayTypes = [DayType.WORK, DayType.LEAVE, DayType.HOLIDAY]
   <div class="mx-auto max-w-5xl">
     <form
       {...addTravelPlan.enhance(async ({ submit, data }) => {
-        console.debug("Submitting form")
-        console.log(data)
-        await submit()
+        const toastId = toast.loading("Hold tight! Creating Travel Plan...", {
+          duration: 15000,
+        })
+        console.debug("Submitting data", data)
+
+        try {
+          await submit()
+
+          if (addTravelPlan.result?.success && addTravelPlan.result.data) {
+            toast.success(addTravelPlan.result.message, {
+              id: toastId,
+              description: `Travel Plan created for ${DateTime.fromJSDate(addTravelPlan.result.data.month).monthLong} ${addTravelPlan.result.data.month.getFullYear()}.`,
+              duration: undefined,
+            })
+
+            console.log(addTravelPlan.result.message, addTravelPlan.result.data)
+            goto(resolve("/admin/travelplan"))
+          } else {
+            if (addTravelPlan.fields.allIssues()) {
+              toast.error("Look for issues in the calendar", { id: toastId, duration: undefined })
+              console.error(addTravelPlan.fields.allIssues())
+            } else {
+              toast.error(addTravelPlan.result?.message ?? "An Internal Error Occurred", {
+                id: toastId,
+                duration: undefined,
+              })
+              console.error(addTravelPlan.result?.message)
+            }
+          }
+        } catch (error) {
+          toast.error("An Internal Error Occurred", {
+            id: toastId,
+            duration: undefined,
+          })
+          console.error(error)
+        }
       })}
     >
       <Card.Root class="w-full">
@@ -69,6 +105,7 @@ const dayTypes = [DayType.WORK, DayType.LEAVE, DayType.HOLIDAY]
               type="single"
               disabled={addTravelPlan.pending > 0}
               name={addTravelPlan.fields.employeeId.as("select").name}
+              onValueChange={() => addTravelPlan.validate()}
               bind:value={
                 () => addTravelPlan.fields.employeeId.value(),
                 (newVal) => {
@@ -89,7 +126,10 @@ const dayTypes = [DayType.WORK, DayType.LEAVE, DayType.HOLIDAY]
             </Select.Root>
           </Card.Action>
         </Card.Header>
-        <Card.Content>
+        <Card.Content class="space-y-4">
+          <div class="text-muted-foreground text-sm">
+            💡 <strong>Tip:</strong> Click on calendar cells to change each day plan.
+          </div>
           <PlanCalendar
             month={nextMonth}
             {days}
@@ -97,6 +137,7 @@ const dayTypes = [DayType.WORK, DayType.LEAVE, DayType.HOLIDAY]
             {routes}
             planEntries={addTravelPlan.fields.planEntries}
             disabled={addTravelPlan.pending > 0}
+            onInput={() => addTravelPlan.validate()}
           />
         </Card.Content>
         <Card.Footer>
