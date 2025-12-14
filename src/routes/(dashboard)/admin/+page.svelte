@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button"
 import { resolve } from "$app/paths"
 
 let { data } = $props()
-let { supabase, user, userProfile, employees } = $derived(data)
+let { userProfile: userProfilePromise, employees } = $derived(data)
+
+let userProfile = $derived(await userProfilePromise)
 </script>
 
 <svelte:head>
@@ -35,6 +37,8 @@ let { supabase, user, userProfile, employees } = $derived(data)
             {data.length}
             Employees
           </Card.Description>
+        {:catch error}
+          0
         {/await}
         <Card.Action>
           <Button variant="link" href={resolve("/admin/employees")}>View All</Button>

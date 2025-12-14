@@ -179,6 +179,7 @@ let hqLabel = $derived.by(() => {
               </Select.Root>
 
               <!-- actual form element to be sent along, hidden on purpose -->
+              <!-- TODO: upgrade this to use the form fields directly, not native select -->
               <select {...addEmployee.fields.tier.as("select")} value={tierSelected} hidden>
                 {#each EMPLOYEE_TIERS as tier (tier.value)}
                   <option value={tier.value}>{tier.label}</option>
@@ -211,6 +212,7 @@ let hqLabel = $derived.by(() => {
               </Select.Root>
 
               <!-- actual form element to be sent along, hidden on purpose -->
+              <!-- TODO: upgrade this to use the form fields directly, not native select -->
               <select {...addEmployee.fields.hqId.as("select")} value={hqSelected} hidden>
                 {#each locations as loc (loc.id)}
                   <option value={loc.id}>{loc.name}</option>

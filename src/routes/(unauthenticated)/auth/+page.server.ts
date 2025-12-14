@@ -21,6 +21,8 @@ export const actions: Actions = {
   // },
 
   login: async ({ request, locals: { supabase }, url }) => {
+    console.time("LOGIN")
+
     const schema = zfd.formData({
       email: zfd.text(z.email()),
       password: zfd.text(),
@@ -30,6 +32,7 @@ export const actions: Actions = {
     const { data, error: parseError, success } = schema.safeParse(formData)
 
     if (!success) {
+      console.timeEnd("LOGIN")
       console.debug("Invalid Form Data:", parseError)
       return fail(400, {
         email: formData.get("email"),
@@ -48,6 +51,7 @@ export const actions: Actions = {
 
     if (authError) {
       console.debug(authError)
+      console.timeEnd("LOGIN")
       return fail(401, { email: email, message: authError.message, error: true })
     }
 
@@ -61,13 +65,16 @@ export const actions: Actions = {
       await supabase.auth.signOut()
 
       console.error("User is not active admin")
+      console.timeEnd("LOGIN")
       error(403, "Employees cannot login to Admin Dashboard")
     }
 
     if (url.searchParams.has("redirectTo")) {
+      console.timeEnd("LOGIN")
       redirect(303, url.searchParams.get("redirectTo") ?? "/admin")
     }
 
+    console.timeEnd("LOGIN")
     redirect(303, "/admin")
   },
 }

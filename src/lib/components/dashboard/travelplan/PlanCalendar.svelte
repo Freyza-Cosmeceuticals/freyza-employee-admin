@@ -48,9 +48,9 @@ const formatDateDisplay = (date: DateValue): string =>
   {#if dt == DayType.WORK}
     <Badge variant="default" class="w-full rounded-sm">WORK</Badge>
   {:else if dt == DayType.LEAVE}
-    <Badge class="w-full rounded-sm bg-blue-600 dark:bg-sky-400">LEAVE</Badge>
+    <Badge class="bg-freyza-badge-leave w-full rounded-sm">LEAVE</Badge>
   {:else if dt == DayType.HOLIDAY}
-    <Badge class="w-full rounded-sm bg-green-600 dark:bg-green-400">HOLIDAY</Badge>
+    <Badge class="bg-freyza-badge-holiday w-full rounded-sm">HOLIDAY</Badge>
   {:else}
     <Badge variant="outline" class="w-full rounded-sm">UNKNOWN</Badge>
   {/if}
@@ -58,7 +58,7 @@ const formatDateDisplay = (date: DateValue): string =>
 
 {#snippet routeBadge(route: Route | null)}
   {#if route}
-    <Badge class="w-full rounded-sm bg-cyan-500">{route.distanceKm}</Badge>
+    <Badge class="bg-freyza-route w-full rounded-sm">{route.distanceKm}</Badge>
   {:else}
     <Badge variant="destructive" class="w-full rounded-sm">NO ROUTE</Badge>
   {/if}

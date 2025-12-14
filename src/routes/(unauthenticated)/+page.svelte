@@ -21,11 +21,25 @@ let { session } = $derived(data)
       <span class="font-semibold"> Goto Admin Dashboard </span>
     </a>
   {:else}
-    <a href="/auth" class={buttonVariants({ variant: "default", size: "lg" })}>
+    <a
+      href="/auth"
+      class={buttonVariants({
+        variant: "default",
+        size: "lg",
+        class: "bg-freyza-brand-primary",
+      })}
+    >
       <span class="font-semibold"> Admin Login </span>
     </a>
-    <a href="/" class={buttonVariants({ variant: "secondary", size: "sm" })}>
-      <button>Download Freyza Employee App</button>
+    <a
+      href="/"
+      class={buttonVariants({
+        variant: "secondary",
+        size: "sm",
+        class: "bg-freyza-brand-tertiary",
+      })}
+    >
+      <span>Download Freyza Employee App</span>
     </a>
   {/if}
 </div>

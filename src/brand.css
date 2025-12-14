@@ -1,0 +1,38 @@
+/* Freyza Brand CSS */
+
+:root {
+  --freyza-brand-primary: #ffb84d;
+  --freyza-brand-secondary: #4d94ff;
+  --freyza-brand-tertiary: #4dff99;
+
+  --freyza-badge-work: #4285f4;
+  --freyza-badge-leave: #e74c3c;
+  --freyza-badge-holiday: #f1c40f;
+  --freyza-route-color: #9b59b6;
+  --freyza-invalid-route: var(--color-destructive);
+}
+
+.dark {
+  --freyza-brand-primary: #ff9600;
+  --freyza-brand-secondary: #0066cc;
+  --freyza-brand-tertiary: #00b366;
+
+  --freyza-badge-work: #5a9cff;
+  --freyza-badge-leave: #ff6b6b;
+  --freyza-badge-holiday: #ffd93d;
+  --freyza-route-color: #bb86fc;
+}
+
+@theme inline {
+  --color-debug: hotpink;
+
+  --color-freyza-brand-primary: var(--freyza-brand-primary);
+  --color-freyza-brand-secondary: var(--freyza-brand-secondary);
+  --color-freyza-brand-tertiary: var(--freyza-brand-tertiary);
+
+  --color-freyza-badge-work: var(--freyza-badge-work);
+  --color-freyza-badge-leave: var(--freyza-badge-leave);
+  --color-freyza-badge-holiday: var(--freyza-badge-holiday);
+  --color-freyza-route: var(--freyza-route-color);
+  --color-freyza-invalid-route: var(--freyza-invalid-route);
+}

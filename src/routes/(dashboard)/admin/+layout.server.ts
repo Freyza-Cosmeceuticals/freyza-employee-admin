@@ -4,8 +4,17 @@
  * send a server request, and thus trigger `hooks.server.ts`.
  **/
 
-// export const load = async ({ setHeaders }) => {
-//   setHeaders({
-//     "cache-control": "no-store",
-//   })
-// }
+import { redirect } from "@sveltejs/kit"
+
+export const load = async ({ locals, setHeaders }) => {
+  const user = locals.user
+  if (!user) {
+    throw redirect(303, "/auth")
+  }
+
+  setHeaders({
+    "cache-control": "no-store",
+  })
+
+  return { user }
+}

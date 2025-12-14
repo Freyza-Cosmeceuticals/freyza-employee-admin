@@ -1,8 +1,6 @@
 <script lang="ts">
-import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import * as Card from "@/components/ui/card"
-import { resolve } from "$app/paths"
 import AddTravelPlanCard from "@/components/dashboard/travelplan/AddTravelPlanCard.svelte"
 
 let { data } = $props()

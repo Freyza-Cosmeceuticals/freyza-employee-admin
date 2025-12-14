@@ -4,7 +4,12 @@ import { sequence } from "@sveltejs/kit/hooks"
 
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY } from "$env/static/public"
 
+const SUPABASE_HANDLE_TAG = "Supabase Handle"
+const AUTH_GUARD_TAG = "Auth Guard"
+
 const supabase: Handle = async ({ event, resolve }) => {
+  console.time(SUPABASE_HANDLE_TAG)
+
   /**
    * Creates a Supabase client specific to this server request.
    *
@@ -60,6 +65,8 @@ const supabase: Handle = async ({ event, resolve }) => {
     return { session, user }
   }
 
+  console.timeEnd(SUPABASE_HANDLE_TAG)
+
   return resolve(event, {
     filterSerializedResponseHeaders(name) {
       /**
@@ -72,6 +79,8 @@ const supabase: Handle = async ({ event, resolve }) => {
 }
 
 const authGuard: Handle = async ({ event, resolve }) => {
+  console.time(AUTH_GUARD_TAG)
+
   const { session, user } = await event.locals.safeGetSession()
   event.locals.session = session
   event.locals.user = user
@@ -83,6 +92,8 @@ const authGuard: Handle = async ({ event, resolve }) => {
   if (event.locals.session && event.url.pathname.startsWith("/auth")) {
     redirect(303, "/admin")
   }
+
+  console.timeEnd(AUTH_GUARD_TAG)
 
   return resolve(event)
 }

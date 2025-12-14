@@ -4,6 +4,7 @@ import PlanCalendar from "@/components/dashboard/travelplan/PlanCalendar.svelte"
 import { Button } from "@/components/ui/button"
 import * as Card from "@/components/ui/card"
 import * as Select from "@/components/ui/select"
+import { Spinner } from "@/components/ui/spinner/index.js"
 import { DayType } from "@db/browser"
 import type { RemoteFormIssue } from "@sveltejs/kit"
 import { Interval } from "luxon"
@@ -17,16 +18,6 @@ const days = $derived(
     .splitBy({ day: 1 })
     .map((d) => d.start!),
 )
-
-// currently selected employee or "Select Employee"
-let empLabel = $derived.by(() => {
-  const found = employees.find((emp) => emp.id == addTravelPlan.fields.employeeId.value())
-  if (found) {
-    return found.name
-  }
-
-  return "Select Employee"
-})
 
 const dayTypes = [DayType.WORK, DayType.LEAVE, DayType.HOLIDAY]
 
@@ -69,8 +60,8 @@ const dayTypes = [DayType.WORK, DayType.LEAVE, DayType.HOLIDAY]
           <Card.Title class="text-xl font-bold">
             {nextMonth.monthLong}
             {nextMonth.year}
-            <input hidden {...addTravelPlan.fields.month.as("text")} value={days[0].toISO()} />
-            <input hidden {...addTravelPlan.fields.createdById.as("text")} value={user?.id} />
+            <input {...addTravelPlan.fields.month.as("hidden", days[0].toISODate())} />
+            <input {...addTravelPlan.fields.createdById.as("hidden", user.id)} />
           </Card.Title>
           <Card.Action>
             <!-- <EmployeeSelectComboBox /> -->
@@ -87,7 +78,8 @@ const dayTypes = [DayType.WORK, DayType.LEAVE, DayType.HOLIDAY]
               required
             >
               <Select.Trigger>
-                {empLabel}
+                {employees.find((emp) => emp.id == addTravelPlan.fields.employeeId.value())?.name ??
+                  "Select Employee"}
               </Select.Trigger>
               <Select.Content>
                 {#each employees as emp (emp.id)}
@@ -108,7 +100,12 @@ const dayTypes = [DayType.WORK, DayType.LEAVE, DayType.HOLIDAY]
           />
         </Card.Content>
         <Card.Footer>
-          <Button type="submit" class="mt-8 w-full">Create Travel Plan</Button>
+          <Button type="submit" class="mt-8 w-full" disabled={addTravelPlan.pending > 0}>
+            {#if addTravelPlan.pending > 0}
+              <Spinner />
+            {/if}
+            Create Travel Plan
+          </Button>
         </Card.Footer>
       </Card.Root>
     </form>

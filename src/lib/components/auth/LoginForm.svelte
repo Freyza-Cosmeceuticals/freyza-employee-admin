@@ -26,10 +26,10 @@ let loading = $state(false)
     <form
       method="POST"
       action="?/login"
-      use:enhance={({ formData, cancel }) => {
+      use:enhance={() => {
         loading = true
         const id = toast.loading("Logging in...", {
-          description: "Don't worry we will get you there",
+          description: "Please wait while we authenticate your credentials",
           position: "top-center",
           duration: 15000,
         })
@@ -37,7 +37,7 @@ let loading = $state(false)
         return async ({ result, update }) => {
           if (result.type === "failure") {
             // handle same page failures
-            toast.error(String(result.data?.message) ?? "Some error occurred", {
+            toast.error(String(result.data?.message) ?? "An error occurred during login", {
               id,
               position: "top-center",
               description: "",
@@ -48,10 +48,10 @@ let loading = $state(false)
             await update()
           } else if (result.type === "error") {
             // +error.svelte error
-            toast.error("Some unknown error occurred", {
+            toast.error("An unexpected error occurred", {
               id,
               position: "top-center",
-              description: "Please try again",
+              description: "Please try again or contact support",
               duration: undefined,
             })
 
@@ -59,7 +59,7 @@ let loading = $state(false)
             await update()
           } else {
             // it's redirect or success
-            toast.loading("Just a little longer...", {
+            toast.loading("Completing authentication...", {
               id,
               position: "top-center",
               description: "",
@@ -69,7 +69,7 @@ let loading = $state(false)
             loading = false
             await update()
 
-            toast.success("Welcome back!", {
+            toast.success("Welcome back", {
               id,
               position: "top-center",
               description: "",
