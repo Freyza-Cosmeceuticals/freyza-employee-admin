@@ -82,7 +82,10 @@ export const addTravelPlan = form(addTravelPlanSchema, async (travelPlan, issue)
 
   console.debug("Travel Plan created successfully", travelPlanObject)
 
-  // TODO: refresh getTravelPlans remote query function (yet to be created)
+  getTravelPlansForMonth(
+    DateTime.fromJSDate(travelPlanObject.month).toISODate() ??
+      `${travelPlanObject.month.toISOString().split("T", 2)[0]}`,
+  ).refresh()
 
   return { data: travelPlanObject, success: true, message: "Travel plan created successfully" }
 })
@@ -107,12 +110,24 @@ export const getTravelPlansForMonth = query.batch(z.coerce.date<string>(), async
   }
 
   // console.debug("Fetched Travel Plans", travelPlans)
-
   const lookup = new Map<string, TravelPlanWithEmployee[]>(
-    travelPlans.map(tp => [
-      DateTime.fromJSDate(tp.month).toISODate() ?? `${tp.month.toISOString().split("T", 2)[0]}`,
-      travelPlans.filter(x => x.month.toISOString() === tp.month.toISOString()),
-    ]),
+    travelPlans.map(tp => {
+      const key =
+        DateTime.fromJSDate(tp.month).toISODate() ?? `${tp.month.toISOString().split("T", 2)[0]}`
+
+      let plans = travelPlans.filter(x => x.month.toISOString() === tp.month.toISOString())
+
+      plans = plans.map(plan => {
+        plan.stats = {
+          holidayDays: 12,
+          leaveDays: 13,
+          workDays: 14,
+        }
+        return plan
+      })
+
+      return [key, plans]
+    }),
   )
 
   // console.log("Lookup", lookup)

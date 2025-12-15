@@ -54,4 +54,12 @@ const travelPlanWithEmployee = {
   },
 } satisfies Prisma.TravelPlanDefaultArgs
 
-export type TravelPlanWithEmployee = Prisma.TravelPlanGetPayload<typeof travelPlanWithEmployee>
+type TravelPlanStats = {
+  workDays: number
+  leaveDays: number
+  holidayDays: number
+}
+
+export type TravelPlanWithEmployee = Prisma.TravelPlanGetPayload<typeof travelPlanWithEmployee> & {
+  stats: TravelPlanStats
+}

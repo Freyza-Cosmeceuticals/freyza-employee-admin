@@ -8,13 +8,13 @@ export { dayTypeBadge, routeBadge }
 
 {#snippet dayTypeBadge(dt: DayType)}
   {#if dt == DayType.WORK}
-    <Badge variant="default" class="w-min rounded-sm">WORK</Badge>
+    <Badge variant="default" class="rounded-sm">WORK</Badge>
   {:else if dt == DayType.LEAVE}
-    <Badge class="bg-freyza-badge-leave w-min rounded-sm">LEAVE</Badge>
+    <Badge class="bg-freyza-badge-leave rounded-sm">LEAVE</Badge>
   {:else if dt == DayType.HOLIDAY}
-    <Badge class="bg-freyza-badge-holiday w-min rounded-sm">HOLIDAY</Badge>
+    <Badge class="bg-freyza-badge-holiday rounded-sm">HOLIDAY</Badge>
   {:else}
-    <Badge variant="outline" class="w-min rounded-sm">UNKNOWN</Badge>
+    <Badge variant="outline" class="rounded-sm">UNKNOWN</Badge>
   {/if}
 {/snippet}
 
