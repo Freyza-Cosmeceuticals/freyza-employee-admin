@@ -1,4 +1,4 @@
-import { UserRole, UserStatus } from "@db/client"
+import { Prisma, UserRole, UserStatus } from "@db/client"
 import { error } from "@sveltejs/kit"
 
 /**
@@ -32,4 +32,14 @@ export function requireAuthMaybeAdmin(
   }
 
   return { user, session, supabase }
+}
+
+export function handleDbError(e: unknown): { data: null; error: string } {
+  if (e instanceof Prisma.PrismaClientKnownRequestError) {
+    console.error(e)
+    return { data: null, error: e.message }
+  }
+
+  console.error(e)
+  return { data: null, error: "An unknown error has occurred" }
 }

@@ -41,3 +41,17 @@ const routeWithName = {
 } satisfies Prisma.RouteDefaultArgs
 
 export type RouteWithName = Prisma.RouteGetPayload<typeof routeWithName>
+
+const travelPlanWithEmployee = {
+  include: {
+    employee: {
+      select: {
+        id: true,
+        name: true,
+        tier: true,
+      },
+    },
+  },
+} satisfies Prisma.TravelPlanDefaultArgs
+
+export type TravelPlanWithEmployee = Prisma.TravelPlanGetPayload<typeof travelPlanWithEmployee>

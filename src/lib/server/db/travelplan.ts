@@ -1,13 +1,15 @@
-import { Prisma, type TravelPlan } from "@db/client"
-import { requireAuthMaybeAdmin } from "./common"
 import prisma from "@/server/db/prisma"
-import type { TravelPlanCreate } from "@/types"
+import type { TravelPlanCreate, TravelPlanWithEmployee } from "@/types"
+import { type TravelPlan } from "@db/client"
+import { handleDbError, requireAuthMaybeAdmin } from "./common"
 
 /**
  * Get all TravelPlans from the db
  * Requires Admin
  */
-export async function getAllTravelPlans(locals: App.Locals): Promise<TravelPlan[]> {
+export async function getAllTravelPlans(
+  locals: App.Locals,
+): Promise<{ data: TravelPlan[]; error: null } | { data: null; error: string }> {
   const { user, session } = requireAuthMaybeAdmin(locals)
 
   try {
@@ -18,10 +20,80 @@ export async function getAllTravelPlans(locals: App.Locals): Promise<TravelPlan[
     })
 
     console.debug(`Found ${travelPlans.length} TravelPlans`)
-    return travelPlans
+    return { data: travelPlans, error: null }
   } catch (e) {
-    console.error(e)
-    return []
+    return handleDbError(e)
+  }
+}
+
+/**
+ * Get all TravelPlans for the given months from the db
+ * Requires Admin
+ */
+export async function getTravelPlansForMonths(
+  locals: App.Locals,
+  months: Date[],
+): Promise<{ data: TravelPlan[]; error: null } | { data: null; error: string }> {
+  const { user, session } = requireAuthMaybeAdmin(locals)
+
+  try {
+    const travelPlans: TravelPlan[] = await prisma.travelPlan.findMany({
+      where: {
+        month: {
+          in: months,
+        },
+      },
+      orderBy: {
+        month: "desc",
+      },
+    })
+
+    console.debug(
+      `Found ${travelPlans.length} TravelPlans for months ${months.map(m => m.toISOString()).join(" ")}`,
+    )
+    return { data: travelPlans, error: null }
+  } catch (e) {
+    return handleDbError(e)
+  }
+}
+
+/**
+ * Get all TravelPlans with employee information for the given months from the db
+ * Requires Admin
+ */
+export async function getTravelPlansWithEmployeeForMonths(
+  locals: App.Locals,
+  months: Date[],
+): Promise<{ data: TravelPlanWithEmployee[]; error: null } | { data: null; error: string }> {
+  const { user, session } = requireAuthMaybeAdmin(locals)
+
+  try {
+    const travelPlans = await prisma.travelPlan.findMany({
+      where: {
+        month: {
+          in: months,
+        },
+      },
+      include: {
+        employee: {
+          select: {
+            id: true,
+            name: true,
+            tier: true,
+          },
+        },
+      },
+      orderBy: {
+        month: "desc",
+      },
+    })
+
+    console.debug(
+      `Found ${travelPlans.length} TravelPlans for months ${months.map(m => m.toISOString()).join(" ")}`,
+    )
+    return { data: travelPlans, error: null }
+  } catch (e) {
+    return handleDbError(e)
   }
 }
 
@@ -63,12 +135,6 @@ export async function createTravelPlan(
     console.debug("Created Successfully")
     return { data: travelPlanObject, error: null }
   } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError) {
-      console.error(e)
-      return { data: null, error: e.message }
-    }
-
-    console.error(e)
-    return { data: null, error: "An unknown error has occurred" }
+    return handleDbError(e)
   }
 }

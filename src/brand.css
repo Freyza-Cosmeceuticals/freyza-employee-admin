@@ -6,8 +6,8 @@
   --freyza-brand-tertiary: #4dff99;
 
   --freyza-badge-work: #4285f4;
-  --freyza-badge-leave: #e74c3c;
-  --freyza-badge-holiday: #f1c40f;
+  --freyza-badge-leave: #c23420;
+  --freyza-badge-holiday: #d4a500;
   --freyza-route-color: #9b59b6;
   --freyza-invalid-route: var(--color-destructive);
 }

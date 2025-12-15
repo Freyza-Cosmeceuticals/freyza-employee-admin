@@ -1,19 +1,21 @@
 <script lang="ts">
-import { Skeleton } from "@/components/ui/skeleton"
-import * as Card from "@/components/ui/card"
+import { getTravelPlansForMonth } from "@/api/travelplan.remote.js"
 import AddTravelPlanCard from "@/components/dashboard/travelplan/AddTravelPlanCard.svelte"
+import TravelPlanCard from "@/components/dashboard/travelplan/TravelPlanCard.svelte"
+import * as Card from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 
 let { data } = $props()
-let { travelPlans, today } = $derived(data)
+let { today } = $derived(data)
 
-const nextMonth = $derived(today.plus({ months: 1 }))
+const nextMonth = $derived(today.plus({ months: 1 }).startOf("month"))
 const months = $derived.by(() => {
   let m = []
   // first next month
   m.push(nextMonth)
 
   for (let i = 0; i < 3; i++) {
-    m.push(today.minus({ months: i }))
+    m.push(today.minus({ months: i }).startOf("month"))
   }
   return m
 })
@@ -29,12 +31,6 @@ const months = $derived.by(() => {
     <Card.Header>
       <Card.Title class="text-2xl">Travel Plans</Card.Title>
       <Card.Description>get them tight on schedule</Card.Description>
-      <!-- <Card.Action>
-        <Button href={resolve("/admin/travelplan/create")}>
-          <CalendarPlusIcon />
-          Create Travel Plan
-        </Button>
-      </Card.Action> -->
     </Card.Header>
   </Card.Root>
 
@@ -50,21 +46,28 @@ const months = $derived.by(() => {
             {/if}
           </Card.Title>
         </Card.Header>
-        <Card.Content class="flex flex-row flex-wrap">
-          {#await travelPlans}
-            {#each [1, 2, 3, 4, 5] as item, i (item)}
-              <Skeleton class="m-4 h-32 w-56" />
+        <Card.Content class="flex flex-row flex-wrap items-stretch gap-4">
+          <!-- pass YYYY-MM-DD format ISODate to the remote query function, same is used there as well -->
+          {#if i === 0}
+            <AddTravelPlanCard />
+          {/if}
+
+          {#await getTravelPlansForMonth(m.toISODate())}
+            {@const skeletonCount = Array.from({ length: i === 0 ? 4 : 5 }, (_, i) => i + 1)}
+            {#each skeletonCount as item, i (item)}
+              <Skeleton class="aspect-video w-32" />
             {/each}
           {:then data}
-            {#if i === 0}
-              <AddTravelPlanCard />
-            {/if}
-            <br />
-
             <!-- .getMonth() is JS Date (0-11), m.month is luxon DateTime (1-12) -->
-            {JSON.stringify(data.filter((tp) => tp.month.getMonth() === m.month - 1))}
+            {@const tps = data?.filter((tp) => tp.month.getMonth() === m.month - 1) ?? []}
+
+            {#each tps as travelPlan}
+              <TravelPlanCard {travelPlan} />
+            {:else}
+              <p class="text-muted-foreground">No Travel Plans for this month</p>
+            {/each}
           {:catch error}
-            <p class="text-center text-lg font-medium text-gray-500">
+            <p class="text-destructive text-center text-lg font-medium">
               An error occurred while fetching travel plans.
             </p>
           {/await}

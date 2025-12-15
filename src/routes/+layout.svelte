@@ -1,18 +1,22 @@
 <script lang="ts">
 import "../app.css"
 
+import { invalidate } from "$app/navigation"
 import favicon from "$lib/assets/favicon.svg"
 import { onMount } from "svelte"
-import { invalidate } from "$app/navigation"
 
-import { ModeWatcher } from "mode-watcher"
 import { Toaster } from "$lib/components/ui/sonner"
 import { SUPABASE_AUTH_TAG } from "@/constants"
+import { Settings } from "luxon"
+import { ModeWatcher } from "mode-watcher"
 
 let { data, children } = $props()
 let { session, supabase } = $derived(data)
 
 onMount(() => {
+  Settings.defaultZone = "Asia/Kolkata"
+  Settings.defaultLocale = "en-IN"
+
   const { data } = supabase.auth.onAuthStateChange((changeEvent, newSession) => {
     console.log(`Auth State changed: ${changeEvent}`, newSession)
 
