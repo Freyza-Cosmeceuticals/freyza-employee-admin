@@ -1,7 +1,7 @@
 <script lang="ts">
-import * as Sidebar from "@/components/ui/sidebar"
-import AppSidebar from "@/components/dashboard/AppSidebar.svelte"
 import AppNavbar from "@/components/dashboard/AppNavbar.svelte"
+import AppSidebar from "@/components/dashboard/AppSidebar.svelte"
+import * as Sidebar from "@/components/ui/sidebar"
 
 let { data, children } = $props()
 let { supabase, session, user } = $derived(data)

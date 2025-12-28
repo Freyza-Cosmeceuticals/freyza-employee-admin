@@ -1,9 +1,9 @@
 import { error, fail, redirect } from "@sveltejs/kit"
 
-import type { Actions } from "./$types"
-import { zfd } from "zod-form-data"
-import z from "zod"
 import { UserRole, UserStatus } from "@db/client"
+import z from "zod"
+import { zfd } from "zod-form-data"
+import type { Actions } from "./$types"
 
 export const actions: Actions = {
   // signup: async ({ request, locals: { supabase } }) => {

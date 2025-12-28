@@ -1,11 +1,11 @@
 <script lang="ts">
 import * as ButtonGroup from "$lib/components/ui/button-group"
 import * as Avatar from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import * as Card from "@/components/ui/card"
 import { DayType } from "@/generated/prisma/enums"
 import type { TravelPlanWithEmployee } from "@/types"
 import { dayTypeBadge } from "./snippets.svelte"
-import { Badge } from "@/components/ui/badge"
 
 interface Props {
   travelPlan: TravelPlanWithEmployee
@@ -20,25 +20,23 @@ const { travelPlan }: Props = $props()
       <ButtonGroup.Root>
         {@render dayTypeBadge(DayType.WORK)}
         <ButtonGroup.Text>
-          <span class="font-mono font-medium"
-            >{travelPlan.stats.workDays.toString().padStart(2, "0")}</span
-          >
+          <span class="font-mono font-medium">
+            {travelPlan.stats.workDays.toString().padStart(2, "0")}
+          </span>
         </ButtonGroup.Text>
       </ButtonGroup.Root>
       <ButtonGroup.Root>
         {@render dayTypeBadge(DayType.HOLIDAY)}
         <ButtonGroup.Text>
           <span class="font-mono font-medium"
-            >{travelPlan.stats.holidayDays.toString().padStart(2, "0")}</span
-          >
+            >{travelPlan.stats.holidayDays.toString().padStart(2, "0")}</span>
         </ButtonGroup.Text>
       </ButtonGroup.Root>
       <ButtonGroup.Root>
         {@render dayTypeBadge(DayType.LEAVE)}
         <ButtonGroup.Text>
           <span class="font-mono font-medium"
-            >{travelPlan.stats.leaveDays.toString().padStart(2, "0")}</span
-          >
+            >{travelPlan.stats.leaveDays.toString().padStart(2, "0")}</span>
         </ButtonGroup.Text>
       </ButtonGroup.Root>
     </div>

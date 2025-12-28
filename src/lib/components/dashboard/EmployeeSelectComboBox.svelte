@@ -3,29 +3,23 @@ import { Button } from "$lib/components/ui/button/index.js"
 import * as Command from "$lib/components/ui/command/index.js"
 import * as Popover from "$lib/components/ui/popover/index.js"
 import { cn } from "$lib/utils.js"
-import type { RouteWithName } from "@/types"
+import type { EmployeeWithHQ } from "@/types"
 import CheckIcon from "@lucide/svelte/icons/check"
 import ChevronsUpDownIcon from "@lucide/svelte/icons/chevrons-up-down"
 import { tick } from "svelte"
 
 interface Props {
-  routes: RouteWithName[]
-  value: string | undefined
+  employees: EmployeeWithHQ[]
+  value: string
   disabled: boolean
-  onValueChange?: (value: string) => void
 }
 
-let { routes, value = $bindable(undefined), disabled, onValueChange }: Props = $props()
+let { employees, value = $bindable(""), disabled }: Props = $props()
 
 let open = $state(false)
 let triggerRef = $state<HTMLButtonElement>(null!)
 
-const selectedValue = $derived.by(() => {
-  const route = routes.find((r) => r.id === value)
-  if (!route) return "Select a route..."
-
-  return `${route.srcLoc.name} → ${route.destLoc.name} (${route.distanceKm}km)`
-})
+const selectedValue = $derived(employees.find((e) => e.id === value)?.name)
 
 // We want to refocus the trigger button when the user selects
 // an item from the list so users can continue navigating the
@@ -47,29 +41,27 @@ function closeAndFocusTrigger() {
         {...props}
         role="combobox"
         aria-expanded={open}>
-        {selectedValue || "Select a route..."}
+        {selectedValue || "Select an employee..."}
         <ChevronsUpDownIcon class="ms-2 size-4 shrink-0 opacity-50" />
       </Button>
     {/snippet}
   </Popover.Trigger>
-  <Popover.Content class="w-[300px] p-0">
-    <Command.Root {onValueChange}>
-      <Command.Input placeholder="Search route..." />
+  <Popover.Content class="w-[200px] p-0">
+    <Command.Root>
+      <Command.Input placeholder="Search employee..." />
       <Command.List>
-        <Command.Empty>No route found.</Command.Empty>
+        <Command.Empty>No employee found.</Command.Empty>
         <Command.Group>
-          {#each routes as r}
+          {#each employees as emp}
             <Command.Item
-              value={r.id}
-              keywords={[r.srcLoc.name, r.destLoc.name]}
+              value={emp.id}
+              keywords={emp.name.split(" ")}
               onSelect={() => {
-                value = r.id
+                value = emp.id
                 closeAndFocusTrigger()
               }}>
-              <CheckIcon class={cn("my-2 me-2 size-4", value !== r.id && "text-transparent")} />
-              <span>
-                {r.srcLoc.name} &RightArrow; {r.destLoc.name} ({r.distanceKm}km)
-              </span>
+              <CheckIcon class={cn("me-2 size-4", value !== emp.id && "text-transparent")} />
+              {emp.name}
             </Command.Item>
           {/each}
         </Command.Group>

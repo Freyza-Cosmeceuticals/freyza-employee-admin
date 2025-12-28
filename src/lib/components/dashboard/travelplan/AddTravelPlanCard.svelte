@@ -7,7 +7,7 @@ import CalendarPlusIcon from "@lucide/svelte/icons/calendar-plus"
 <a href={resolve("/admin/travelplan/create")}>
   <Card.Root class="h-full w-64 p-4">
     <Card.Content class="grid place-items-center gap-2 p-2">
-      <CalendarPlusIcon class="bg-secondary size-10 rounded-full p-2" />
+      <CalendarPlusIcon class="size-10 rounded-full bg-secondary p-2" />
       <p class="text-muted-foreground">Add new travel plan</p>
     </Card.Content>
   </Card.Root>

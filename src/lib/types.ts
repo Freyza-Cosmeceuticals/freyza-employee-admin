@@ -4,7 +4,7 @@ import {
   type Route,
   type TravelPlan,
   type TravelPlanEntry,
-  type User,
+  type User
 } from "@db/browser"
 
 export type LocationCreate = Omit<Location, "id" | "createdAt" | "updatedAt">
@@ -27,7 +27,7 @@ export type TravelPlanCreate = Omit<TravelPlan, "id" | "createdAt" | "updatedAt"
 }
 
 const employeeWithHq = {
-  include: { hq: true },
+  include: { hq: true }
 } satisfies Prisma.UserDefaultArgs
 
 export type EmployeeWithHQ = Prisma.UserGetPayload<typeof employeeWithHq>
@@ -36,8 +36,8 @@ export type UserCreate = Omit<User, "id" | "createdAt" | "updatedAt"> & { id?: s
 const routeWithName = {
   include: {
     srcLoc: { select: { name: true, id: true } },
-    destLoc: { select: { name: true, id: true } },
-  },
+    destLoc: { select: { name: true, id: true } }
+  }
 } satisfies Prisma.RouteDefaultArgs
 
 export type RouteWithName = Prisma.RouteGetPayload<typeof routeWithName>
@@ -48,10 +48,10 @@ const travelPlanWithEmployee = {
       select: {
         id: true,
         name: true,
-        tier: true,
-      },
-    },
-  },
+        tier: true
+      }
+    }
+  }
 } satisfies Prisma.TravelPlanDefaultArgs
 
 type TravelPlanStats = {

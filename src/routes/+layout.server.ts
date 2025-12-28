@@ -7,6 +7,6 @@ export const load: LayoutServerLoad = async ({ locals: { safeGetSession }, cooki
   const { session } = await safeGetSession()
   return {
     session,
-    cookies: cookies.getAll(),
+    cookies: cookies.getAll()
   }
 }

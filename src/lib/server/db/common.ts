@@ -6,7 +6,7 @@ import { error } from "@sveltejs/kit"
  */
 export function requireAuthMaybeAdmin(
   { user, session, supabase }: App.Locals,
-  admin: boolean = true,
+  admin: boolean = true
 ) {
   if (!user) {
     console.error("Oh current user is non-existent, return")

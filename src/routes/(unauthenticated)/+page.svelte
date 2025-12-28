@@ -12,8 +12,7 @@ let { session } = $derived(data)
 </svelte:head>
 
 <div
-  class="mx-auto grid h-[80svh] w-full max-w-2xl grid-cols-1 place-content-center gap-8 text-center"
->
+  class="mx-auto grid h-[80svh] w-full max-w-2xl grid-cols-1 place-content-center gap-8 text-center">
   <h1 class="text-3xl font-bold">Freyza Cosmeceuticals Employee System</h1>
 
   {#if session !== null}
@@ -26,9 +25,8 @@ let { session } = $derived(data)
       class={buttonVariants({
         variant: "default",
         size: "lg",
-        class: "bg-freyza-brand-primary",
-      })}
-    >
+        class: "bg-freyza-brand-primary"
+      })}>
       <span class="font-semibold"> Admin Login </span>
     </a>
     <a
@@ -36,9 +34,8 @@ let { session } = $derived(data)
       class={buttonVariants({
         variant: "secondary",
         size: "sm",
-        class: "bg-freyza-brand-tertiary",
-      })}
-    >
+        class: "bg-freyza-brand-tertiary"
+      })}>
       <span>Download Freyza Employee App</span>
     </a>
   {/if}

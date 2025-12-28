@@ -1,17 +1,17 @@
 <script lang="ts">
-import { type RemoteFormIssue } from "@sveltejs/kit"
-import type { Location, EmployeeTier } from "@db/browser"
-import { toast } from "svelte-sonner"
-import { Button } from "@/components/ui/button"
-import * as Dialog from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import * as Field from "@/components/ui/field"
-import * as Select from "@/components/ui/select"
-import CirclePlus from "@lucide/svelte/icons/circle-plus"
-import LoaderCircle from "@lucide/svelte/icons/loader-circle"
 import { addEmployee } from "@/api/employee.remote"
 import { fetchLocations } from "@/api/location.remote"
+import { Button } from "@/components/ui/button"
+import * as Dialog from "@/components/ui/dialog"
+import * as Field from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import * as Select from "@/components/ui/select"
 import { EMPLOYEE_TIERS } from "@/constants"
+import type { EmployeeTier, Location } from "@db/browser"
+import CirclePlus from "@lucide/svelte/icons/circle-plus"
+import LoaderCircle from "@lucide/svelte/icons/loader-circle"
+import { type RemoteFormIssue } from "@sveltejs/kit"
+import { toast } from "svelte-sonner"
 
 let open = $state(false)
 
@@ -78,7 +78,7 @@ let hqLabel = $derived.by(() => {
 
             toast.success(addEmployee.result.message, {
               id: toastId,
-              description: `${addEmployee.result.data.name} has joined the team`,
+              description: `${addEmployee.result.data.name} has joined the team`
             })
             console.log(addEmployee.result.message, addEmployee.result.data)
           } else {
@@ -87,7 +87,7 @@ let hqLabel = $derived.by(() => {
               console.error(addEmployee.fields.allIssues())
             } else {
               toast.error(addEmployee.result?.message ?? "An Internal Error Occurred", {
-                id: toastId,
+                id: toastId
               })
 
               console.error(addEmployee.result?.message)
@@ -95,13 +95,12 @@ let hqLabel = $derived.by(() => {
           }
         } catch (error) {
           toast.error("An Internal Error Occurred", {
-            id: toastId,
+            id: toastId
           })
 
           console.error(error)
         }
-      })}
-    >
+      })}>
       <Field.Group>
         <Field.Set>
           <Field.Separator />
@@ -118,8 +117,7 @@ let hqLabel = $derived.by(() => {
                 placeholder="Enter Name"
                 required
                 disabled={addEmployee.pending > 0}
-                {...addEmployee.fields.name.as("text")}
-              />
+                {...addEmployee.fields.name.as("text")} />
             </Field.Field>
 
             <Field.Field orientation="responsive">
@@ -134,8 +132,7 @@ let hqLabel = $derived.by(() => {
                 placeholder="Enter Email"
                 required
                 disabled={addEmployee.pending > 0}
-                {...addEmployee.fields.email.as("email")}
-              />
+                {...addEmployee.fields.email.as("email")} />
             </Field.Field>
 
             <Field.Field orientation="responsive">
@@ -150,8 +147,7 @@ let hqLabel = $derived.by(() => {
                 placeholder="Enter Phone"
                 required
                 disabled={addEmployee.pending > 0}
-                {...addEmployee.fields.phone.as("text")}
-              />
+                {...addEmployee.fields.phone.as("text")} />
             </Field.Field>
 
             <Field.Field orientation="responsive">
@@ -166,8 +162,7 @@ let hqLabel = $derived.by(() => {
                 type="single"
                 disabled={addEmployee.pending > 0}
                 bind:value={tierSelected}
-                required
-              >
+                required>
                 <Select.Trigger name={addEmployee.fields.tier.as("select").name}>
                   {tierLabel}
                 </Select.Trigger>
@@ -199,8 +194,7 @@ let hqLabel = $derived.by(() => {
                 type="single"
                 disabled={addEmployee.pending > 0}
                 bind:value={hqSelected}
-                required
-              >
+                required>
                 <Select.Trigger>
                   {hqLabel}
                 </Select.Trigger>
@@ -232,8 +226,7 @@ let hqLabel = $derived.by(() => {
                 placeholder="Select Joining Date"
                 required
                 disabled={addEmployee.pending > 0}
-                {...addEmployee.fields.joiningDate.as("date")}
-              />
+                {...addEmployee.fields.joiningDate.as("date")} />
             </Field.Field>
           </Field.Group>
         </Field.Set>

@@ -5,7 +5,7 @@ import type { PageServerLoad } from "./$types"
 import { DateTime } from "luxon"
 
 export const load: PageServerLoad = async ({ depends, locals }) => {
-  depends(SUPABASE_AUTH_TAG)
+  // depends(SUPABASE_AUTH_TAG)
 
   const employees = await getAllEmployees(locals)
   const routes = await getAllRoutes(locals)

@@ -42,17 +42,17 @@ const months = $derived.by(() => {
             {m.monthLong}
             {m.year}
             {#if i === 0}
-              <span class="font-normal italic"> (Next Month) </span>
+              <span class="font-normal italic"> (Upcoming Month) </span>
             {/if}
           </Card.Title>
         </Card.Header>
         <Card.Content class="flex flex-row flex-wrap items-stretch gap-4">
-          <!-- pass YYYY-MM-DD format ISODate to the remote query function, same is used there as well -->
           {#if i === 0}
             <AddTravelPlanCard />
           {/if}
 
-          {#await getTravelPlansForMonth(m.toISODate())}
+          <!-- pass YYYY-MM-DD format ISODate to the remote query function, same is used there as well -->
+          {#await getTravelPlansForMonth(m)}
             {@const skeletonCount = Array.from({ length: i === 0 ? 4 : 5 }, (_, i) => i + 1)}
             {#each skeletonCount as item, i (item)}
               <Skeleton class="aspect-video w-32" />
@@ -67,7 +67,7 @@ const months = $derived.by(() => {
               <p class="text-muted-foreground">No Travel Plans for this month</p>
             {/each}
           {:catch error}
-            <p class="text-destructive text-center text-lg font-medium">
+            <p class="text-center text-lg font-medium text-destructive">
               An error occurred while fetching travel plans.
             </p>
           {/await}

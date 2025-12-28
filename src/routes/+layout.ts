@@ -1,7 +1,7 @@
-import { createBrowserClient, createServerClient, isBrowser } from "@supabase/ssr"
 import { PUBLIC_SUPABASE_PUBLISHABLE_KEY, PUBLIC_SUPABASE_URL } from "$env/static/public"
-import type { LayoutLoad } from "./$types"
 import { SUPABASE_AUTH_TAG } from "@/constants"
+import { createBrowserClient, createServerClient, isBrowser } from "@supabase/ssr"
+import type { LayoutLoad } from "./$types"
 
 export const load: LayoutLoad = async ({ data, depends, fetch }) => {
   /**
@@ -13,18 +13,18 @@ export const load: LayoutLoad = async ({ data, depends, fetch }) => {
   const supabase = isBrowser()
     ? createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
         global: {
-          fetch,
-        },
+          fetch
+        }
       })
     : createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
         global: {
-          fetch,
+          fetch
         },
         cookies: {
           getAll() {
             return data.cookies
-          },
-        },
+          }
+        }
       })
 
   /**
@@ -33,11 +33,11 @@ export const load: LayoutLoad = async ({ data, depends, fetch }) => {
    * safely checked the session using `safeGetSession`.
    */
   const {
-    data: { session },
+    data: { session }
   } = await supabase.auth.getSession()
 
   const {
-    data: { user },
+    data: { user }
   } = await supabase.auth.getUser()
 
   return { session, supabase, user }

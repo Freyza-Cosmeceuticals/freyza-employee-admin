@@ -1,10 +1,10 @@
 <script lang="ts">
-import * as DropdownMenu from "@/components/ui/dropdown-menu"
-import { Button, buttonVariants } from "@/components/ui/button"
-import type { Session, SupabaseClient, User } from "@supabase/supabase-js"
-import UserIcon from "@lucide/svelte/icons/user-round"
 import { goto } from "$app/navigation"
 import { resolve } from "$app/paths"
+import { Button, buttonVariants } from "@/components/ui/button"
+import * as DropdownMenu from "@/components/ui/dropdown-menu"
+import UserIcon from "@lucide/svelte/icons/user-round"
+import type { Session, SupabaseClient, User } from "@supabase/supabase-js"
 
 interface Props {
   session: Session

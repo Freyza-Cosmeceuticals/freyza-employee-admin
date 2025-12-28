@@ -1,7 +1,7 @@
 import { getRequestEvent, query } from "$app/server"
-import { requireAuthMaybeAdmin } from "./common"
 import { getAllLocations } from "@/server/db/location"
 import type { Location } from "@db/client"
+import { requireAuthMaybeAdmin } from "./common"
 
 /**
  * Fetch all locations

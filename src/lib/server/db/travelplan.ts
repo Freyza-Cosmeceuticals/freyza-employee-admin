@@ -8,15 +8,15 @@ import { handleDbError, requireAuthMaybeAdmin } from "./common"
  * Requires Admin
  */
 export async function getAllTravelPlans(
-  locals: App.Locals,
+  locals: App.Locals
 ): Promise<{ data: TravelPlan[]; error: null } | { data: null; error: string }> {
   const { user, session } = requireAuthMaybeAdmin(locals)
 
   try {
     const travelPlans: TravelPlan[] = await prisma.travelPlan.findMany({
       orderBy: {
-        month: "desc",
-      },
+        month: "desc"
+      }
     })
 
     console.debug(`Found ${travelPlans.length} TravelPlans`)
@@ -32,7 +32,7 @@ export async function getAllTravelPlans(
  */
 export async function getTravelPlansForMonths(
   locals: App.Locals,
-  months: Date[],
+  months: Date[]
 ): Promise<{ data: TravelPlan[]; error: null } | { data: null; error: string }> {
   const { user, session } = requireAuthMaybeAdmin(locals)
 
@@ -40,16 +40,16 @@ export async function getTravelPlansForMonths(
     const travelPlans: TravelPlan[] = await prisma.travelPlan.findMany({
       where: {
         month: {
-          in: months,
-        },
+          in: months
+        }
       },
       orderBy: {
-        month: "desc",
-      },
+        month: "desc"
+      }
     })
 
     console.debug(
-      `Found ${travelPlans.length} TravelPlans for months ${months.map(m => m.toISOString()).join(" ")}`,
+      `Found ${travelPlans.length} TravelPlans for months ${months.map(m => m.toISOString()).join(" ")}`
     )
     return { data: travelPlans, error: null }
   } catch (e) {
@@ -63,33 +63,34 @@ export async function getTravelPlansForMonths(
  */
 export async function getTravelPlansWithEmployeeForMonths(
   locals: App.Locals,
-  months: Date[],
+  months: Date[]
 ): Promise<{ data: TravelPlanWithEmployee[]; error: null } | { data: null; error: string }> {
   const { user, session } = requireAuthMaybeAdmin(locals)
 
+  // TODO Add stats
   try {
     const travelPlans = await prisma.travelPlan.findMany({
       where: {
         month: {
-          in: months,
-        },
+          in: months
+        }
       },
       include: {
         employee: {
           select: {
             id: true,
             name: true,
-            tier: true,
-          },
-        },
+            tier: true
+          }
+        }
       },
       orderBy: {
-        month: "desc",
-      },
+        month: "desc"
+      }
     })
 
     console.debug(
-      `Found ${travelPlans.length} TravelPlans for months ${months.map(m => m.toISOString()).join(" ")}`,
+      `Found ${travelPlans.length} TravelPlans for months ${months.map(m => m.toISOString()).join(" ")}`
     )
     return { data: travelPlans, error: null }
   } catch (e) {
@@ -103,7 +104,7 @@ export async function getTravelPlansWithEmployeeForMonths(
  */
 export async function createTravelPlan(
   locals: App.Locals,
-  travelPlan: TravelPlanCreate,
+  travelPlan: TravelPlanCreate
 ): Promise<{ data: TravelPlan; error: null } | { data: null; error: string }> {
   const { user, session } = requireAuthMaybeAdmin(locals)
 
@@ -125,11 +126,11 @@ export async function createTravelPlan(
             data: travelPlan.planEntries.map(entry => ({
               date: entry.date,
               dayType: entry.dayType,
-              routeId: entry.routeId,
-            })),
-          },
-        },
-      },
+              routeId: entry.routeId
+            }))
+          }
+        }
+      }
     })
 
     console.debug("Created Successfully")

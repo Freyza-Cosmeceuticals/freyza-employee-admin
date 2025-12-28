@@ -19,7 +19,7 @@ const nextMonth = $derived(today.plus({ months: 1 }))
 const days = $derived(
   Interval.fromDateTimes(nextMonth.startOf("month"), nextMonth.endOf("month"))
     .splitBy({ day: 1 })
-    .map((d) => d.start!),
+    .map((d) => d.start!)
 )
 
 const dayTypes = [DayType.WORK, DayType.LEAVE, DayType.HOLIDAY]
@@ -54,7 +54,7 @@ const dayTypes = [DayType.WORK, DayType.LEAVE, DayType.HOLIDAY]
     <form
       {...addTravelPlan.enhance(async ({ submit, data }) => {
         const toastId = toast.loading("Hold tight! Creating Travel Plan...", {
-          duration: 15000,
+          duration: 15000
         })
         console.debug("Submitting data", data)
 
@@ -65,7 +65,7 @@ const dayTypes = [DayType.WORK, DayType.LEAVE, DayType.HOLIDAY]
             toast.success(addTravelPlan.result.message, {
               id: toastId,
               description: `Travel Plan created for ${DateTime.fromJSDate(addTravelPlan.result.data.month).monthLong} ${addTravelPlan.result.data.month.getFullYear()}.`,
-              duration: undefined,
+              duration: undefined
             })
 
             console.log(addTravelPlan.result.message, addTravelPlan.result.data)
@@ -77,7 +77,7 @@ const dayTypes = [DayType.WORK, DayType.LEAVE, DayType.HOLIDAY]
             } else {
               toast.error(addTravelPlan.result?.message ?? "An Internal Error Occurred", {
                 id: toastId,
-                duration: undefined,
+                duration: undefined
               })
               console.error(addTravelPlan.result?.message)
             }
@@ -85,12 +85,11 @@ const dayTypes = [DayType.WORK, DayType.LEAVE, DayType.HOLIDAY]
         } catch (error) {
           toast.error("An Internal Error Occurred", {
             id: toastId,
-            duration: undefined,
+            duration: undefined
           })
           console.error(error)
         }
-      })}
-    >
+      })}>
       <Card.Root class="w-full">
         <Card.Header>
           <Card.Title class="text-xl font-bold">
@@ -112,8 +111,7 @@ const dayTypes = [DayType.WORK, DayType.LEAVE, DayType.HOLIDAY]
                   addTravelPlan.fields.employeeId.set(newVal)
                 }
               }
-              required
-            >
+              required>
               <Select.Trigger>
                 {employees.find((emp) => emp.id == addTravelPlan.fields.employeeId.value())?.name ??
                   "Select Employee"}
@@ -127,7 +125,7 @@ const dayTypes = [DayType.WORK, DayType.LEAVE, DayType.HOLIDAY]
           </Card.Action>
         </Card.Header>
         <Card.Content class="space-y-4">
-          <div class="text-muted-foreground text-sm">
+          <div class="text-sm text-muted-foreground">
             💡 <strong>Tip:</strong> Click on calendar cells to change each day plan.
           </div>
           <PlanCalendar
@@ -137,8 +135,7 @@ const dayTypes = [DayType.WORK, DayType.LEAVE, DayType.HOLIDAY]
             {routes}
             planEntries={addTravelPlan.fields.planEntries}
             disabled={addTravelPlan.pending > 0}
-            onInput={() => addTravelPlan.validate()}
-          />
+            onInput={() => addTravelPlan.validate()} />
         </Card.Content>
         <Card.Footer>
           <Button type="submit" class="mt-8 w-full" disabled={addTravelPlan.pending > 0}>

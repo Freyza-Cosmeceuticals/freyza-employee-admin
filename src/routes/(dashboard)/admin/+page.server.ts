@@ -1,6 +1,6 @@
+import { N_EMPLOYEES_HOME, SUPABASE_AUTH_TAG } from "@/constants"
 import { getAllEmployees, getUser } from "@/server/db/user"
 import type { PageServerLoad } from "./$types"
-import { N_EMPLOYEES_HOME, SUPABASE_AUTH_TAG } from "@/constants"
 
 export const load: PageServerLoad = async ({ depends, locals }) => {
   depends(SUPABASE_AUTH_TAG)

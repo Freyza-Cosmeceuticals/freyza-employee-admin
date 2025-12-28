@@ -19,7 +19,7 @@ const addTravelPlanEntrySchema = z
         if (val.length === 0) return null
 
         return val
-      }),
+      })
   })
   .refine(
     data => {
@@ -31,8 +31,8 @@ const addTravelPlanEntrySchema = z
     },
     {
       message: "Route ID is required for working days",
-      path: ["routeId"],
-    },
+      path: ["routeId"]
+    }
   )
 
 const addTravelPlanSchema = z
@@ -40,7 +40,7 @@ const addTravelPlanSchema = z
     employeeId: z.string().min(1),
     month: z.coerce.date<string>(),
     createdById: z.string().min(1),
-    planEntries: z.array(addTravelPlanEntrySchema),
+    planEntries: z.array(addTravelPlanEntrySchema)
   })
   .refine(
     data => {
@@ -51,8 +51,8 @@ const addTravelPlanSchema = z
       return true
     },
     {
-      message: "Plan entries must match the number of days in the month",
-    },
+      message: "Plan entries must match the number of days in the month"
+    }
   )
 
 export const addTravelPlan = form(addTravelPlanSchema, async (travelPlan, issue) => {
@@ -63,7 +63,7 @@ export const addTravelPlan = form(addTravelPlanSchema, async (travelPlan, issue)
 
   // sanity check
   const invalidIdx = travelPlan.planEntries.findIndex(
-    entry => entry.dayType === DayType.WORK && !entry.routeId,
+    entry => entry.dayType === DayType.WORK && !entry.routeId
   )
   if (invalidIdx !== -1) {
     invalid(issue.planEntries[invalidIdx].routeId("Route ID is required for working days"))
@@ -84,7 +84,7 @@ export const addTravelPlan = form(addTravelPlanSchema, async (travelPlan, issue)
 
   getTravelPlansForMonth(
     DateTime.fromJSDate(travelPlanObject.month).toISODate() ??
-      `${travelPlanObject.month.toISOString().split("T", 2)[0]}`,
+      `${travelPlanObject.month.toISOString().split("T", 2)[0]}`
   ).refresh()
 
   return { data: travelPlanObject, success: true, message: "Travel plan created successfully" }
@@ -93,7 +93,7 @@ export const addTravelPlan = form(addTravelPlanSchema, async (travelPlan, issue)
 export const getTravelPlansForMonth = query.batch(z.coerce.date<string>(), async months => {
   const { locals } = getRequestEvent()
   const { user, session, supabase } = requireAuthMaybeAdmin(locals)
-  // console.debug("Fetching Travel Plans for months", months)
+  console.debug("Fetching Travel Plans for months", months)
 
   if (months.length === 0) {
     error(400, "No months provided")
@@ -101,7 +101,7 @@ export const getTravelPlansForMonth = query.batch(z.coerce.date<string>(), async
 
   const { data: travelPlans, error: dbError } = await getTravelPlansWithEmployeeForMonths(
     locals,
-    months,
+    months
   )
 
   if (travelPlans === null) {
@@ -121,20 +121,20 @@ export const getTravelPlansForMonth = query.batch(z.coerce.date<string>(), async
         plan.stats = {
           holidayDays: 12,
           leaveDays: 13,
-          workDays: 14,
+          workDays: 14
         }
         return plan
       })
 
       return [key, plans]
-    }),
+    })
   )
 
   // console.log("Lookup", lookup)
-  // console.log("What I get here: ", months[0].toString())
+  console.log("What I get here: ", months[0].toString())
 
   return month => {
-    // console.log(month, typeof month, month.toString(), lookup.get(month.toString()))
+    console.log(month, typeof month, month.toString(), lookup.get(month.toString()))
     return lookup.get(month.toString())
   }
 })

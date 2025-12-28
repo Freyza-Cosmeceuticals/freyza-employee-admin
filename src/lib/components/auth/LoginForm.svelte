@@ -1,12 +1,12 @@
 <script lang="ts">
-import * as Card from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
 import { enhance } from "$app/forms"
+import { Button } from "@/components/ui/button"
+import * as Card from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import Loader from "@lucide/svelte/icons/loader"
-import type { ActionData } from "../../../routes/(unauthenticated)/auth/$types"
 import { toast } from "svelte-sonner"
+import type { ActionData } from "../../../routes/(unauthenticated)/auth/$types"
 
 interface Props {
   form: ActionData
@@ -31,7 +31,7 @@ let loading = $state(false)
         const id = toast.loading("Logging in...", {
           description: "Please wait while we authenticate your credentials",
           position: "top-center",
-          duration: 15000,
+          duration: 15000
         })
 
         return async ({ result, update }) => {
@@ -41,7 +41,7 @@ let loading = $state(false)
               id,
               position: "top-center",
               description: "",
-              duration: undefined,
+              duration: undefined
             })
 
             loading = false
@@ -52,7 +52,7 @@ let loading = $state(false)
               id,
               position: "top-center",
               description: "Please try again or contact support",
-              duration: undefined,
+              duration: undefined
             })
 
             loading = false
@@ -63,7 +63,7 @@ let loading = $state(false)
               id,
               position: "top-center",
               description: "",
-              duration: 30000,
+              duration: 30000
             })
 
             loading = false
@@ -73,12 +73,11 @@ let loading = $state(false)
               id,
               position: "top-center",
               description: "",
-              duration: undefined,
+              duration: undefined
             })
           }
         }
-      }}
-    >
+      }}>
       <div class="flex flex-col gap-6">
         <div class="grid gap-2">
           <Label for="email">Email</Label>
@@ -89,8 +88,7 @@ let loading = $state(false)
             required
             placeholder="email@example.com"
             value={form?.email ?? ""}
-            disabled={loading}
-          />
+            disabled={loading} />
         </div>
 
         <div class="grid gap-2">
@@ -99,8 +97,7 @@ let loading = $state(false)
             <a
               href="##"
               class="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-              tabindex={1}
-            >
+              tabindex={1}>
               Forgot your password?
             </a>
           </div>
@@ -110,8 +107,7 @@ let loading = $state(false)
             name="password"
             placeholder="password123"
             disabled={loading}
-            required
-          />
+            required />
         </div>
       </div>
       <Button type="submit" class="mt-8 w-full" disabled={loading}>

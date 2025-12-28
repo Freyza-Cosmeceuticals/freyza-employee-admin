@@ -1,10 +1,10 @@
 <script lang="ts">
-import { Skeleton } from "@/components/ui/skeleton"
-import * as Card from "@/components/ui/card"
+import { resolve } from "$app/paths"
 import AdminProfileCard from "@/components/dashboard/AdminProfileCard.svelte"
 import EmployeeList from "@/components/dashboard/EmployeeList.svelte"
 import { Button } from "@/components/ui/button"
-import { resolve } from "$app/paths"
+import * as Card from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 
 let { data } = $props()
 let { userProfile: userProfilePromise, employees } = $derived(data)
@@ -16,8 +16,7 @@ let userProfile = $derived(await userProfilePromise)
   <title>Admin Dashboard | Freyza Cosmeceuticals Employee System</title>
   <meta
     name="description"
-    content="Admin Dashboard page for Freyza Cosmeceuticals Employee System"
-  />
+    content="Admin Dashboard page for Freyza Cosmeceuticals Employee System" />
 </svelte:head>
 
 <div class="h-auto w-full space-y-8 px-4 py-8">

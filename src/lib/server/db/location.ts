@@ -1,6 +1,6 @@
+import prisma from "@/server/db/prisma"
 import type { Location } from "@db/client"
 import { requireAuthMaybeAdmin } from "./common"
-import prisma from "@/server/db/prisma"
 
 /**
  * Get all Locations from the db
@@ -12,11 +12,11 @@ export async function getAllLocations(locals: App.Locals): Promise<Location[]> {
   try {
     const locations: Location[] = await prisma.location.findMany({
       where: {
-        operational: true,
+        operational: true
       },
       orderBy: {
-        name: "asc",
-      },
+        name: "asc"
+      }
     })
 
     console.debug(`Found ${locations.length} locations`)

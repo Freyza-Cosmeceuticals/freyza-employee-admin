@@ -1,12 +1,12 @@
 <script lang="ts">
-import * as Empty from "@/components/ui/empty"
-import { UserStatus } from "@db/browser"
-import AddEmployeeButton from "./AddEmployeeButton.svelte"
-import * as Item from "@/components/ui/item"
 import * as Avatar from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import type { ItemVariant } from "../ui/item/item.svelte"
+import * as Empty from "@/components/ui/empty"
+import * as Item from "@/components/ui/item"
 import type { EmployeeWithHQ } from "@/types"
+import { UserStatus } from "@db/browser"
+import type { ItemVariant } from "../ui/item/item.svelte"
+import AddEmployeeButton from "./AddEmployeeButton.svelte"
 
 interface Props {
   variant?: ItemVariant

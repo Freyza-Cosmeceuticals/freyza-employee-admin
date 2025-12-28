@@ -10,8 +10,8 @@ export async function getUser(locals: App.Locals): Promise<User | null> {
   try {
     const userProfile: User | null = await prisma.user.findFirst({
       where: {
-        id: user.id,
-      },
+        id: user.id
+      }
     })
 
     console.debug(userProfile ? "Okay so user profile was found" : "No User profile exists")
@@ -24,7 +24,7 @@ export async function getUser(locals: App.Locals): Promise<User | null> {
 
 export async function createEmployee(
   locals: App.Locals,
-  employeeData: EmployeeCreate,
+  employeeData: EmployeeCreate
 ): Promise<{ data: Employee; error: null } | { data: null; error: string }> {
   const { user, session } = requireAuthMaybeAdmin(locals)
 
@@ -40,8 +40,8 @@ export async function createEmployee(
         status: employeeData.status,
         tier: employeeData.tier,
         hqId: employeeData.hqId,
-        joiningDate: employeeData.joiningDate,
-      },
+        joiningDate: employeeData.joiningDate
+      }
     })
 
     console.debug("Created successfully")
@@ -59,7 +59,7 @@ export async function createEmployee(
 
 export async function getAllEmployees(
   locals: App.Locals,
-  limitN?: number,
+  limitN?: number
 ): Promise<EmployeeWithHQ[]> {
   const { user, session } = requireAuthMaybeAdmin(locals)
 
@@ -67,15 +67,15 @@ export async function getAllEmployees(
     const employees = await prisma.user.findMany({
       where: {
         role: UserRole.EMPLOYEE,
-        status: UserStatus.ACTIVE,
+        status: UserStatus.ACTIVE
       },
       include: {
-        hq: true,
+        hq: true
       },
       orderBy: {
-        createdAt: "desc",
+        createdAt: "desc"
       },
-      take: limitN,
+      take: limitN
     })
 
     console.debug(`Found ${employees.length} employees with limitN ${limitN}`)

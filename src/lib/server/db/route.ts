@@ -1,6 +1,6 @@
+import type { RouteWithName } from "@/types"
 import { requireAuthMaybeAdmin } from "./common"
 import prisma from "./prisma"
-import type { RouteWithName } from "@/types"
 
 /**
  * Get all Routes from the db
@@ -14,15 +14,15 @@ export async function getAllRoutes(locals: App.Locals): Promise<RouteWithName[]>
     const routes: RouteWithName[] = await prisma.route.findMany({
       where: {
         srcLoc: { operational: true },
-        destLoc: { operational: true },
+        destLoc: { operational: true }
       },
       include: {
         srcLoc: { select: { name: true, id: true } },
-        destLoc: { select: { name: true, id: true } },
+        destLoc: { select: { name: true, id: true } }
       },
       orderBy: {
-        createdAt: "desc",
-      },
+        createdAt: "desc"
+      }
     })
 
     console.debug(`Found ${routes.length} routes`)

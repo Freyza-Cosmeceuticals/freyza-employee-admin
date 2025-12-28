@@ -1,11 +1,11 @@
 <script lang="ts">
+import { resolve } from "$app/paths"
 import * as Sidebar from "@/components/ui/sidebar"
-import UserRoundIcon from "@lucide/svelte/icons/user-round"
-import NotebookTabsIcon from "@lucide/svelte/icons/notebook-tabs"
 import CalendarDaysIcon from "@lucide/svelte/icons/calendar-days"
 import MapPinIcon from "@lucide/svelte/icons/map-pin"
+import NotebookTabsIcon from "@lucide/svelte/icons/notebook-tabs"
 import RouteIcon from "@lucide/svelte/icons/route"
-import { resolve } from "$app/paths"
+import UserRoundIcon from "@lucide/svelte/icons/user-round"
 </script>
 
 <Sidebar.Root collapsible="icon">

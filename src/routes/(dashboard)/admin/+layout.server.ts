@@ -4,17 +4,21 @@
  * send a server request, and thus trigger `hooks.server.ts`.
  **/
 
+import { SUPABASE_AUTH_TAG } from "@/constants"
 import { redirect } from "@sveltejs/kit"
 
-export const load = async ({ locals, setHeaders }) => {
+export const load = async ({ locals, setHeaders, depends }) => {
+  depends(SUPABASE_AUTH_TAG)
+
   const user = locals.user
-  if (!user) {
+  const session = locals.session
+  if (!user || !session) {
     throw redirect(303, "/auth")
   }
 
   setHeaders({
-    "cache-control": "no-store",
+    "cache-control": "no-store"
   })
 
-  return { user }
+  return { user, session }
 }

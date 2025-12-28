@@ -2,7 +2,7 @@ import { form, getRequestEvent } from "$app/server"
 import { createEmployee } from "@/server/db/user"
 import { supabaseAdmin } from "@/server/supabaseAdmin"
 import type { EmployeeCreate } from "@/types"
-import { EmployeeTier, UserRole, UserStatus, type User } from "@db/client"
+import { EmployeeTier, UserRole, UserStatus } from "@db/client"
 import { z } from "zod"
 import { requireAuthMaybeAdmin } from "./common"
 
@@ -13,7 +13,7 @@ const addEmployeeSchema = z.object({
   hqId: z.string(),
   joiningDate: z.coerce.date<string>(),
 
-  email: z.email(),
+  email: z.email()
 })
 
 export const addEmployee = form(addEmployeeSchema, async employee => {
@@ -29,8 +29,8 @@ export const addEmployee = form(addEmployeeSchema, async employee => {
     user_metadata: {
       role: UserRole.EMPLOYEE,
       status: UserStatus.ACTIVE,
-      name: employee.name,
-    },
+      name: employee.name
+    }
   })
 
   if (!potentialEmployee.data.user) {
@@ -47,7 +47,7 @@ export const addEmployee = form(addEmployeeSchema, async employee => {
     tier: employee.tier,
     hqId: employee.hqId,
     joiningDate: employee.joiningDate,
-    resignDate: null,
+    resignDate: null
   }
 
   const { data: employeeProfile, error } = await createEmployee(locals, employeeData)
