@@ -15,18 +15,25 @@ const config = {
 
     alias: {
       "@/*": "./src/lib/*",
-      "@db/*": "./src/lib/generated/prisma/*",
+      "@db/*": "./src/lib/generated/prisma/*"
     },
 
     experimental: {
-      remoteFunctions: true,
-    },
+      remoteFunctions: true
+    }
   },
   compilerOptions: {
     experimental: {
-      async: true,
-    },
+      async: true
+    }
   },
+  vitePlugin: {
+    inspector: {
+      toggleKeyCombo: "alt-x",
+      showToggleButton: "active",
+      toggleButtonPos: "bottom-right"
+    }
+  }
 }
 
 export default config

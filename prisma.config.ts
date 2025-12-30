@@ -5,10 +5,10 @@ export default defineConfig({
   schema: path.join("prisma", "schema.prisma"),
 
   datasource: {
-    url: env("DATABASE_URL"),
+    url: env("DATABASE_URL")
   },
   migrations: {
     path: path.join("prisma", "migrations"),
-    seed: path.join("prisma", "seed.ts"),
-  },
+    seed: path.join("prisma", "seed.ts")
+  }
 })

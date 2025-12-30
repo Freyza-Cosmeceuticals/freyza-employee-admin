@@ -1,22 +1,40 @@
-import { form, getRequestEvent } from "$app/server"
 import { createEmployee } from "@/server/db/user"
 import { supabaseAdmin } from "@/server/supabaseAdmin"
 import type { EmployeeCreate } from "@/types"
 import { EmployeeTier, UserRole, UserStatus } from "@db/client"
-import { z } from "zod"
+
+import * as v from "valibot"
+
+import { form, getRequestEvent } from "$app/server"
+
 import { requireAuthMaybeAdmin } from "./common"
 
-const addEmployeeSchema = z.object({
-  name: z.string().min(3).max(20),
-  phone: z.string().min(10).max(15),
-  tier: z.enum(EmployeeTier),
-  hqId: z.string(),
-  joiningDate: z.coerce.date<string>(),
-
-  email: z.email()
+const addEmployeeSchema = v.object({
+  name: v.pipe(
+    v.string(),
+    v.trim(),
+    v.minLength(3, "Name must be at least 3 characters long."),
+    v.maxLength(30, "Name is too long.")
+  ),
+  phone: v.pipe(
+    v.string(),
+    v.trim(),
+    v.minLength(10, "Phone number must be at least 10 characters long."),
+    v.maxLength(15, "Phone number is too long.")
+  ),
+  tier: v.enum(EmployeeTier, "Invalid Tier"),
+  hqId: v.pipe(v.string(), v.trim(), v.uuid("Please select a valid HQ.")),
+  joiningDate: v.pipe(v.string(), v.toDate("Invalid Date")),
+  email: v.pipe(
+    v.string(),
+    v.trim(),
+    v.nonEmpty("Please enter an email."),
+    v.email("The email format is incorrect."),
+    v.maxLength(30, "The email is too long.")
+  )
 })
 
-export const addEmployee = form(addEmployeeSchema, async employee => {
+export const addEmployee = form(addEmployeeSchema, async (employee) => {
   const { locals } = getRequestEvent()
   const { user, session, supabase } = requireAuthMaybeAdmin(locals)
 

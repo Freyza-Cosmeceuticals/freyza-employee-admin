@@ -1,59 +1,58 @@
-import { form, getRequestEvent, query } from "$app/server"
+import { error, invalid } from "@sveltejs/kit"
 import { createTravelPlan, getTravelPlansWithEmployeeForMonths } from "@/server/db/travelplan"
 import type { TravelPlanWithEmployee } from "@/types"
 import { DayType } from "@db/client"
-import { error, invalid } from "@sveltejs/kit"
+
 import { DateTime } from "luxon"
-import z from "zod"
+import * as v from "valibot"
+
+import { form, getRequestEvent, query } from "$app/server"
+
 import { requireAuthMaybeAdmin } from "./common"
 
-const addTravelPlanEntrySchema = z
-  .object({
-    date: z.coerce.date<string>(),
-    dayType: z.enum(DayType),
-    routeId: z
-      .string()
-      .optional()
-      .transform(val => {
-        if (!val) return null
-        if (val.length === 0) return null
+const addTravelPlanEntrySchema = v.pipe(
+  v.object({
+    date: v.pipe(v.string(), v.toDate("Invalid Date")),
+    dayType: v.enum(DayType, "Invalid Day Type"),
+    routeId: v.optional(
+      v.union([
+        v.pipe(v.string(), v.trim(), v.empty()),
+        v.pipe(v.string(), v.trim(), v.uuid("Invalid Route ID"))
+      ])
+    )
+  }),
+  v.transform((input) => ({ ...input, routeId: input.routeId || null })),
+  v.forward(
+    v.partialCheck(
+      [["dayType"], ["routeId"]],
+      (data) => {
+        if (data.dayType === DayType.WORK && !data.routeId) {
+          return false
+        }
 
-        return val
-      })
-  })
-  .refine(
-    data => {
-      if (data.dayType === DayType.WORK && !data.routeId) {
-        return false
-      }
-
-      return true
-    },
-    {
-      message: "Route ID is required for working days",
-      path: ["routeId"]
-    }
+        return true
+      },
+      "Route ID is required for working days"
+    ),
+    ["routeId"]
   )
+)
 
-const addTravelPlanSchema = z
-  .object({
-    employeeId: z.string().min(1),
-    month: z.coerce.date<string>(),
-    createdById: z.string().min(1),
-    planEntries: z.array(addTravelPlanEntrySchema)
-  })
-  .refine(
-    data => {
-      if (DateTime.fromJSDate(data.month).daysInMonth !== data.planEntries.length) {
-        return false
-      }
-
-      return true
-    },
-    {
-      message: "Plan entries must match the number of days in the month"
+const addTravelPlanSchema = v.pipe(
+  v.object({
+    employeeId: v.pipe(v.string(), v.trim(), v.uuid("Invalid Employee ID")),
+    month: v.pipe(v.string(), v.toDate("Invalid Month")),
+    createdById: v.pipe(v.string(), v.trim(), v.uuid("Invalid Created By ID")),
+    planEntries: v.array(addTravelPlanEntrySchema)
+  }),
+  v.check((data) => {
+    if (DateTime.fromJSDate(data.month).daysInMonth !== data.planEntries.length) {
+      return false
     }
-  )
+
+    return true
+  }, "Plan entries must match the number of days in the month")
+)
 
 export const addTravelPlan = form(addTravelPlanSchema, async (travelPlan, issue) => {
   const { locals } = getRequestEvent()
@@ -61,14 +60,15 @@ export const addTravelPlan = form(addTravelPlanSchema, async (travelPlan, issue)
 
   console.debug("Adding Travel Plan with data", travelPlan)
 
-  // sanity check
+  // sanity check for all work days have routeId
   const invalidIdx = travelPlan.planEntries.findIndex(
-    entry => entry.dayType === DayType.WORK && !entry.routeId
+    (entry) => entry.dayType === DayType.WORK && !entry.routeId
   )
   if (invalidIdx !== -1) {
     invalid(issue.planEntries[invalidIdx].routeId("Route ID is required for working days"))
   }
 
+  // just check the creator userId
   if (user.id !== travelPlan.createdById) {
     return { success: false, data: null, message: "Cross user requests not allowed" }
   }
@@ -81,60 +81,48 @@ export const addTravelPlan = form(addTravelPlanSchema, async (travelPlan, issue)
   }
 
   console.debug("Travel Plan created successfully", travelPlanObject)
-
-  getTravelPlansForMonth(
-    DateTime.fromJSDate(travelPlanObject.month).toISODate() ??
-      `${travelPlanObject.month.toISOString().split("T", 2)[0]}`
-  ).refresh()
+  getTravelPlansForMonth(travelPlanObject.month.toISOString().split("T", 2)[0]).refresh()
 
   return { data: travelPlanObject, success: true, message: "Travel plan created successfully" }
 })
 
-export const getTravelPlansForMonth = query.batch(z.coerce.date<string>(), async months => {
-  const { locals } = getRequestEvent()
-  const { user, session, supabase } = requireAuthMaybeAdmin(locals)
-  console.debug("Fetching Travel Plans for months", months)
+export const getTravelPlansForMonth = query.batch(
+  v.pipe(v.string(), v.toDate("Invalid Date")),
+  async (months) => {
+    const { locals } = getRequestEvent()
+    const { user, session, supabase } = requireAuthMaybeAdmin(locals)
+    console.debug("Fetching Travel Plans for months", months)
 
-  if (months.length === 0) {
-    error(400, "No months provided")
-  }
+    if (months.length === 0) {
+      error(400, "No months provided")
+    }
 
-  const { data: travelPlans, error: dbError } = await getTravelPlansWithEmployeeForMonths(
-    locals,
-    months
-  )
+    const { data: travelPlans, error: dbError } = await getTravelPlansWithEmployeeForMonths(
+      locals,
+      months
+    )
 
-  if (travelPlans === null) {
-    console.error("Failed to fetch travel plans", dbError)
-    error(500, dbError)
-  }
+    if (travelPlans === null) {
+      console.error("Failed to fetch travel plans", dbError)
+      error(500, dbError)
+    }
 
-  // console.debug("Fetched Travel Plans", travelPlans)
-  const lookup = new Map<string, TravelPlanWithEmployee[]>(
-    travelPlans.map(tp => {
-      const key =
-        DateTime.fromJSDate(tp.month).toISODate() ?? `${tp.month.toISOString().split("T", 2)[0]}`
+    // console.debug("Fetched Travel Plans", travelPlans)
+    const lookup = new Map<string, TravelPlanWithEmployee[]>(
+      travelPlans.map((tp) => {
+        // See line 122 below
+        const key = tp.month.toISOString().split("T", 2)[0]
+        let plans = travelPlans.filter((x) => x.month.toISOString() === tp.month.toISOString())
 
-      let plans = travelPlans.filter(x => x.month.toISOString() === tp.month.toISOString())
-
-      plans = plans.map(plan => {
-        plan.stats = {
-          holidayDays: 12,
-          leaveDays: 13,
-          workDays: 14
-        }
-        return plan
+        return [key, plans]
       })
+    )
 
-      return [key, plans]
-    })
-  )
-
-  // console.log("Lookup", lookup)
-  console.log("What I get here: ", months[0].toString())
-
-  return month => {
-    console.log(month, typeof month, month.toString(), lookup.get(month.toString()))
-    return lookup.get(month.toString())
+    return (month) => {
+      // todo, an error is present here, presumably with sveltekit remote fns
+      // it is supposed to be a parsed Date, but is a string
+      // console.log(typeof month, month, lookup)
+      return lookup.get(month.toString())
+    }
   }
-})
+)

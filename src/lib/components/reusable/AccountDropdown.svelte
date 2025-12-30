@@ -28,12 +28,13 @@ const logout = async () => {
   <DropdownMenu.Trigger>
     <span class={buttonVariants({ variant: "outline", size: "sm" })}><UserIcon /></span>
   </DropdownMenu.Trigger>
-  <DropdownMenu.Content>
+  <DropdownMenu.Content class="min-w-64">
+    <DropdownMenu.Label>Account</DropdownMenu.Label>
     <DropdownMenu.Group>
-      <DropdownMenu.Label>Account</DropdownMenu.Label>
       <DropdownMenu.Separator />
       <DropdownMenu.Item>{user.email}</DropdownMenu.Item>
       <DropdownMenu.Item>Profile</DropdownMenu.Item>
+      <DropdownMenu.Separator />
       <DropdownMenu.Item>
         <Button onclick={logout} class="w-full">Logout</Button>
       </DropdownMenu.Item>

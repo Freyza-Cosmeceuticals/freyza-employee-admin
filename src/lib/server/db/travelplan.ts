@@ -1,6 +1,7 @@
 import prisma from "@/server/db/prisma"
 import type { TravelPlanCreate, TravelPlanWithEmployee } from "@/types"
 import { type TravelPlan } from "@db/client"
+
 import { handleDbError, requireAuthMaybeAdmin } from "./common"
 
 /**
@@ -49,7 +50,7 @@ export async function getTravelPlansForMonths(
     })
 
     console.debug(
-      `Found ${travelPlans.length} TravelPlans for months ${months.map(m => m.toISOString()).join(" ")}`
+      `Found ${travelPlans.length} TravelPlans for months ${months.map((m) => m.toISOString()).join(" ")}`
     )
     return { data: travelPlans, error: null }
   } catch (e) {
@@ -89,9 +90,16 @@ export async function getTravelPlansWithEmployeeForMonths(
       }
     })
 
-    console.debug(
-      `Found ${travelPlans.length} TravelPlans for months ${months.map(m => m.toISOString()).join(" ")}`
-    )
+    travelPlans.forEach((travelPlan) => {
+      // @ts-ignore
+      travelPlan.stats = {
+        holidayDays: 12,
+        leaveDays: 13,
+        workDays: 14
+      }
+    })
+
+    // @ts-ignore
     return { data: travelPlans, error: null }
   } catch (e) {
     return handleDbError(e)
@@ -123,7 +131,7 @@ export async function createTravelPlan(
         createdById: travelPlan.createdById,
         planEntries: {
           createMany: {
-            data: travelPlan.planEntries.map(entry => ({
+            data: travelPlan.planEntries.map((entry) => ({
               date: entry.date,
               dayType: entry.dayType,
               routeId: entry.routeId

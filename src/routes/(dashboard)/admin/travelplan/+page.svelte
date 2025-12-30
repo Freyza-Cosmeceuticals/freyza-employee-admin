@@ -52,7 +52,7 @@ const months = $derived.by(() => {
           {/if}
 
           <!-- pass YYYY-MM-DD format ISODate to the remote query function, same is used there as well -->
-          {#await getTravelPlansForMonth(m)}
+          {#await getTravelPlansForMonth(m.toISODate())}
             {@const skeletonCount = Array.from({ length: i === 0 ? 4 : 5 }, (_, i) => i + 1)}
             {#each skeletonCount as item, i (item)}
               <Skeleton class="aspect-video w-32" />

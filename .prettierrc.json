@@ -3,10 +3,34 @@
   "singleQuote": false,
   "trailingComma": "none",
   "semi": false,
-  "svelteIndentScriptAndStyle": false,
   "bracketSameLine": true,
   "printWidth": 100,
-  "plugins": ["prettier-plugin-svelte", "prettier-plugin-tailwindcss"],
+  "svelteIndentScriptAndStyle": false,
+  "importOrder": [
+    "^@sveltejs",
+    "^@",
+
+    "<SEPARATOR>",
+    "<THIRD_PARTY_MODULES>",
+    "<SEPARATOR>",
+
+    "^\\$(?!lib/)",
+    "<SEPARATOR>",
+    "^\\$lib/",
+
+    "<SEPARATOR>",
+    "^[.]",
+
+    "<SEPARATOR>"
+  ],
+
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true,
+  "plugins": [
+    "prettier-plugin-svelte",
+    "prettier-plugin-tailwindcss",
+    "@trivago/prettier-plugin-sort-imports"
+  ],
   "tailwindStylesheet": "./src/app.css",
   "overrides": [
     {

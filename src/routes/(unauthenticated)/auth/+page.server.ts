@@ -1,8 +1,8 @@
 import { error, fail, redirect } from "@sveltejs/kit"
-
 import { UserRole, UserStatus } from "@db/client"
-import z from "zod"
-import { zfd } from "zod-form-data"
+
+import * as v from "valibot"
+
 import type { Actions } from "./$types"
 
 export const actions: Actions = {
@@ -23,21 +23,21 @@ export const actions: Actions = {
   login: async ({ request, locals: { supabase }, url }) => {
     console.time("LOGIN")
 
-    const schema = zfd.formData({
-      email: zfd.text(z.email()),
-      password: zfd.text(),
+    const schema = v.object({
+      email: v.pipe(v.string(), v.email("Email is not valid")),
+      password: v.pipe(v.string(), v.minLength(8, "Password must be at least 8 characters long"))
     })
 
     const formData = await request.formData()
-    const { data, error: parseError, success } = schema.safeParse(formData)
+    const { output: data, issues: parseError, success } = v.safeParse(schema, formData)
 
     if (!success) {
       console.timeEnd("LOGIN")
       console.debug("Invalid Form Data:", parseError)
       return fail(400, {
         email: formData.get("email"),
-        message: JSON.parse(parseError.message)[0].message,
-        error: true,
+        message: parseError[0].message,
+        error: true
       })
     }
 
@@ -46,7 +46,7 @@ export const actions: Actions = {
 
     const {
       error: authError,
-      data: { user: loggedInUser },
+      data: { user: loggedInUser }
     } = await supabase.auth.signInWithPassword({ email, password })
 
     if (authError) {
@@ -76,5 +76,5 @@ export const actions: Actions = {
 
     console.timeEnd("LOGIN")
     redirect(303, "/admin")
-  },
+  }
 }
