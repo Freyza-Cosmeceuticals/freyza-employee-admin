@@ -1,8 +1,10 @@
-import { createServerClient } from "@supabase/ssr"
-import { type Handle, redirect } from "@sveltejs/kit"
+import { PUBLIC_SUPABASE_PUBLISHABLE_KEY, PUBLIC_SUPABASE_URL } from "$env/static/public"
+import { redirect } from "@sveltejs/kit"
 import { sequence } from "@sveltejs/kit/hooks"
 
-import { PUBLIC_SUPABASE_PUBLISHABLE_KEY, PUBLIC_SUPABASE_URL } from "$env/static/public"
+import { createServerClient } from "@supabase/ssr"
+
+import type { Handle } from "@sveltejs/kit"
 
 const SUPABASE_HANDLE_TAG = "Supabase Handle"
 const AUTH_GUARD_TAG = "Auth Guard"
@@ -23,12 +25,12 @@ const supabase: Handle = async ({ event, resolve }) => {
        * the cookie options. Setting `path` to `/` replicates previous/
        * standard behavior.
        */
-      setAll: cookiesToSet => {
+      setAll: (cookiesToSet) => {
         cookiesToSet.forEach(({ name, value, options }) => {
           event.cookies.set(name, value, { ...options, path: "/" })
         })
-      }
-    }
+      },
+    },
   })
 
   if ("suppressGetSessionWarning" in event.locals.supabase.auth) {
@@ -47,7 +49,7 @@ const supabase: Handle = async ({ event, resolve }) => {
    */
   event.locals.safeGetSession = async () => {
     const {
-      data: { session }
+      data: { session },
     } = await event.locals.supabase.auth.getSession()
     if (!session) {
       return { session: null, user: null }
@@ -55,7 +57,7 @@ const supabase: Handle = async ({ event, resolve }) => {
 
     const {
       data: { user },
-      error
+      error,
     } = await event.locals.supabase.auth.getUser()
     if (error) {
       // JWT validation has failed
@@ -74,7 +76,7 @@ const supabase: Handle = async ({ event, resolve }) => {
        * headers, so we need to tell SvelteKit to pass it through.
        */
       return name === "content-range" || name === "x-supabase-api-version"
-    }
+    },
   })
 }
 

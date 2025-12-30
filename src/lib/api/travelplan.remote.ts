@@ -1,59 +1,24 @@
+import { form, getRequestEvent, query } from "$app/server"
+import { addTravelPlanSchema, getTravelPlanForMonthsSchema } from "$lib/schemas"
 import { error, invalid } from "@sveltejs/kit"
-import { createTravelPlan, getTravelPlansWithEmployeeForMonths } from "@/server/db/travelplan"
-import type { TravelPlanWithEmployee } from "@/types"
+
+import {
+    createTravelPlan as createTravelPlanDb,
+    getTravelPlansWithEmployeeForMonths as getTravelPlansWithEmployeeForMonthsDb,
+    getTravelPlanWithEmployeeForEmployeeAndMonth as getTravelPlanWithEmployeeForEmployeeAndMonthDb
+} from "@/server/db/travelplan"
 import { DayType } from "@db/client"
 
 import { DateTime } from "luxon"
-import * as v from "valibot"
-
-import { form, getRequestEvent, query } from "$app/server"
 
 import { requireAuthMaybeAdmin } from "./common"
 
-const addTravelPlanEntrySchema = v.pipe(
-  v.object({
-    date: v.pipe(v.string(), v.toDate("Invalid Date")),
-    dayType: v.enum(DayType, "Invalid Day Type"),
-    routeId: v.optional(
-      v.union([
-        v.pipe(v.string(), v.trim(), v.empty()),
-        v.pipe(v.string(), v.trim(), v.uuid("Invalid Route ID"))
-      ])
-    )
-  }),
-  v.transform((input) => ({ ...input, routeId: input.routeId || null })),
-  v.forward(
-    v.partialCheck(
-      [["dayType"], ["routeId"]],
-      (data) => {
-        if (data.dayType === DayType.WORK && !data.routeId) {
-          return false
-        }
-
-        return true
-      },
-      "Route ID is required for working days"
-    ),
-    ["routeId"]
-  )
-)
-
-const addTravelPlanSchema = v.pipe(
-  v.object({
-    employeeId: v.pipe(v.string(), v.trim(), v.uuid("Invalid Employee ID")),
-    month: v.pipe(v.string(), v.toDate("Invalid Month")),
-    createdById: v.pipe(v.string(), v.trim(), v.uuid("Invalid Created By ID")),
-    planEntries: v.array(addTravelPlanEntrySchema)
-  }),
-  v.check((data) => {
-    if (DateTime.fromJSDate(data.month).daysInMonth !== data.planEntries.length) {
-      return false
-    }
-
-    return true
-  }, "Plan entries must match the number of days in the month")
-)
-
+/**
+ * Remote form function to add a new Travel Plan given the travel plan data
+ * It first checks for common errors and if a plan already exists for the employee for this month
+ * and then creates the plan.
+ * Requires Admin
+ */
 export const addTravelPlan = form(addTravelPlanSchema, async (travelPlan, issue) => {
   const { locals } = getRequestEvent()
   const { user, session, supabase } = requireAuthMaybeAdmin(locals)
@@ -73,7 +38,28 @@ export const addTravelPlan = form(addTravelPlanSchema, async (travelPlan, issue)
     return { success: false, data: null, message: "Cross user requests not allowed" }
   }
 
-  const { data: travelPlanObject, error } = await createTravelPlan(locals, travelPlan)
+  // check if a plan already exists for the employee for this month
+  const { data: potentialPlan, error: dbError } =
+    await getTravelPlanWithEmployeeForEmployeeAndMonthDb(travelPlan.employeeId, travelPlan.month)
+
+  console.log("Potential Plan:", potentialPlan, "Error:", dbError)
+
+  // if a plan already exists return error, or continue creation if this query failed for some reason
+  if (potentialPlan !== null && !dbError) {
+    console.error("A Travel plan already exists for this employee.")
+    const monthName = DateTime.fromISO(potentialPlan.month.toISOString()).monthLong
+    return {
+      success: false,
+      data: null,
+      message: `A Travel plan for ${monthName} already exists for this employee.`
+    }
+  }
+
+  if (dbError) {
+    console.error("Failed to check for existing travel plan", dbError)
+  }
+
+  const { data: travelPlanObject, error } = await createTravelPlanDb(locals, travelPlan)
 
   if (travelPlanObject === null) {
     console.error("Failed to create travel plan", error)
@@ -81,48 +67,41 @@ export const addTravelPlan = form(addTravelPlanSchema, async (travelPlan, issue)
   }
 
   console.debug("Travel Plan created successfully", travelPlanObject)
+  // refresh the get plans for month
   getTravelPlansForMonth(travelPlanObject.month.toISOString().split("T", 2)[0]).refresh()
 
   return { data: travelPlanObject, success: true, message: "Travel plan created successfully" }
 })
 
-export const getTravelPlansForMonth = query.batch(
-  v.pipe(v.string(), v.toDate("Invalid Date")),
-  async (months) => {
-    const { locals } = getRequestEvent()
-    const { user, session, supabase } = requireAuthMaybeAdmin(locals)
-    console.debug("Fetching Travel Plans for months", months)
+/**
+ * Remote batch query function to get travel plans for a specific month
+ * Requires Admin
+ */
+export const getTravelPlansForMonth = query.batch(getTravelPlanForMonthsSchema, async (months) => {
+  const { locals } = getRequestEvent()
+  const { user, session, supabase } = requireAuthMaybeAdmin(locals)
+  // console.debug("Fetching Travel Plans for months", months)
 
-    if (months.length === 0) {
-      error(400, "No months provided")
-    }
-
-    const { data: travelPlans, error: dbError } = await getTravelPlansWithEmployeeForMonths(
-      locals,
-      months
-    )
-
-    if (travelPlans === null) {
-      console.error("Failed to fetch travel plans", dbError)
-      error(500, dbError)
-    }
-
-    // console.debug("Fetched Travel Plans", travelPlans)
-    const lookup = new Map<string, TravelPlanWithEmployee[]>(
-      travelPlans.map((tp) => {
-        // See line 122 below
-        const key = tp.month.toISOString().split("T", 2)[0]
-        let plans = travelPlans.filter((x) => x.month.toISOString() === tp.month.toISOString())
-
-        return [key, plans]
-      })
-    )
-
-    return (month) => {
-      // todo, an error is present here, presumably with sveltekit remote fns
-      // it is supposed to be a parsed Date, but is a string
-      // console.log(typeof month, month, lookup)
-      return lookup.get(month.toString())
-    }
+  if (months.length === 0) {
+    error(400, "No months provided")
   }
-)
+
+  const { data: travelPlans, error: dbError } = await getTravelPlansWithEmployeeForMonthsDb(
+    locals,
+    months
+  )
+
+  if (travelPlans === null) {
+    console.error("Failed to fetch travel plans", dbError)
+    error(500, dbError)
+  }
+
+  // console.debug("Fetched Travel Plans", travelPlans)
+
+  return (month) => {
+    // todo, an error is present here, presumably with sveltekit remote fns
+    // it is supposed to be a parsed Date, but is a string
+    // console.log(typeof month, month, lookup)
+    return travelPlans.get(month.toString())
+  }
+})

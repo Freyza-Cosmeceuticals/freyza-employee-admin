@@ -1,17 +1,21 @@
 <script lang="ts">
-import type { addTravelPlan } from "@/api/travelplan.remote"
+import RouteSelectComboBox from "@/components/dashboard/RouteSelectComboBox.svelte"
 import Calendar from "@/components/ui/calendar/calendar.svelte"
 import PopoverContent from "@/components/ui/popover/popover-content.svelte"
 import PopoverTrigger from "@/components/ui/popover/popover-trigger.svelte"
 import Popover from "@/components/ui/popover/popover.svelte"
 import * as Select from "@/components/ui/select"
+
 import { DayType } from "@/generated/prisma/browser"
-import type { RouteWithName } from "@/types"
-import { isWeekend, parseDate, type DateValue } from "@internationalized/date"
+
+import { isWeekend, parseDate } from "@internationalized/date"
 import Holidays from "date-holidays"
 import { DateTime } from "luxon"
-import RouteSelectComboBox from "../RouteSelectComboBox.svelte"
+
 import { dayTypeBadge, routeBadge } from "./snippets.svelte"
+import type { addTravelPlan } from "@/api/travelplan.remote"
+import type { RouteWithName } from "@/types"
+import type { DateValue } from "@internationalized/date"
 
 interface Props {
   month: DateTime
@@ -38,13 +42,13 @@ const getInitialDays = () => {
       if (day.weekday === 6 || day.weekday === 7) return [idx, DayType.HOLIDAY]
       if (hd.isHoliday(day.toJSDate())) return [idx, DayType.HOLIDAY]
       return [idx, DayType.WORK]
-    }),
+    })
   )
 }
 
 // form submission values
-let selectedDayTypes = $state<Record<number, DayType>>(getInitialDays())
-let selectedRoutes = $state<Record<number, string | null>>({})
+// let selectedDayTypes = $state<Record<number, DayType>>(getInitialDays())
+// let selectedRoutes = $state<Record<number, string | null>>({})
 
 const getDateKey = (date: DateValue): string =>
   `${date.year}-${String(date.month).padStart(2, "0")}-${String(date.day).padStart(2, "0")}`
@@ -54,7 +58,7 @@ const formatDateDisplay = (date: DateValue): string =>
     weekday: "long",
     year: "numeric",
     month: "long",
-    day: "numeric",
+    day: "numeric"
   })
 
 // $inspect(selectedDayTypes)
@@ -68,19 +72,18 @@ const formatDateDisplay = (date: DateValue): string =>
     type="single"
     value={undefined}
     placeholder={selectedMonth}
-    class="border-border  bg-card mx-auto w-min rounded-lg border shadow-sm [--cell-size:--spacing(32)]"
+    class="mx-auto  w-min rounded-lg border border-border bg-card shadow-sm [--cell-size:--spacing(32)]"
     initialFocus={false}
     disableDaysOutsideMonth={true}
     preventDeselect={true}
     weekdayFormat="short"
-    {disabled}
-  >
+    {disabled}>
     {#snippet day({ day, outsideMonth })}
       {@const dayIsWeekend = isWeekend(day, "en-IN")}
       <!-- TODO: make this better -->
       {@const i = days.findIndex((d) => d.day === day.day && !outsideMonth)}
-      {@const thisDayType = selectedDayTypes[i] ?? DayType.WORK}
-      {@const thisRouteId = selectedRoutes[i] ?? null}
+      {@const thisDayType = planEntries[i].dayType.value() ?? DayType.WORK}
+      {@const thisRouteId = planEntries[i].routeId.value() ?? null}
       {@const thisRoute = routes.find((r) => r.id === thisRouteId) ?? null}
       {@const hasErrors = (planEntries[i].allIssues()?.length ?? 0) > 0}
 
@@ -96,26 +99,24 @@ const formatDateDisplay = (date: DateValue): string =>
           (value) => {
             openPopovers[getDateKey(day)] = value
           }
-        }
-      >
+        }>
         <PopoverTrigger
           class={[
-            "text-foreground hover:text-foreground h-34 w-32 p-4 text-sm font-normal transition-colors",
-            "hover:bg-muted/50 bg-transparent disabled:hover:bg-transparent",
+            "h-34 w-32 p-4 text-sm font-normal text-foreground transition-colors hover:text-foreground",
+            "bg-transparent hover:bg-muted/50 disabled:hover:bg-transparent",
             "relative inline-flex flex-col items-end justify-start gap-2",
             // "rounded-md",
-            "border-border border border-s-0 border-t-0",
+            "border border-s-0 border-t-0 border-border",
             "disabled:pointer-events-none disabled:opacity-40",
-            hasErrors && "hover:bg-destructive/20",
+            hasErrors && "hover:bg-destructive/20"
             // "outline-destructive/50 hover:bg-destructive/20 outline-2 -outline-offset-1",
           ]}
-          disabled={outsideMonth}
-        >
+          disabled={outsideMonth}>
           <!-- error overlay outline, under probation, change date color looks more nice -->
-          {#if hasErrors && false}
+          {#if hasErrors}
             <div
-              class="outline-destructive/50 hover:bg-destructive/20 absolute top-2 left-2 h-[calc(100%-var(--spacing)*4)] w-[calc(100%-var(--spacing)*4)] rounded-md outline-2"
-            ></div>
+              class="absolute top-2 left-2 h-[calc(100%-var(--spacing)*4)] w-[calc(100%-var(--spacing)*4)] rounded-md outline-2 outline-destructive/50 hover:bg-destructive/20">
+            </div>
           {/if}
 
           <strong class={["mb-2", hasErrors && "text-destructive"]}>{day.day}</strong>
@@ -124,14 +125,13 @@ const formatDateDisplay = (date: DateValue): string =>
             {#if thisDayType === DayType.WORK}
               {@render routeBadge(thisRoute)}
             {/if}
-            <!-- <span> Hello </span> -->
           {/if}
         </PopoverTrigger>
 
         {#if !outsideMonth}
           <PopoverContent class="w-80 p-0">
-            <div class="border-border bg-muted/40 border-b p-4">
-              <h3 class="text-foreground text-base font-semibold">
+            <div class="border-b border-border bg-muted/40 p-4">
+              <h3 class="text-base font-semibold text-foreground">
                 {formatDateDisplay(day)}
               </h3>
             </div>
@@ -143,15 +143,16 @@ const formatDateDisplay = (date: DateValue): string =>
                 bind:value={
                   () => thisDayType,
                   (value) => {
-                    selectedDayTypes[i] = value
+                    planEntries[i].dayType.set(value)
+                    // selectedDayTypes[i] = value
                     if (value !== DayType.WORK) {
-                      selectedRoutes[i] = null
+                      planEntries[i].routeId.set("")
+                      // selectedRoutes[i] = null
                     }
                   }
                 }
                 {disabled}
-                required
-              >
+                required>
                 <Select.Trigger>
                   {thisDayType.toUpperCase()}
                 </Select.Trigger>
@@ -164,7 +165,7 @@ const formatDateDisplay = (date: DateValue): string =>
 
               {#if thisDayType === DayType.WORK}
                 {#each planEntries[i].routeId.issues() as issue}
-                  <p class="text-destructive ms-2 text-sm">
+                  <p class="ms-2 text-sm text-destructive">
                     {issue.message}
                   </p>
                 {/each}
@@ -174,14 +175,14 @@ const formatDateDisplay = (date: DateValue): string =>
                   bind:value={
                     () => thisRouteId ?? undefined,
                     (value) => {
-                      selectedRoutes[i] = value ?? null
+                      planEntries[i].routeId.set(value ?? "")
+                      // selectedRoutes[i] = value ?? null
                     }
                   }
                   {disabled}
-                  onValueChange={() => onInput()}
-                />
+                  onValueChange={() => onInput()} />
               {:else}
-                <p class="text-muted-foreground text-sm">No Route to be selected</p>
+                <p class="text-sm text-muted-foreground">No Route to be selected</p>
               {/if}
             </div>
           </PopoverContent>

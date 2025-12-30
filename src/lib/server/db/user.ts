@@ -1,8 +1,13 @@
 import prisma from "@/server/db/prisma"
-import type { Employee, EmployeeCreate, EmployeeWithHQ } from "@/types"
-import { Prisma, UserRole, UserStatus, type User } from "@db/client"
-import { requireAuthMaybeAdmin } from "./common"
+import { UserRole, UserStatus } from "@db/client"
 
+import { handleDbError, requireAuthMaybeAdmin } from "./common"
+import type { Employee, EmployeeCreate, EmployeeWithHQ } from "@/types"
+import type { User } from "@db/client"
+
+/**
+ * Gets the user profile associated with the current user
+ */
 export async function getUser(locals: App.Locals): Promise<User | null> {
   const { user, session } = requireAuthMaybeAdmin(locals, false)
 
@@ -22,6 +27,11 @@ export async function getUser(locals: App.Locals): Promise<User | null> {
   }
 }
 
+/**
+ * Creates a new Employee User
+ * @param locals
+ * @param employeeData
+ */
 export async function createEmployee(
   locals: App.Locals,
   employeeData: EmployeeCreate
@@ -47,19 +57,21 @@ export async function createEmployee(
     console.debug("Created successfully")
     return { data: employeeProfile, error: null }
   } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError) {
-      console.error(e)
-      return { data: null, error: e.message }
-    }
-
-    console.error(e)
-    return { data: null, error: "An unknown error has occurred" }
+    return handleDbError(e)
   }
 }
 
+/**
+ * Returns all Active Employees in the db, optionally limited by a number or excluding certain ids
+ * @param locals
+ * @param limitN Limit to certain count, ordered by joining date (recent first)
+ * @param excludeIds Optional array of employee ids to exclude from the result
+ * @returns
+ */
 export async function getAllEmployees(
   locals: App.Locals,
-  limitN?: number
+  limitN?: number,
+  excludeIds?: string[]
 ): Promise<EmployeeWithHQ[]> {
   const { user, session } = requireAuthMaybeAdmin(locals)
 
@@ -67,7 +79,10 @@ export async function getAllEmployees(
     const employees = await prisma.user.findMany({
       where: {
         role: UserRole.EMPLOYEE,
-        status: UserStatus.ACTIVE
+        status: UserStatus.ACTIVE,
+        id: {
+          notIn: excludeIds || []
+        }
       },
       include: {
         hq: true
@@ -79,9 +94,36 @@ export async function getAllEmployees(
     })
 
     console.debug(`Found ${employees.length} employees with limitN ${limitN}`)
+    if (excludeIds) console.debug(`...excluding ${excludeIds.length} ids`)
+
     return employees
   } catch (e) {
     console.error(e)
     return []
+  }
+}
+
+/**
+ * Returns the count of active employees in the db
+ * @param locals
+ * @returns
+ */
+export async function getEmployeeCount(
+  locals: App.Locals
+): Promise<{ data: number; error: null } | { data: null; error: string }> {
+  const { user, session } = requireAuthMaybeAdmin(locals)
+
+  try {
+    const count = await prisma.user.count({
+      where: {
+        role: UserRole.EMPLOYEE,
+        status: UserStatus.ACTIVE
+      }
+    })
+
+    console.debug(`Found ${count} active employees`)
+    return { data: count, error: null }
+  } catch (e) {
+    return handleDbError(e)
   }
 }

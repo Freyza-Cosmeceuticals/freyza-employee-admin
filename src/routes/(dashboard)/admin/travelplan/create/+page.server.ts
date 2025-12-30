@@ -1,15 +1,33 @@
-import { SUPABASE_AUTH_TAG, TIMEZONE } from "@/constants"
+import { TIMEZONE } from "@/constants"
 import { getAllRoutes } from "@/server/db/route"
+import { getTravelPlansForMonth } from "@/server/db/travelplan"
 import { getAllEmployees } from "@/server/db/user"
-import type { PageServerLoad } from "./$types"
+
 import { DateTime } from "luxon"
+
+import type { PageServerLoad } from "./$types"
 
 export const load: PageServerLoad = async ({ depends, locals }) => {
   // depends(SUPABASE_AUTH_TAG)
 
-  const employees = await getAllEmployees(locals)
-  const routes = await getAllRoutes(locals)
   const today = DateTime.now().setZone(TIMEZONE)
+  const nextMonth = today
+    .plus({ months: 1 })
+    .startOf("month")
+    .setZone("UTC", { keepLocalTime: true })
+    .toJSDate()
+
+  const travelPlansForMonth = await getTravelPlansForMonth(locals, nextMonth)
+  if (travelPlansForMonth.error !== null) {
+    console.error("Error fetching travel plans for filtering employees:", travelPlansForMonth.error)
+  }
+
+  const employeesDone = travelPlansForMonth.data?.map((plan) => plan.employeeId) ?? []
+
+  const [employees, routes] = await Promise.all([
+    getAllEmployees(locals, undefined, employeesDone),
+    getAllRoutes(locals)
+  ])
 
   return { employees, routes, today }
 }

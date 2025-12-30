@@ -1,4 +1,5 @@
-import { SUPABASE_AUTH_TAG, TIMEZONE } from "@/constants"
+import { TIMEZONE } from "@/constants"
+import { getEmployeeCount } from "@/server/db/user"
 
 import { DateTime } from "luxon"
 
@@ -8,6 +9,7 @@ export const load: PageServerLoad = async ({ depends, locals }) => {
   // depends(SUPABASE_AUTH_TAG)
 
   const today = DateTime.now().setZone(TIMEZONE) as DateTime<true>
+  const employeeCount = getEmployeeCount(locals)
 
-  return { today }
+  return { today, employeeCount }
 }

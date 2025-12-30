@@ -1,38 +1,12 @@
+import { form, getRequestEvent } from "$app/server"
+import { addEmployeeSchema } from "$lib/schemas"
+
 import { createEmployee } from "@/server/db/user"
 import { supabaseAdmin } from "@/server/supabaseAdmin"
+import { UserRole, UserStatus } from "@db/client"
+
 import type { EmployeeCreate } from "@/types"
-import { EmployeeTier, UserRole, UserStatus } from "@db/client"
-
-import * as v from "valibot"
-
-import { form, getRequestEvent } from "$app/server"
-
 import { requireAuthMaybeAdmin } from "./common"
-
-const addEmployeeSchema = v.object({
-  name: v.pipe(
-    v.string(),
-    v.trim(),
-    v.minLength(3, "Name must be at least 3 characters long."),
-    v.maxLength(30, "Name is too long.")
-  ),
-  phone: v.pipe(
-    v.string(),
-    v.trim(),
-    v.minLength(10, "Phone number must be at least 10 characters long."),
-    v.maxLength(15, "Phone number is too long.")
-  ),
-  tier: v.enum(EmployeeTier, "Invalid Tier"),
-  hqId: v.pipe(v.string(), v.trim(), v.uuid("Please select a valid HQ.")),
-  joiningDate: v.pipe(v.string(), v.toDate("Invalid Date")),
-  email: v.pipe(
-    v.string(),
-    v.trim(),
-    v.nonEmpty("Please enter an email."),
-    v.email("The email format is incorrect."),
-    v.maxLength(30, "The email is too long.")
-  )
-})
 
 export const addEmployee = form(addEmployeeSchema, async (employee) => {
   const { locals } = getRequestEvent()
@@ -47,8 +21,8 @@ export const addEmployee = form(addEmployeeSchema, async (employee) => {
     user_metadata: {
       role: UserRole.EMPLOYEE,
       status: UserStatus.ACTIVE,
-      name: employee.name
-    }
+      name: employee.name,
+    },
   })
 
   if (!potentialEmployee.data.user) {
@@ -65,7 +39,7 @@ export const addEmployee = form(addEmployeeSchema, async (employee) => {
     tier: employee.tier,
     hqId: employee.hqId,
     joiningDate: employee.joiningDate,
-    resignDate: null
+    resignDate: null,
   }
 
   const { data: employeeProfile, error } = await createEmployee(locals, employeeData)

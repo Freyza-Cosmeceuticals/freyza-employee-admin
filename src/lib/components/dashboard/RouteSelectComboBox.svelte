@@ -3,10 +3,12 @@ import { Button } from "$lib/components/ui/button/index.js"
 import * as Command from "$lib/components/ui/command/index.js"
 import * as Popover from "$lib/components/ui/popover/index.js"
 import { cn } from "$lib/utils.js"
-import type { RouteWithName } from "@/types"
+
 import CheckIcon from "@lucide/svelte/icons/check"
 import ChevronsUpDownIcon from "@lucide/svelte/icons/chevrons-up-down"
 import { tick } from "svelte"
+
+import type { RouteWithName } from "@/types"
 
 interface Props {
   routes: RouteWithName[]
@@ -43,7 +45,7 @@ function closeAndFocusTrigger() {
     {#snippet child({ props })}
       <Button
         variant="outline"
-        class="w-[200px] justify-between"
+        class="w-50 justify-between"
         {...props}
         role="combobox"
         aria-expanded={open}>
@@ -52,8 +54,8 @@ function closeAndFocusTrigger() {
       </Button>
     {/snippet}
   </Popover.Trigger>
-  <Popover.Content class="w-[300px] p-0">
-    <Command.Root {onValueChange}>
+  <Popover.Content class="w-75 p-0">
+    <Command.Root>
       <Command.Input placeholder="Search route..." />
       <Command.List>
         <Command.Empty>No route found.</Command.Empty>
@@ -65,6 +67,7 @@ function closeAndFocusTrigger() {
               onSelect={() => {
                 value = r.id
                 closeAndFocusTrigger()
+                onValueChange?.(value)
               }}>
               <CheckIcon class={cn("my-2 me-2 size-4", value !== r.id && "text-transparent")} />
               <span>

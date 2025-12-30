@@ -1,6 +1,8 @@
 <script module lang="ts">
 import { Badge } from "@/components/ui/badge"
+
 import { DayType } from "@/generated/prisma/enums"
+
 import type { RouteWithName } from "@/types"
 
 export { dayTypeBadge, routeBadge }

@@ -7,29 +7,36 @@
   "printWidth": 100,
   "svelteIndentScriptAndStyle": false,
   "importOrder": [
+    "^\\$().*$",
     "^@sveltejs",
-    "^@",
+    "",
+    "^@/components(.*)$",
+    "",
+    "^@/",
+    "^@db/(.*)$",
 
-    "<SEPARATOR>",
+    "",
+    "^@",
     "<THIRD_PARTY_MODULES>",
-    "<SEPARATOR>",
+    "",
 
     "^\\$(?!lib/)",
-    "<SEPARATOR>",
+    "",
     "^\\$lib/",
 
-    "<SEPARATOR>",
+    "",
     "^[.]",
+    "<TYPES>",
 
-    "<SEPARATOR>"
+    ""
   ],
-
   "importOrderSeparation": true,
   "importOrderSortSpecifiers": true,
+
   "plugins": [
     "prettier-plugin-svelte",
     "prettier-plugin-tailwindcss",
-    "@trivago/prettier-plugin-sort-imports"
+    "@ianvs/prettier-plugin-sort-imports"
   ],
   "tailwindStylesheet": "./src/app.css",
   "overrides": [
