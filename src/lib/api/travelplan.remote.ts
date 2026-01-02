@@ -3,9 +3,9 @@ import { addTravelPlanSchema, getTravelPlanForMonthsSchema } from "$lib/schemas"
 import { error, invalid } from "@sveltejs/kit"
 
 import {
-    createTravelPlan as createTravelPlanDb,
-    getTravelPlansWithEmployeeForMonths as getTravelPlansWithEmployeeForMonthsDb,
-    getTravelPlanWithEmployeeForEmployeeAndMonth as getTravelPlanWithEmployeeForEmployeeAndMonthDb
+  createTravelPlan as createTravelPlanDb,
+  getTravelPlansWithEmployeeForMonths as getTravelPlansWithEmployeeForMonthsDb,
+  getTravelPlanWithEmployeeForEmployeeAndMonth as getTravelPlanWithEmployeeForEmployeeAndMonthDb
 } from "@/server/db/travelplan"
 import { DayType } from "@db/client"
 
@@ -40,7 +40,11 @@ export const addTravelPlan = form(addTravelPlanSchema, async (travelPlan, issue)
 
   // check if a plan already exists for the employee for this month
   const { data: potentialPlan, error: dbError } =
-    await getTravelPlanWithEmployeeForEmployeeAndMonthDb(travelPlan.employeeId, travelPlan.month)
+    await getTravelPlanWithEmployeeForEmployeeAndMonthDb(
+      locals,
+      travelPlan.employeeId,
+      travelPlan.month
+    )
 
   console.log("Potential Plan:", potentialPlan, "Error:", dbError)
 
@@ -78,6 +82,9 @@ export const addTravelPlan = form(addTravelPlanSchema, async (travelPlan, issue)
  * Requires Admin
  */
 export const getTravelPlansForMonth = query.batch(getTravelPlanForMonthsSchema, async (months) => {
+  let TAG = `Remote: getTravelPlansForMonth(${months.length} MONTHS)`
+  console.time(TAG)
+
   const { locals } = getRequestEvent()
   const { user, session, supabase } = requireAuthMaybeAdmin(locals)
   // console.debug("Fetching Travel Plans for months", months)
@@ -88,7 +95,8 @@ export const getTravelPlansForMonth = query.batch(getTravelPlanForMonthsSchema, 
 
   const { data: travelPlans, error: dbError } = await getTravelPlansWithEmployeeForMonthsDb(
     locals,
-    months
+    months,
+    true
   )
 
   if (travelPlans === null) {
@@ -98,6 +106,7 @@ export const getTravelPlansForMonth = query.batch(getTravelPlanForMonthsSchema, 
 
   // console.debug("Fetched Travel Plans", travelPlans)
 
+  console.timeEnd(TAG)
   return (month) => {
     // todo, an error is present here, presumably with sveltekit remote fns
     // it is supposed to be a parsed Date, but is a string

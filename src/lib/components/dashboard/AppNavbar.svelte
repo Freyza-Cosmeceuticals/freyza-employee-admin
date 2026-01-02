@@ -22,7 +22,7 @@ const { session, user, supabase }: Props = $props()
 <header>
   <nav
     class={[
-      "mx-auto flex h-16 w-full flex-row items-center justify-between rounded-md px-4 py-2 shadow-sm",
+      "mx-auto flex h-16 w-full flex-row items-center justify-between rounded-md px-4 py-2 shadow-sm"
     ]}>
     <div class="flex flex-row items-center gap-4">
       <Sidebar.Trigger class="-ml-1" />
@@ -37,11 +37,11 @@ const { session, user, supabase }: Props = $props()
       <ColorModeToggle />
     </div>
   </nav>
-  {#if navigating.from}
-    <div class="progress h-0.5 bg-freyza-brand-secondary" out:fade={{ duration: 100 }}></div>
-  {:else}
-    <div class="h-0.5 w-full"></div>
-  {/if}
+  <div class="5 h-0 w-full">
+    {#if navigating.from}
+      <div class="progress h-0.5 bg-freyza-brand-secondary" out:fade={{ duration: 100 }}></div>
+    {/if}
+  </div>
 </header>
 
 <style scoped>

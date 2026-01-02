@@ -15,7 +15,7 @@ export const load: PageServerLoad = async ({ depends, locals }) => {
     .plus({ months: 1 })
     .startOf("month") as DateTime<true>
 
-  const tasks = new Promise((resolve) => {
+  const tasks: Promise<{ id: number; task: string; urgency: string }[]> = new Promise((resolve) => {
     setTimeout(() => {
       resolve([
         {

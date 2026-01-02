@@ -9,19 +9,7 @@ import { getTravelPlansForMonth } from "@/api/travelplan.remote.js"
 import type { TravelPlanWithEmployee } from "@/types.js"
 
 let { data } = $props()
-let { today, employeeCount } = $derived(data)
-
-const nextMonth = $derived(today.plus({ months: 1 }).startOf("month"))
-const months = $derived.by(() => {
-  let ms = []
-  // first next month
-  ms.push(nextMonth)
-
-  for (let i = 0; i < 3; i++) {
-    ms.push(today.minus({ months: i }).startOf("month"))
-  }
-  return ms
-})
+let { today, nextMonth, months, employeeCount } = $derived(data)
 
 function isAnyEmployeeLeft(
   travelPlans: TravelPlanWithEmployee[] | undefined,
@@ -49,7 +37,7 @@ function isAnyEmployeeLeft(
 
   <div class="mx-auto max-w-5xl">
     {#each months as m, i (m.toString())}
-      <Card.Root class="w-full border-0 bg-transparent shadow-none">
+      <Card.Root class="w-full gap-2 border-0 bg-transparent shadow-none">
         <Card.Header>
           <Card.Title class="text-lg font-semibold">
             {m.monthLong}
@@ -71,13 +59,11 @@ function isAnyEmployeeLeft(
             {#each travelPlans as travelPlan}
               <TravelPlanCard {travelPlan} />
             {:else}
-              <p class="text-muted-foreground">No Travel Plans for this month</p>
+              {#if i !== 0}
+                <p class="text-muted-foreground">No Travel Plans for this month</p>
+              {/if}
             {/each}
 
-            <!-- {#await getTravelPlansForMonth(m.toISODate())} -->
-            <!-- {:then data} -->
-            <!-- {:catch error} -->
-            <!-- {/await} -->
             {#snippet pending()}
               {@const skeletonCount = Array.from({ length: i === 0 ? 4 : 5 }, (_, i) => i + 1)}
               {#if i === 0}

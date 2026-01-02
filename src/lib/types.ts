@@ -1,11 +1,6 @@
-import {
-  Prisma,
-  type Location,
-  type Route,
-  type TravelPlan,
-  type TravelPlanEntry,
-  type User
-} from "@db/browser"
+import { Prisma } from "@db/browser"
+
+import type { Location, Route, TravelPlan, TravelPlanEntry, User } from "@db/browser"
 
 export type LocationCreate = Omit<Location, "id" | "createdAt" | "updatedAt">
 export type RouteCreate = Omit<Route, "id" | "createdAt" | "updatedAt">
@@ -54,12 +49,12 @@ const travelPlanWithEmployee = {
   }
 } satisfies Prisma.TravelPlanDefaultArgs
 
-type TravelPlanStats = {
+export type TravelPlanStats = {
   workDays: number
   leaveDays: number
   holidayDays: number
 }
 
 export type TravelPlanWithEmployee = Prisma.TravelPlanGetPayload<typeof travelPlanWithEmployee> & {
-  stats: TravelPlanStats
+  stats?: TravelPlanStats
 }

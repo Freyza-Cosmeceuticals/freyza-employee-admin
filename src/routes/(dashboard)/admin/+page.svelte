@@ -114,7 +114,7 @@ let userProfile = $derived(await userProfilePromise)
         {#await tasks}
           <Skeleton class="h-12 w-full" />
         {:then data}
-          <TasksList tasks={data as { id: number; task: string; urgency: string }[]} />
+          <TasksList tasks={data} />
         {:catch error}
           <p>
             Error loading Tasks: {error}

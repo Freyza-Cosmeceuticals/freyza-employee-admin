@@ -1,11 +1,15 @@
 <script lang="ts">
 import * as ButtonGroup from "$lib/components/ui/button-group"
+
 import * as Avatar from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import * as Card from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+
 import { DayType } from "@/generated/prisma/enums"
-import type { TravelPlanWithEmployee } from "@/types"
+
 import { dayTypeBadge } from "./snippets.svelte"
+import type { TravelPlanWithEmployee } from "@/types"
 
 interface Props {
   travelPlan: TravelPlanWithEmployee
@@ -14,42 +18,51 @@ interface Props {
 const { travelPlan }: Props = $props()
 </script>
 
-<Card.Root class="h-auto w-72 p-2">
-  <Card.Content class="flex h-full flex-row items-center justify-between p-2">
-    <div class="flex flex-col items-end gap-2">
-      <ButtonGroup.Root>
-        {@render dayTypeBadge(DayType.WORK)}
-        <ButtonGroup.Text>
-          <span class="font-mono font-medium">
-            {travelPlan.stats.workDays.toString().padStart(2, "0")}
-          </span>
-        </ButtonGroup.Text>
-      </ButtonGroup.Root>
-      <ButtonGroup.Root>
-        {@render dayTypeBadge(DayType.HOLIDAY)}
-        <ButtonGroup.Text>
-          <span class="font-mono font-medium"
-            >{travelPlan.stats.holidayDays.toString().padStart(2, "0")}</span>
-        </ButtonGroup.Text>
-      </ButtonGroup.Root>
-      <ButtonGroup.Root>
-        {@render dayTypeBadge(DayType.LEAVE)}
-        <ButtonGroup.Text>
-          <span class="font-mono font-medium"
-            >{travelPlan.stats.leaveDays.toString().padStart(2, "0")}</span>
-        </ButtonGroup.Text>
-      </ButtonGroup.Root>
-    </div>
-    <ButtonGroup.Separator />
-    <div class="flex flex-col items-center justify-center gap-2">
-      <div class="flex flex-row items-center gap-2">
-        <Avatar.Root class="size-6">
-          <Avatar.Image src="https://github.com/harshnarayanjha.png" />
-          <Avatar.Fallback>{travelPlan.employee.name.substring(0, 1)}</Avatar.Fallback>
-        </Avatar.Root>
-        <div class="text-lg font-semibold">{travelPlan.employee.name}</div>
+{#snippet stat(type: DayType, value: number)}
+  <ButtonGroup.Root class="flex-1 justify-center">
+    {@render dayTypeBadge(type)}
+    <ButtonGroup.Text>
+      <span class="font-mono text-sm font-medium">
+        {value.toString().padStart(2, "0")}
+      </span>
+    </ButtonGroup.Text>
+  </ButtonGroup.Root>
+{/snippet}
+
+<Card.Root class="w-auto p-3">
+  <Card.Content class="flex flex-col gap-4 p-0">
+    <!-- Header -->
+    <div class="flex min-w-0 items-center gap-3">
+      <Avatar.Root class="size-8 shrink-0">
+        <Avatar.Image src="https://github.com/harshnarayanjha.png" />
+        <Avatar.Fallback>
+          {travelPlan.employee.name.slice(0, 1)}
+        </Avatar.Fallback>
+      </Avatar.Root>
+
+      <div class="flex min-w-0 flex-col">
+        <span
+          class="truncate text-base leading-tight font-semibold"
+          title={travelPlan.employee.name}>
+          {travelPlan.employee.name}
+        </span>
+
+        {#if travelPlan.employee.tier}
+          <Badge class="mt-0.5 w-fit px-1.5 py-0 text-xs">
+            {travelPlan.employee.tier.toUpperCase()}
+          </Badge>
+        {/if}
       </div>
-      <Badge>{travelPlan.employee.tier?.toUpperCase()}</Badge>
+    </div>
+
+    <!-- Divider -->
+    <Separator />
+
+    <!-- Stats -->
+    <div class="flex gap-2">
+      {@render stat(DayType.WORK, travelPlan.stats?.workDays ?? 0)}
+      {@render stat(DayType.HOLIDAY, travelPlan.stats?.holidayDays ?? 0)}
+      {@render stat(DayType.LEAVE, travelPlan.stats?.leaveDays ?? 0)}
     </div>
   </Card.Content>
 </Card.Root>

@@ -1,8 +1,42 @@
 import prisma from "@/server/db/prisma"
-import { type TravelPlan } from "@db/client"
+import { DayType } from "@db/client"
 
 import { handleDbError, requireAuthMaybeAdmin } from "./common"
-import type { TravelPlanCreate, TravelPlanWithEmployee } from "@/types"
+import type { TravelPlanCreate, TravelPlanStats, TravelPlanWithEmployee } from "@/types"
+import type { TravelPlan } from "@db/client"
+
+/**
+ * Calculate travel plan stats. Requires Admin
+ * @param travelPlanId
+ * @returns
+ */
+export async function getTravelPlanStats(
+  locals: App.Locals,
+  travelPlanId: string
+): Promise<{ data: TravelPlanStats; error: null } | { data: null; error: string }> {
+  try {
+    let TAG = `DB: getTravelPlanStats(${travelPlanId})`
+    console.time(TAG)
+    const { user, session } = requireAuthMaybeAdmin(locals)
+
+    const stats = await prisma.travelPlanEntry.groupBy({
+      by: ["tpId", "dayType"],
+      where: { tpId: travelPlanId },
+      _count: { id: true }
+    })
+
+    const properStats = {
+      workDays: stats.find((stat) => stat.dayType === DayType.WORK)?._count.id || 0,
+      holidayDays: stats.find((stat) => stat.dayType === DayType.HOLIDAY)?._count.id || 0,
+      leaveDays: stats.find((stat) => stat.dayType === DayType.LEAVE)?._count.id || 0
+    }
+
+    console.timeEnd(TAG)
+    return { data: properStats, error: null }
+  } catch (e) {
+    return handleDbError(e)
+  }
+}
 
 /**
  * Get all TravelPlans from the db
@@ -11,6 +45,8 @@ import type { TravelPlanCreate, TravelPlanWithEmployee } from "@/types"
 export async function getAllTravelPlans(
   locals: App.Locals
 ): Promise<{ data: TravelPlan[]; error: null } | { data: null; error: string }> {
+  const TAG = `DB: getAllTravelPlans()`
+  console.time(TAG)
   const { user, session } = requireAuthMaybeAdmin(locals)
 
   try {
@@ -21,6 +57,7 @@ export async function getAllTravelPlans(
     })
 
     console.debug(`Found ${travelPlans.length} TravelPlans`)
+    console.timeEnd(TAG)
     return { data: travelPlans, error: null }
   } catch (e) {
     return handleDbError(e)
@@ -35,6 +72,8 @@ export async function getTravelPlansForMonth(
   locals: App.Locals,
   month: Date
 ): Promise<{ data: TravelPlan[]; error: null } | { data: null; error: string }> {
+  const TAG = `DB: getTravelPlansForMonth(${month})`
+  console.time(TAG)
   const { user, session } = requireAuthMaybeAdmin(locals)
 
   try {
@@ -50,6 +89,7 @@ export async function getTravelPlansForMonth(
     console.debug(
       `Found ${travelPlans.length} TravelPlans for month ${month.getFullYear()}-${(month.getMonth() + 1).toString().padStart(2, "0")}`
     )
+    console.timeEnd(TAG)
     return { data: travelPlans, error: null }
   } catch (e) {
     return handleDbError(e)
@@ -62,13 +102,15 @@ export async function getTravelPlansForMonth(
  */
 export async function getTravelPlansWithEmployeeForMonths(
   locals: App.Locals,
-  months: Date[]
+  months: Date[],
+  includeStats = false
 ): Promise<
   { data: Map<string, TravelPlanWithEmployee[]>; error: null } | { data: null; error: string }
 > {
+  let TAG = `DB: getTravelPlansWithEmployeeForMonths(${months.length} MONTHS)`
+  console.time(TAG)
   const { user, session } = requireAuthMaybeAdmin(locals)
 
-  // TODO Add stats
   try {
     const travelPlans = await prisma.travelPlan.findMany({
       where: {
@@ -90,14 +132,33 @@ export async function getTravelPlansWithEmployeeForMonths(
       }
     })
 
-    const grouped = travelPlans.reduce((map, travelPlan) => {
-      const key = travelPlan.month.toISOString().split("T", 2)[0]
-      if (!map.has(key)) map.set(key, [])
+    let grouped: Map<string, TravelPlanWithEmployee[]>
 
-      map.get(key)!.push({ ...travelPlan, stats: { holidayDays: 12, leaveDays: 13, workDays: 14 } })
-      return map
-    }, new Map<string, TravelPlanWithEmployee[]>())
+    if (includeStats) {
+      grouped = await travelPlans.reduce(async (map, travelPlan) => {
+        const key = travelPlan.month.toISOString().split("T", 2)[0]
+        const acc = await map
+        if (!acc.has(key)) acc.set(key, [])
 
+        const stats = await getTravelPlanStats(locals, travelPlan.id)
+        if (stats.data !== null) {
+          acc.get(key)!.push({ ...travelPlan, stats: stats.data })
+        }
+
+        return acc
+      }, Promise.resolve(new Map<string, TravelPlanWithEmployee[]>()))
+    } else {
+      grouped = travelPlans.reduce((map, travelPlan) => {
+        const key = travelPlan.month.toISOString().split("T", 2)[0]
+        if (!map.has(key)) map.set(key, [])
+
+        map.get(key)!.push(travelPlan)
+
+        return map
+      }, new Map<string, TravelPlanWithEmployee[]>())
+    }
+
+    console.timeEnd(TAG)
     return { data: grouped, error: null }
   } catch (e) {
     return handleDbError(e)
@@ -109,11 +170,17 @@ export async function getTravelPlansWithEmployeeForMonths(
  * Requires Admin
  */
 export async function getTravelPlanWithEmployeeForEmployeeAndMonth(
+  locals: App.Locals,
   employeeId: string,
-  month: Date
-): Promise<{ data: TravelPlanWithEmployee; error: null } | { data: null; error: string }> {
+  month: Date,
+  includeStats = false
+): Promise<{ data: TravelPlanWithEmployee | null; error: null } | { data: null; error: string }> {
   try {
-    const travelPlan = await prisma.travelPlan.findFirst({
+    let TAG = `DB: getTravelPlanWithEmployeeForEmployeeAndMonth(${employeeId}, ${month.toISOString().split("T", 2)[0]})`
+    console.time(TAG)
+    const { user, session } = requireAuthMaybeAdmin(locals)
+
+    const travelPlan: TravelPlanWithEmployee | null = await prisma.travelPlan.findFirst({
       where: {
         employeeId,
         month
@@ -132,14 +199,12 @@ export async function getTravelPlanWithEmployeeForEmployeeAndMonth(
       }
     })
 
-    // @ts-ignore
-    travelPlan.stats = {
-      holidayDays: 12,
-      leaveDays: 13,
-      workDays: 14
+    if (includeStats && travelPlan) {
+      const stats = await getTravelPlanStats(locals, travelPlan.id)
+      if (stats.data !== null) travelPlan.stats = stats.data
     }
 
-    // @ts-ignore
+    console.timeEnd(TAG)
     return { data: travelPlan, error: null }
   } catch (e) {
     return handleDbError(e)
@@ -154,6 +219,8 @@ export async function createTravelPlan(
   locals: App.Locals,
   travelPlan: TravelPlanCreate
 ): Promise<{ data: TravelPlan; error: null } | { data: null; error: string }> {
+  let TAG = `DB: createTravelPlan(${travelPlan.employeeId}, ${travelPlan.month.toISOString().split("T", 2)[0]})`
+  console.time(TAG)
   const { user, session } = requireAuthMaybeAdmin(locals)
 
   console.debug("Creating TravelPlan", travelPlan)
@@ -181,7 +248,8 @@ export async function createTravelPlan(
       }
     })
 
-    console.debug("Created Successfully")
+    console.debug("Travel Plan Created Successfully")
+    console.timeEnd(TAG)
     return { data: travelPlanObject, error: null }
   } catch (e) {
     return handleDbError(e)
