@@ -2,7 +2,12 @@ import prisma from "@/server/db/prisma"
 import { DayType } from "@db/client"
 
 import { handleDbError, requireAuthMaybeAdmin } from "./common"
-import type { TravelPlanCreate, TravelPlanStats, TravelPlanWithEmployee } from "@/types"
+import type {
+  TravelPlanCreate,
+  TravelPlanStats,
+  TravelPlanWithEmployee,
+  TravelPlanWithEmployeeWithEntries
+} from "@/types"
 import type { TravelPlan } from "@db/client"
 
 /**
@@ -65,6 +70,59 @@ export async function getAllTravelPlans(
 }
 
 /**
+ * Get a TravelPlan by ID with Employee Data optionally with entries
+ * @param locals
+ * @param tpId
+ * @returns
+ */
+export async function getTravelPlanWithEmployeeOptionalEntriesById(
+  locals: App.Locals,
+  tpId: string,
+  includeEntries: boolean = false
+): Promise<
+  | { data: TravelPlanWithEmployee | TravelPlanWithEmployeeWithEntries | null; error: null }
+  | { data: null; error: string }
+> {
+  const TAG = `DB: getTravelPlanById(${tpId})`
+  console.time(TAG)
+  const { user, session } = requireAuthMaybeAdmin(locals, false)
+
+  try {
+    const travelPlan: TravelPlanWithEmployee | TravelPlanWithEmployeeWithEntries | null =
+      await prisma.travelPlan.findUnique({
+        where: {
+          id: tpId
+        },
+        include: {
+          employee: {
+            include: {
+              hq: true
+            }
+          },
+          planEntries: includeEntries
+            ? {
+                include: {
+                  route: {
+                    include: {
+                      srcLoc: true,
+                      destLoc: true
+                    }
+                  }
+                }
+              }
+            : false
+        }
+      })
+
+    console.debug(`Found TravelPlan ${tpId}`)
+    console.timeEnd(TAG)
+    return { data: travelPlan, error: null }
+  } catch (e) {
+    return handleDbError(e)
+  }
+}
+
+/**
  * Get all TravelPlans for the given month from the db
  * Requires Admin
  */
@@ -112,7 +170,7 @@ export async function getTravelPlansWithEmployeeForMonths(
   const { user, session } = requireAuthMaybeAdmin(locals)
 
   try {
-    const travelPlans = await prisma.travelPlan.findMany({
+    const travelPlans: TravelPlanWithEmployee[] = await prisma.travelPlan.findMany({
       where: {
         month: {
           in: months
@@ -120,10 +178,8 @@ export async function getTravelPlansWithEmployeeForMonths(
       },
       include: {
         employee: {
-          select: {
-            id: true,
-            name: true,
-            tier: true
+          include: {
+            hq: true
           }
         }
       },
@@ -187,10 +243,8 @@ export async function getTravelPlanWithEmployeeForEmployeeAndMonth(
       },
       include: {
         employee: {
-          select: {
-            id: true,
-            name: true,
-            tier: true
+          include: {
+            hq: true
           }
         }
       },

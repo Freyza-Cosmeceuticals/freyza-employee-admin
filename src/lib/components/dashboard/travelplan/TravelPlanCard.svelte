@@ -1,4 +1,6 @@
 <script lang="ts">
+import { resolve } from "$app/paths"
+
 import * as Avatar from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import * as Card from "@/components/ui/card"
@@ -17,9 +19,9 @@ const { travelPlan }: Props = $props()
 </script>
 
 <Card.Root class="w-auto p-3">
-  <Card.Content class="flex flex-col gap-4 p-0">
+  <Card.Content class="flex flex-col gap-4 p-1">
     <!-- Header -->
-    <div class="flex min-w-0 items-center gap-3">
+    <div class="flex w-full flex-row items-center justify-start gap-3">
       <Avatar.Root class="size-8 shrink-0">
         <Avatar.Image src="https://github.com/harshnarayanjha.png" />
         <Avatar.Fallback>
@@ -34,22 +36,35 @@ const { travelPlan }: Props = $props()
           {travelPlan.employee.name}
         </span>
 
-        {#if travelPlan.employee.tier}
-          <Badge class="mt-0.5 w-fit px-1.5 py-0 text-xs">
-            {travelPlan.employee.tier.toUpperCase()}
-          </Badge>
-        {/if}
+        <div class="flex flex-row items-center gap-2">
+          {#if travelPlan.employee.tier}
+            <Badge class="mt-0.5 w-fit px-1.5 py-0 text-xs">
+              {travelPlan.employee.tier.toUpperCase()}
+            </Badge>
+          {/if}
+
+          {#if travelPlan.employee.hq}
+            <span class="text-sm text-muted-foreground italic">
+              {travelPlan.employee.hq.name}
+            </span>
+          {/if}
+        </div>
       </div>
+
+      <a
+        href={resolve(`/admin/travelplan/${travelPlan.id}`)}
+        class="ms-auto self-start text-sm hover:underline">
+        View Plan
+      </a>
     </div>
-
-    <!-- Divider -->
     <Separator />
-
+  </Card.Content>
+  <Card.Footer>
     <!-- Stats -->
     <div class="flex gap-2">
       {@render statsBadge(DayType.WORK, travelPlan.stats?.workDays ?? 0)}
       {@render statsBadge(DayType.HOLIDAY, travelPlan.stats?.holidayDays ?? 0)}
       {@render statsBadge(DayType.LEAVE, travelPlan.stats?.leaveDays ?? 0)}
     </div>
-  </Card.Content>
+  </Card.Footer>
 </Card.Root>

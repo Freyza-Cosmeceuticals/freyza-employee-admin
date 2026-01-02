@@ -1,17 +1,23 @@
 import { form, getRequestEvent, query } from "$app/server"
-import { addTravelPlanSchema, getTravelPlanForMonthsSchema } from "$lib/schemas"
+import {
+  addTravelPlanSchema,
+  getTravelPlanByIdSchema,
+  getTravelPlanForMonthsSchema
+} from "$lib/schemas"
 import { error, invalid } from "@sveltejs/kit"
 
 import {
   createTravelPlan as createTravelPlanDb,
   getTravelPlansWithEmployeeForMonths as getTravelPlansWithEmployeeForMonthsDb,
-  getTravelPlanWithEmployeeForEmployeeAndMonth as getTravelPlanWithEmployeeForEmployeeAndMonthDb
+  getTravelPlanWithEmployeeForEmployeeAndMonth as getTravelPlanWithEmployeeForEmployeeAndMonthDb,
+  getTravelPlanWithEmployeeOptionalEntriesById as getTravelPlanWithEmployeeOptionalEntriesByIdDb
 } from "@/server/db/travelplan"
 import { DayType } from "@db/client"
 
 import { DateTime } from "luxon"
 
 import { requireAuthMaybeAdmin } from "./common"
+import type { TravelPlanWithEmployeeWithEntries } from "@/types"
 
 /**
  * Remote form function to add a new Travel Plan given the travel plan data
@@ -78,6 +84,59 @@ export const addTravelPlan = form(addTravelPlanSchema, async (travelPlan, issue)
 })
 
 /**
+ * Remote query function to get a travel plan by Id
+ */
+export const getTravelPlanById = query(getTravelPlanByIdSchema, async (tpId) => {
+  let TAG = `Remote: getTravelPlanById(${tpId})`
+  console.time(TAG)
+
+  const { locals } = getRequestEvent()
+  const { user, session, supabase } = requireAuthMaybeAdmin(locals, false)
+  // console.debug("Fetching Travel Plan by Id", tpId)
+
+  const { data: travelPlan, error: dbError } = await getTravelPlanWithEmployeeOptionalEntriesByIdDb(
+    locals,
+    tpId
+  )
+
+  if (dbError !== null) {
+    console.error("Failed to fetch travel plan", dbError)
+    error(500, "Failed to fetch travel plan")
+  }
+
+  console.debug("Travel Plan fetched successfully", travelPlan)
+  console.timeEnd(TAG)
+  return travelPlan
+})
+
+/**
+ * Remote query function to get a travel plan by Id with Entries
+ */
+export const getTravelPlanByIdWithEntries = query(getTravelPlanByIdSchema, async (tpId) => {
+  let TAG = `Remote: getTravelPlanByIdWithEntries(${tpId})`
+  console.time(TAG)
+
+  const { locals } = getRequestEvent()
+  const { user, session, supabase } = requireAuthMaybeAdmin(locals, false)
+  // console.debug("Fetching Travel Plan by Id", tpId)
+
+  const { data: travelPlan, error: dbError } = await getTravelPlanWithEmployeeOptionalEntriesByIdDb(
+    locals,
+    tpId,
+    true
+  )
+
+  if (dbError !== null) {
+    console.error("Failed to fetch travel plan", dbError)
+    error(500, "Failed to fetch travel plan")
+  }
+
+  // console.debug("Travel Plan fetched successfully", travelPlan)
+  console.timeEnd(TAG)
+  return travelPlan as TravelPlanWithEmployeeWithEntries | null
+})
+
+/**
  * Remote batch query function to get travel plans for a specific month
  * Requires Admin
  */
@@ -99,7 +158,7 @@ export const getTravelPlansForMonth = query.batch(getTravelPlanForMonthsSchema, 
     true
   )
 
-  if (travelPlans === null) {
+  if (dbError !== null) {
     console.error("Failed to fetch travel plans", dbError)
     error(500, dbError)
   }

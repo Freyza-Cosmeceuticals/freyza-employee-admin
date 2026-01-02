@@ -81,3 +81,4 @@ export const addTravelPlanSchema = v.pipe(
 )
 
 export const getTravelPlanForMonthsSchema = v.pipe(v.string(), v.toDate("Invalid Date"))
+export const getTravelPlanByIdSchema = v.pipe(v.string(), v.uuid("Invalid Travel Plan ID"))

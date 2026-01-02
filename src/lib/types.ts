@@ -30,8 +30,8 @@ export type UserCreate = Omit<User, "id" | "createdAt" | "updatedAt"> & { id?: s
 
 const routeWithName = {
   include: {
-    srcLoc: { select: { name: true, id: true } },
-    destLoc: { select: { name: true, id: true } }
+    srcLoc: true,
+    destLoc: true
   }
 } satisfies Prisma.RouteDefaultArgs
 
@@ -40,14 +40,43 @@ export type RouteWithName = Prisma.RouteGetPayload<typeof routeWithName>
 const travelPlanWithEmployee = {
   include: {
     employee: {
-      select: {
-        id: true,
-        name: true,
-        tier: true
+      include: {
+        hq: true
       }
     }
   }
 } satisfies Prisma.TravelPlanDefaultArgs
+
+const travelPlanWithEmployeeWithEntries = {
+  include: {
+    employee: {
+      include: {
+        hq: true
+      }
+    },
+    planEntries: {
+      include: {
+        route: {
+          include: {
+            srcLoc: true,
+            destLoc: true
+          }
+        }
+      }
+    }
+  }
+} satisfies Prisma.TravelPlanDefaultArgs
+
+const travelPlanEntryWithRoute = {
+  include: {
+    route: {
+      include: {
+        srcLoc: true,
+        destLoc: true
+      }
+    }
+  }
+} satisfies Prisma.TravelPlanEntryDefaultArgs
 
 export type TravelPlanStats = {
   workDays: number
@@ -58,3 +87,11 @@ export type TravelPlanStats = {
 export type TravelPlanWithEmployee = Prisma.TravelPlanGetPayload<typeof travelPlanWithEmployee> & {
   stats?: TravelPlanStats
 }
+
+export type TravelPlanWithEmployeeWithEntries = Prisma.TravelPlanGetPayload<
+  typeof travelPlanWithEmployeeWithEntries
+>
+
+export type TravelPlanEntryWithRoute = Prisma.TravelPlanEntryGetPayload<
+  typeof travelPlanEntryWithRoute
+>
