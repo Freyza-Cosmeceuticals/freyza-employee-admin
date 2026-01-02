@@ -1,7 +1,10 @@
 <script lang="ts">
 import { resolve } from "$app/paths"
+
 import * as Sidebar from "@/components/ui/sidebar"
+
 import CalendarDaysIcon from "@lucide/svelte/icons/calendar-days"
+import CalendarPlusIcon from "@lucide/svelte/icons/calendar-plus"
 import MapPinIcon from "@lucide/svelte/icons/map-pin"
 import NotebookTabsIcon from "@lucide/svelte/icons/notebook-tabs"
 import RouteIcon from "@lucide/svelte/icons/route"
@@ -16,7 +19,7 @@ import UserRoundIcon from "@lucide/svelte/icons/user-round"
   </Sidebar.Header>
   <Sidebar.Content>
     <Sidebar.Group>
-      <Sidebar.GroupLabel>Admin Stuff</Sidebar.GroupLabel>
+      <Sidebar.GroupLabel>Admin</Sidebar.GroupLabel>
       <Sidebar.GroupContent>
         <Sidebar.Menu>
           <Sidebar.MenuItem>
@@ -41,8 +44,17 @@ import UserRoundIcon from "@lucide/svelte/icons/user-round"
           </Sidebar.MenuItem>
         </Sidebar.Menu>
       </Sidebar.GroupContent>
+    </Sidebar.Group>
 
+    <Sidebar.Group>
       <Sidebar.GroupLabel>Plan</Sidebar.GroupLabel>
+      <Sidebar.GroupAction>
+        {#snippet child({ props })}
+          <a href={resolve("/admin/travelplan/create")} {...props}>
+            <CalendarPlusIcon />
+          </a>
+        {/snippet}
+      </Sidebar.GroupAction>
       <Sidebar.GroupContent>
         <Sidebar.Menu>
           <Sidebar.MenuItem>
@@ -57,7 +69,9 @@ import UserRoundIcon from "@lucide/svelte/icons/user-round"
           </Sidebar.MenuItem>
         </Sidebar.Menu>
       </Sidebar.GroupContent>
+    </Sidebar.Group>
 
+    <Sidebar.Group>
       <Sidebar.GroupLabel>Manage</Sidebar.GroupLabel>
       <Sidebar.GroupContent>
         <Sidebar.Menu>

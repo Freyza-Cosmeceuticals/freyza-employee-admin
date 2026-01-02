@@ -1,6 +1,4 @@
 <script lang="ts">
-import * as ButtonGroup from "$lib/components/ui/button-group"
-
 import * as Avatar from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import * as Card from "@/components/ui/card"
@@ -8,7 +6,7 @@ import { Separator } from "@/components/ui/separator"
 
 import { DayType } from "@/generated/prisma/enums"
 
-import { dayTypeBadge } from "./snippets.svelte"
+import { statsBadge } from "./snippets.svelte"
 import type { TravelPlanWithEmployee } from "@/types"
 
 interface Props {
@@ -17,17 +15,6 @@ interface Props {
 
 const { travelPlan }: Props = $props()
 </script>
-
-{#snippet stat(type: DayType, value: number)}
-  <ButtonGroup.Root class="flex-1 justify-center">
-    {@render dayTypeBadge(type)}
-    <ButtonGroup.Text>
-      <span class="font-mono text-sm font-medium">
-        {value.toString().padStart(2, "0")}
-      </span>
-    </ButtonGroup.Text>
-  </ButtonGroup.Root>
-{/snippet}
 
 <Card.Root class="w-auto p-3">
   <Card.Content class="flex flex-col gap-4 p-0">
@@ -60,9 +47,9 @@ const { travelPlan }: Props = $props()
 
     <!-- Stats -->
     <div class="flex gap-2">
-      {@render stat(DayType.WORK, travelPlan.stats?.workDays ?? 0)}
-      {@render stat(DayType.HOLIDAY, travelPlan.stats?.holidayDays ?? 0)}
-      {@render stat(DayType.LEAVE, travelPlan.stats?.leaveDays ?? 0)}
+      {@render statsBadge(DayType.WORK, travelPlan.stats?.workDays ?? 0)}
+      {@render statsBadge(DayType.HOLIDAY, travelPlan.stats?.holidayDays ?? 0)}
+      {@render statsBadge(DayType.LEAVE, travelPlan.stats?.leaveDays ?? 0)}
     </div>
   </Card.Content>
 </Card.Root>

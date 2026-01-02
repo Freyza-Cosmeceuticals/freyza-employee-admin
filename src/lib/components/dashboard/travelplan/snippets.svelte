@@ -1,11 +1,12 @@
 <script module lang="ts">
 import { Badge } from "@/components/ui/badge"
+import * as ButtonGroup from "@/components/ui/button-group"
 
 import { DayType } from "@/generated/prisma/enums"
 
 import type { RouteWithName } from "@/types"
 
-export { dayTypeBadge, routeBadge }
+export { dayTypeBadge, routeBadge, statsBadge }
 </script>
 
 {#snippet dayTypeBadge(dt: DayType)}
@@ -28,4 +29,15 @@ export { dayTypeBadge, routeBadge }
   {:else}
     <Badge variant="destructive" class="w-full rounded-sm bg-freyza-invalid-route">NO ROUTE</Badge>
   {/if}
+{/snippet}
+
+{#snippet statsBadge(type: DayType, value: number, big: boolean = false)}
+  <ButtonGroup.Root>
+    {@render dayTypeBadge(type)}
+    <ButtonGroup.Text>
+      <span class={["font-mono text-sm font-medium", big && "text-xl"]}>
+        {value.toString().padStart(2, "0")}
+      </span>
+    </ButtonGroup.Text>
+  </ButtonGroup.Root>
 {/snippet}

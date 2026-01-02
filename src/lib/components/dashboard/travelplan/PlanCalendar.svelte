@@ -6,13 +6,14 @@ import PopoverTrigger from "@/components/ui/popover/popover-trigger.svelte"
 import Popover from "@/components/ui/popover/popover.svelte"
 import * as Select from "@/components/ui/select"
 
+import { TIMEZONE } from "@/constants"
 import { DayType } from "@/generated/prisma/browser"
 
 import { isWeekend, parseDate } from "@internationalized/date"
 import Holidays from "date-holidays"
 import { DateTime } from "luxon"
 
-import { dayTypeBadge, routeBadge } from "./snippets.svelte"
+import { dayTypeBadge, routeBadge, statsBadge } from "./snippets.svelte"
 import type { addTravelPlan } from "@/api/travelplan.remote"
 import type { RouteWithName } from "@/types"
 import type { DateValue } from "@internationalized/date"
@@ -33,22 +34,35 @@ let selectedMonth = $derived(parseDate(month.toISODate()!))
 
 let openPopovers = $state<Record<string, boolean>>({})
 
-const getInitialDays = () => {
-  var hd = new Holidays("IN")
-
-  return Object.fromEntries(
-    days.map((day, idx) => {
-      // 6 is saturday, 7 is sunday
-      if (day.weekday === 6 || day.weekday === 7) return [idx, DayType.HOLIDAY]
-      if (hd.isHoliday(day.toJSDate())) return [idx, DayType.HOLIDAY]
-      return [idx, DayType.WORK]
-    })
-  )
+const hd = new Holidays("IN")
+const setInitialDays = () => {
+  days.forEach((day, idx) => {
+    // 6 is saturday, 7 is sunday
+    if (day.weekday === 6 || day.weekday === 7) {
+      planEntries[idx].dayType.set(DayType.HOLIDAY)
+    } else if (hd.isHoliday(day.toJSDate())) {
+      planEntries[idx].dayType.set(DayType.HOLIDAY)
+    } else {
+      planEntries[idx].dayType.set(DayType.WORK)
+    }
+  })
 }
 
-// form submission values
-// let selectedDayTypes = $state<Record<number, DayType>>(getInitialDays())
-// let selectedRoutes = $state<Record<number, string | null>>({})
+setInitialDays()
+
+let workDaysCount = $derived(
+  planEntries.value()?.reduce((acc, entry) => acc + (entry.dayType === DayType.WORK ? 1 : 0), 0) ??
+    0
+)
+let holidayDaysCount = $derived(
+  planEntries
+    .value()
+    ?.reduce((acc, entry) => acc + (entry.dayType === DayType.HOLIDAY ? 1 : 0), 0) ?? 0
+)
+let leaveDaysCount = $derived(
+  planEntries.value()?.reduce((acc, entry) => acc + (entry.dayType === DayType.LEAVE ? 1 : 0), 0) ??
+    0
+)
 
 const getDateKey = (date: DateValue): string =>
   `${date.year}-${String(date.month).padStart(2, "0")}-${String(date.day).padStart(2, "0")}`
@@ -61,13 +75,17 @@ const formatDateDisplay = (date: DateValue): string =>
     day: "numeric"
   })
 
-// $inspect(selectedDayTypes)
 // $inspect(openPopovers)
 // $inspect(days)
 // $inspect(planEntries.allIssues()).with(console.log)
 </script>
 
 <div class="w-full">
+  <div class="container my-2 flex flex-row justify-center gap-4 p-4">
+    {@render statsBadge(DayType.WORK, workDaysCount, true)}
+    {@render statsBadge(DayType.HOLIDAY, holidayDaysCount, true)}
+    {@render statsBadge(DayType.LEAVE, leaveDaysCount, true)}
+  </div>
   <Calendar
     type="single"
     value={undefined}
@@ -80,6 +98,7 @@ const formatDateDisplay = (date: DateValue): string =>
     {disabled}>
     {#snippet day({ day, outsideMonth })}
       {@const dayIsWeekend = isWeekend(day, "en-IN")}
+      {@const holidayInfo = hd.isHoliday(day.toDate(TIMEZONE))}
       <!-- TODO: make this better -->
       {@const i = days.findIndex((d) => d.day === day.day && !outsideMonth)}
       {@const thisDayType = planEntries[i].dayType.value() ?? DayType.WORK}
@@ -134,6 +153,18 @@ const formatDateDisplay = (date: DateValue): string =>
               <h3 class="text-base font-semibold text-foreground">
                 {formatDateDisplay(day)}
               </h3>
+              {#if holidayInfo || dayIsWeekend}
+                <ul class="text-sm text-muted-foreground">
+                  {#if holidayInfo}
+                    {#each holidayInfo as holiday}
+                      <li>{holiday.name} ({holiday.type})</li>
+                    {/each}
+                  {/if}
+                  {#if dayIsWeekend}
+                    <li>Weekend</li>
+                  {/if}
+                </ul>
+              {/if}
             </div>
 
             <div class="space-y-4 p-4">

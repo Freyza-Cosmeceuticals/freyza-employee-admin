@@ -21,9 +21,8 @@ import { toast } from "svelte-sonner"
 import type { RemoteFormIssue } from "@sveltejs/kit"
 
 let { data } = $props()
-let { user, employees, routes, today } = $derived(data)
+let { user, employees, routes, today, nextMonth } = $derived(data)
 
-const nextMonth = $derived(today.plus({ months: 1 }))
 const days = $derived(
   Interval.fromDateTimes(nextMonth.startOf("month"), nextMonth.endOf("month"))
     .splitBy({ day: 1 })
