@@ -1,6 +1,6 @@
-import type { RouteWithName } from "@/types"
 import { requireAuthMaybeAdmin } from "./common"
 import prisma from "./prisma"
+import type { RouteWithName } from "$lib/types"
 
 /**
  * Get all Routes from the db

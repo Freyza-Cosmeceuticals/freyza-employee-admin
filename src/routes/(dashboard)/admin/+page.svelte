@@ -1,15 +1,15 @@
 <script lang="ts">
 import { resolve } from "$app/paths"
 
-import AdminProfileCard from "@/components/dashboard/AdminProfileCard.svelte"
-import EmployeeList from "@/components/dashboard/EmployeeList.svelte"
-import TasksList from "@/components/dashboard/TasksList.svelte"
-import TravelPlanList from "@/components/dashboard/TravelPlanList.svelte"
-import { Button } from "@/components/ui/button"
-import * as Card from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import AdminProfileCard from "$lib/components/dashboard/AdminProfileCard.svelte"
+import EmployeeList from "$lib/components/dashboard/EmployeeList.svelte"
+import TasksList from "$lib/components/dashboard/TasksList.svelte"
+import TravelPlanList from "$lib/components/dashboard/TravelPlanList.svelte"
+import { Button } from "@ui/button"
+import * as Card from "@ui/card"
+import { Skeleton } from "@ui/skeleton"
 
-import { getTravelPlansForMonth } from "@/api/travelplan.remote.js"
+import { getTravelPlansForMonth } from "$lib/api/travelplan.remote.js"
 
 let { data } = $props()
 let { userProfile: userProfilePromise, employees, upcomingMonth, tasks } = $derived(data)

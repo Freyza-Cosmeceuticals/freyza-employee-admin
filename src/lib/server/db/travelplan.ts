@@ -1,14 +1,14 @@
-import prisma from "@/server/db/prisma"
+import prisma from "$lib/server/db/prisma"
 import { DayType } from "@db/client"
 
 import { handleDbError, requireAuthMaybeAdmin } from "./common"
+import type { TravelPlan } from "@db/client"
 import type {
   TravelPlanCreate,
   TravelPlanStats,
   TravelPlanWithEmployee,
   TravelPlanWithEmployeeWithEntries
-} from "@/types"
-import type { TravelPlan } from "@db/client"
+} from "$lib/types"
 
 /**
  * Calculate travel plan stats. Requires Admin
@@ -96,7 +96,7 @@ export async function getTravelPlanWithEmployeeOptionalEntriesById(
         include: {
           employee: {
             include: {
-              hq: true
+              hq: { select: { name: true, id: true, operational: true } }
             }
           },
           planEntries: includeEntries
@@ -104,8 +104,8 @@ export async function getTravelPlanWithEmployeeOptionalEntriesById(
                 include: {
                   route: {
                     include: {
-                      srcLoc: true,
-                      destLoc: true
+                      srcLoc: { select: { name: true, id: true, operational: true } },
+                      destLoc: { select: { name: true, id: true, operational: true } }
                     }
                   }
                 }
@@ -179,7 +179,7 @@ export async function getTravelPlansWithEmployeeForMonths(
       include: {
         employee: {
           include: {
-            hq: true
+            hq: { select: { name: true, id: true, operational: true } }
           }
         }
       },
@@ -244,7 +244,7 @@ export async function getTravelPlanWithEmployeeForEmployeeAndMonth(
       include: {
         employee: {
           include: {
-            hq: true
+            hq: { select: { name: true, id: true, operational: true } }
           }
         }
       },

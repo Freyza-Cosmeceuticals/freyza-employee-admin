@@ -1,7 +1,7 @@
-import { TIMEZONE } from "@/constants"
-import { getAllRoutes } from "@/server/db/route"
-import { getTravelPlansForMonth } from "@/server/db/travelplan"
-import { getAllEmployees } from "@/server/db/user"
+import { TIMEZONE } from "$lib/constants"
+import { getAllRoutes } from "$lib/server/db/route"
+import { getTravelPlansForMonth } from "$lib/server/db/travelplan"
+import { getAllEmployees } from "$lib/server/db/user"
 
 import { DateTime } from "luxon"
 

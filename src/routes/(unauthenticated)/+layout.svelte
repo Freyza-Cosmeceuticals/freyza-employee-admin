@@ -1,5 +1,5 @@
 <script lang="ts">
-import Navbar from "@/components/reusable/Navbar.svelte"
+import Navbar from "$lib/components/reusable/Navbar.svelte"
 
 let { data, children } = $props()
 let { session, user, supabase } = $derived(data)

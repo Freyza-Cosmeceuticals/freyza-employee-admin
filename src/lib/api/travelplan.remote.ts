@@ -1,23 +1,23 @@
 import { form, getRequestEvent, query } from "$app/server"
+import { error, invalid } from "@sveltejs/kit"
+
 import {
   addTravelPlanSchema,
   getTravelPlanByIdSchema,
   getTravelPlanForMonthsSchema
 } from "$lib/schemas"
-import { error, invalid } from "@sveltejs/kit"
-
 import {
   createTravelPlan as createTravelPlanDb,
   getTravelPlansWithEmployeeForMonths as getTravelPlansWithEmployeeForMonthsDb,
   getTravelPlanWithEmployeeForEmployeeAndMonth as getTravelPlanWithEmployeeForEmployeeAndMonthDb,
   getTravelPlanWithEmployeeOptionalEntriesById as getTravelPlanWithEmployeeOptionalEntriesByIdDb
-} from "@/server/db/travelplan"
+} from "$lib/server/db/travelplan"
 import { DayType } from "@db/client"
 
 import { DateTime } from "luxon"
 
 import { requireAuthMaybeAdmin } from "./common"
-import type { TravelPlanWithEmployeeWithEntries } from "@/types"
+import type { TravelPlanWithEmployeeWithEntries } from "$lib/types"
 
 /**
  * Remote form function to add a new Travel Plan given the travel plan data

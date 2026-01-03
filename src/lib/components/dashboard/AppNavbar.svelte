@@ -1,9 +1,9 @@
 <script lang="ts">
 import { navigating } from "$app/state"
 
-import AccountDropdown from "@/components/reusable/AccountDropdown.svelte"
-import ColorModeToggle from "@/components/reusable/ColorModeToggle.svelte"
-import * as Sidebar from "@/components/ui/sidebar"
+import AccountDropdown from "$lib/components/reusable/AccountDropdown.svelte"
+import ColorModeToggle from "$lib/components/reusable/ColorModeToggle.svelte"
+import * as Sidebar from "@ui/sidebar"
 
 import { fade } from "svelte/transition"
 

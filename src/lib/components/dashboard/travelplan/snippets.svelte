@@ -1,10 +1,10 @@
 <script module lang="ts">
-import { Badge } from "@/components/ui/badge"
-import * as ButtonGroup from "@/components/ui/button-group"
+import { Badge } from "@ui/badge"
+import * as ButtonGroup from "@ui/button-group"
 
-import { DayType } from "@/generated/prisma/enums"
+import { DayType } from "@db/enums"
 
-import type { RouteWithName } from "@/types"
+import type { RouteWithName } from "$lib/types"
 
 export { dayTypeBadge, routeBadge, statsBadge }
 </script>

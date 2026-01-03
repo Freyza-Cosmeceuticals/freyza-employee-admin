@@ -1,11 +1,14 @@
 <script lang="ts">
 import { enhance } from "$app/forms"
-import { Button } from "@/components/ui/button"
-import * as Card from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+
+import { Button } from "@ui/button"
+import * as Card from "@ui/card"
+import { Input } from "@ui/input"
+import { Label } from "@ui/label"
+
 import Loader from "@lucide/svelte/icons/loader"
 import { toast } from "svelte-sonner"
+
 import type { ActionData } from "../../../routes/(unauthenticated)/auth/$types"
 
 interface Props {

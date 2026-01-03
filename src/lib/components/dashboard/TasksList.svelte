@@ -1,10 +1,10 @@
 <script lang="ts">
-import * as Empty from "@/components/ui/empty"
-import * as Item from "@/components/ui/item"
+import * as Empty from "@ui/empty"
+import * as Item from "@ui/item"
 
 import CalendarIcon from "@lucide/svelte/icons/calendars"
 
-import type { ItemVariant } from "@/components/ui/item/item.svelte"
+import type { ItemVariant } from "@ui/item/item.svelte"
 
 interface Props {
   variant?: ItemVariant

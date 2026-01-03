@@ -7,22 +7,19 @@
   "printWidth": 100,
   "svelteIndentScriptAndStyle": false,
   "importOrder": [
-    "^\\$().*$",
-    "^@sveltejs",
+    "^\\$(?!lib/)",
+    "^@sveltejs/",
     "",
-    "^@/components(.*)$",
+    "^\\$lib/components/",
+    "^@ui/",
     "",
-    "^@/",
-    "^@db/(.*)$",
+    "^\\$lib/",
+    "^@db/",
 
     "",
     "^@",
     "<THIRD_PARTY_MODULES>",
     "",
-
-    "^\\$(?!lib/)",
-    "",
-    "^\\$lib/",
 
     "",
     "^[.]",
@@ -30,8 +27,6 @@
 
     ""
   ],
-  "importOrderSeparation": true,
-  "importOrderSortSpecifiers": true,
 
   "plugins": [
     "prettier-plugin-svelte",

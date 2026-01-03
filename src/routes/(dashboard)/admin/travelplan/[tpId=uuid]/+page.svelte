@@ -1,10 +1,12 @@
 <script lang="ts">
 import { page } from "$app/state"
 
-import ViewPlanCalendar from "@/components/dashboard/travelplan/ViewPlanCalendar.svelte"
-import * as Card from "@/components/ui/card"
+import ViewPlanCalendar from "$lib/components/dashboard/travelplan/ViewPlanCalendar.svelte"
+import * as Avatar from "@ui/avatar"
+import { Badge } from "@ui/badge"
+import * as Card from "@ui/card"
 
-import { getTravelPlanByIdWithEntries } from "@/api/travelplan.remote.js"
+import { getTravelPlanByIdWithEntries } from "$lib/api/travelplan.remote.js"
 import { DayType } from "@db/browser"
 
 import { DateTime } from "luxon"
@@ -44,8 +46,32 @@ $inspect(tpId).with(console.log)
             {month.year}
           </Card.Title>
           <Card.Action>
-            <div class="flex flex-col items-end justify-center gap-2">
-              {travelPlan.employee.name}
+            <div class="flex flex-row items-center justify-end gap-3">
+              <Avatar.Root class="size-8 shrink-0 self-start">
+                <Avatar.Image src="https://github.com/harshnarayanjha.png" />
+                <Avatar.Fallback>
+                  {travelPlan.employee.name.slice(0, 1)}
+                </Avatar.Fallback>
+              </Avatar.Root>
+
+              <div class="flex min-w-0 flex-col">
+                <span class="font-semibold">
+                  {travelPlan.employee.name}
+                </span>
+                <div class="flex flex-row items-center gap-2">
+                  {#if travelPlan.employee.tier}
+                    <Badge class="mt-0.5 w-fit px-1.5 py-0 text-xs">
+                      {travelPlan.employee.tier.toUpperCase()}
+                    </Badge>
+                  {/if}
+
+                  {#if travelPlan.employee.hq}
+                    <span class="text-sm text-muted-foreground italic">
+                      {travelPlan.employee.hq.name}
+                    </span>
+                  {/if}
+                </div>
+              </div>
             </div>
           </Card.Action>
         </Card.Header>

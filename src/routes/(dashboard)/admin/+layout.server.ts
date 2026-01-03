@@ -4,8 +4,9 @@
  * send a server request, and thus trigger `hooks.server.ts`.
  **/
 
-import { SUPABASE_AUTH_TAG } from "@/constants"
 import { redirect } from "@sveltejs/kit"
+
+import { SUPABASE_AUTH_TAG } from "$lib/constants"
 
 export const load = async ({ locals, setHeaders, depends }) => {
   depends(SUPABASE_AUTH_TAG)

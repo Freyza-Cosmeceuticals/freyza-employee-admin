@@ -1,7 +1,8 @@
 <script lang="ts">
-import * as Card from "@/components/ui/card"
-import type { User } from "@db/browser"
+import * as Card from "@ui/card"
+
 import AddEmployeeButton from "./AddEmployeeButton.svelte"
+import type { User } from "@db/browser"
 
 interface Props {
   userProfile: User | null

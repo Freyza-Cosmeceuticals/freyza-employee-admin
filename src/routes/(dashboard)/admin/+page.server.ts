@@ -1,5 +1,5 @@
-import { N_EMPLOYEES_HOME, SUPABASE_AUTH_TAG, TIMEZONE } from "@/constants"
-import { getAllEmployees, getUser } from "@/server/db/user"
+import { N_EMPLOYEES_HOME, SUPABASE_AUTH_TAG, TIMEZONE } from "$lib/constants"
+import { getAllEmployees, getUser } from "$lib/server/db/user"
 
 import { DateTime } from "luxon"
 

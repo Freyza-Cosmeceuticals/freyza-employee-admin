@@ -1,4 +1,5 @@
 import { Settings } from "luxon"
+
 import type { LayoutServerLoad } from "./$types"
 
 Settings.defaultZone = "Asia/Kolkata"

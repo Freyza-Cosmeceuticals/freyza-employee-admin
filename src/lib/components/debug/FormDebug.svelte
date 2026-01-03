@@ -11,7 +11,7 @@ const fields = $derived(form.fields as RemoteFormFields<RemoteFormInput>)
 {JSON.stringify(
     {
       values: fields.value(),
-      issues: fields.allIssues(),
+      issues: fields.allIssues()
     },
     null,
     2

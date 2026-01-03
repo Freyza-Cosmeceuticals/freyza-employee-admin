@@ -1,6 +1,6 @@
 <script lang="ts">
-import * as Empty from "@/components/ui/empty"
-import * as Item from "@/components/ui/item"
+import * as Empty from "@ui/empty"
+import * as Item from "@ui/item"
 
 import { DayType } from "@db/browser"
 
@@ -8,8 +8,8 @@ import CalendarIcon from "@lucide/svelte/icons/calendars"
 
 import { dayTypeBadge } from "./travelplan/snippets.svelte"
 import TravelPlanCard from "./travelplan/TravelPlanCard.svelte"
-import type { ItemVariant } from "@/components/ui/item/item.svelte"
-import type { TravelPlanWithEmployee } from "@/types"
+import type { ItemVariant } from "@ui/item/item.svelte"
+import type { TravelPlanWithEmployee } from "$lib/types"
 
 interface Props {
   variant?: ItemVariant
@@ -18,13 +18,6 @@ interface Props {
 
 let { variant = "default", plans }: Props = $props()
 </script>
-
-{#snippet planStats(plan: TravelPlanWithEmployee)}
-  <div>
-    {@render dayTypeBadge(DayType.WORK)}
-    {plan.stats.workDays}
-  </div>
-{/snippet}
 
 <!-- Wrapped in Card.Content -->
 <Item.Group>

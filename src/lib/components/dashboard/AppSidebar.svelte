@@ -1,7 +1,7 @@
 <script lang="ts">
 import { resolve } from "$app/paths"
 
-import * as Sidebar from "@/components/ui/sidebar"
+import * as Sidebar from "@ui/sidebar"
 
 import CalendarDaysIcon from "@lucide/svelte/icons/calendar-days"
 import CalendarPlusIcon from "@lucide/svelte/icons/calendar-plus"

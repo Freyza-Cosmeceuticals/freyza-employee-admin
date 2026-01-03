@@ -1,7 +1,9 @@
 import { getRequestEvent, query } from "$app/server"
-import { getAllLocations } from "@/server/db/location"
-import type { Location } from "@db/client"
+
+import { getAllLocations } from "$lib/server/db/location"
+
 import { requireAuthMaybeAdmin } from "./common"
+import type { LocationWithName } from "$lib/types"
 
 /**
  * Fetch all locations
@@ -11,6 +13,6 @@ export const fetchLocations = query(async () => {
   const { locals } = getRequestEvent()
   const { user, session, supabase } = requireAuthMaybeAdmin(locals, false)
 
-  const locations: Location[] = await getAllLocations(locals)
+  const locations: LocationWithName[] = await getAllLocations(locals)
   return locations
 })

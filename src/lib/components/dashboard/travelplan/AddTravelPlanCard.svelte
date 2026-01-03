@@ -1,7 +1,7 @@
 <script lang="ts">
 import { resolve } from "$app/paths"
 
-import * as Card from "@/components/ui/card"
+import * as Card from "@ui/card"
 
 import CalendarPlusIcon from "@lucide/svelte/icons/calendar-plus"
 </script>

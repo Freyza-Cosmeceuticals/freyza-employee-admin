@@ -1,17 +1,22 @@
 <script lang="ts">
-import { addEmployee } from "@/api/employee.remote"
-import { fetchLocations } from "@/api/location.remote"
-import { Button } from "@/components/ui/button"
-import * as Dialog from "@/components/ui/dialog"
-import * as Field from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import * as Select from "@/components/ui/select"
-import { EMPLOYEE_TIERS } from "@/constants"
-import type { EmployeeTier, Location } from "@db/browser"
+import { type RemoteFormIssue } from "@sveltejs/kit"
+
+import { Button } from "@ui/button"
+import * as Dialog from "@ui/dialog"
+import * as Field from "@ui/field"
+import { Input } from "@ui/input"
+import * as Select from "@ui/select"
+
+import { addEmployee } from "$lib/api/employee.remote"
+import { fetchLocations } from "$lib/api/location.remote"
+import { EMPLOYEE_TIERS } from "$lib/constants"
+
 import CirclePlus from "@lucide/svelte/icons/circle-plus"
 import LoaderCircle from "@lucide/svelte/icons/loader-circle"
-import { type RemoteFormIssue } from "@sveltejs/kit"
 import { toast } from "svelte-sonner"
+
+import type { EmployeeTier } from "@db/browser"
+import type { LocationWithName } from "$lib/types"
 
 let open = $state(false)
 
@@ -25,7 +30,7 @@ let tierLabel = $derived.by(() => {
   return "Select Tier"
 })
 
-let locations = $state<Location[] | null>(null)
+let locations = $state<LocationWithName[] | null>(null)
 locations = await fetchLocations()
 
 let hqSelected = $state<string>("Select HQ")
@@ -58,7 +63,7 @@ let hqLabel = $derived.by(() => {
       </Button>
     {/snippet}
   </Dialog.Trigger>
-  <Dialog.Content class="sm:max-w-[625px]">
+  <Dialog.Content class="sm:max-w-156.25">
     <Dialog.Header>
       <Dialog.Title>Add new employee</Dialog.Title>
       <Dialog.Description>Create a new Employee at Freyza</Dialog.Description>

@@ -1,12 +1,12 @@
 import { form, getRequestEvent } from "$app/server"
-import { addEmployeeSchema } from "$lib/schemas"
 
-import { createEmployee } from "@/server/db/user"
-import { supabaseAdmin } from "@/server/supabaseAdmin"
+import { addEmployeeSchema } from "$lib/schemas"
+import { createEmployee } from "$lib/server/db/user"
+import { supabaseAdmin } from "$lib/server/supabaseAdmin"
 import { UserRole, UserStatus } from "@db/client"
 
-import type { EmployeeCreate } from "@/types"
 import { requireAuthMaybeAdmin } from "./common"
+import type { EmployeeCreate } from "$lib/types"
 
 export const addEmployee = form(addEmployeeSchema, async (employee) => {
   const { locals } = getRequestEvent()
@@ -19,10 +19,12 @@ export const addEmployee = form(addEmployeeSchema, async (employee) => {
     password: "12345678",
     email_confirm: true,
     user_metadata: {
-      role: UserRole.EMPLOYEE,
-      status: UserStatus.ACTIVE,
-      name: employee.name,
+      name: employee.name
     },
+    app_metadata: {
+      app_role: UserRole.EMPLOYEE,
+      app_status: UserStatus.ACTIVE
+    }
   })
 
   if (!potentialEmployee.data.user) {
@@ -39,7 +41,7 @@ export const addEmployee = form(addEmployeeSchema, async (employee) => {
     tier: employee.tier,
     hqId: employee.hqId,
     joiningDate: employee.joiningDate,
-    resignDate: null,
+    resignDate: null
   }
 
   const { data: employeeProfile, error } = await createEmployee(locals, employeeData)

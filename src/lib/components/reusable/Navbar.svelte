@@ -1,9 +1,11 @@
 <script lang="ts">
 import { page } from "$app/state"
-import { buttonVariants } from "@/components/ui/button"
-import type { Session, SupabaseClient, User } from "@supabase/supabase-js"
+
+import { buttonVariants } from "@ui/button"
+
 import AccountDropdown from "./AccountDropdown.svelte"
 import ColorModeToggle from "./ColorModeToggle.svelte"
+import type { Session, SupabaseClient, User } from "@supabase/supabase-js"
 
 interface Props {
   session: Session | null

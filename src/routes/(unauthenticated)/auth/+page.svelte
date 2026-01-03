@@ -1,6 +1,7 @@
 <script lang="ts">
-import LoginForm from "@/components/auth/LoginForm.svelte"
-import * as Alert from "@/components/ui/alert"
+import LoginForm from "$lib/components/auth/LoginForm.svelte"
+import * as Alert from "@ui/alert"
+
 import CircleAlertIcon from "@lucide/svelte/icons/circle-alert"
 
 let { form } = $props()

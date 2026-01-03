@@ -1,6 +1,7 @@
 <script lang="ts">
 import { resolve } from "$app/paths"
-import { buttonVariants } from "@/components/ui/button"
+
+import { buttonVariants } from "@ui/button"
 
 let { data } = $props()
 let { session } = $derived(data)

@@ -22,16 +22,22 @@ export type TravelPlanCreate = Omit<TravelPlan, "id" | "createdAt" | "updatedAt"
 }
 
 const employeeWithHq = {
-  include: { hq: true }
+  include: { hq: { select: { name: true, id: true, operational: true } } }
 } satisfies Prisma.UserDefaultArgs
 
 export type EmployeeWithHQ = Prisma.UserGetPayload<typeof employeeWithHq>
 export type UserCreate = Omit<User, "id" | "createdAt" | "updatedAt"> & { id?: string }
 
+const locationWithName = {
+  select: { name: true, id: true }
+} satisfies Prisma.LocationDefaultArgs
+
+export type LocationWithName = Prisma.LocationGetPayload<typeof locationWithName>
+
 const routeWithName = {
   include: {
-    srcLoc: true,
-    destLoc: true
+    srcLoc: { select: { name: true, id: true } },
+    destLoc: { select: { name: true, id: true } }
   }
 } satisfies Prisma.RouteDefaultArgs
 
@@ -41,7 +47,7 @@ const travelPlanWithEmployee = {
   include: {
     employee: {
       include: {
-        hq: true
+        hq: { select: { name: true, id: true, operational: true } }
       }
     }
   }
@@ -51,15 +57,15 @@ const travelPlanWithEmployeeWithEntries = {
   include: {
     employee: {
       include: {
-        hq: true
+        hq: { select: { name: true, id: true, operational: true } }
       }
     },
     planEntries: {
       include: {
         route: {
           include: {
-            srcLoc: true,
-            destLoc: true
+            srcLoc: { select: { name: true, id: true, operational: true } },
+            destLoc: { select: { name: true, id: true, operational: true } }
           }
         }
       }
@@ -71,8 +77,8 @@ const travelPlanEntryWithRoute = {
   include: {
     route: {
       include: {
-        srcLoc: true,
-        destLoc: true
+        srcLoc: { select: { name: true, id: true, operational: true } },
+        destLoc: { select: { name: true, id: true, operational: true } }
       }
     }
   }

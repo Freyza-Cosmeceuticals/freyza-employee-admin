@@ -1,396 +1,395 @@
-# Database Schema Documentation
+# PLAN.md – Employee Travel & Expense System
 
-> NOTE: AI generated, take this as a grain of salt, schema.prisma and business login are always the source of truth
-
-### MR Travel & Reporting System
-
-> Last Updated: 29th Oct 2025
+Status: WIP  
+Stack: Android (Kotlin) · Supabase (Postgres, Auth, Cron) · SvelteKit + Prisma
 
 ---
 
-## Table of Contents
+## 1. High-level Architecture
 
-- [Overview](#overview)
-- [Models & Fields](#models--fields)
-  - [User](#user)
-  - [Location](#location)
-  - [Route](#route)
-  - [TravelPlan](#travelplan)
-  - [TravelPlanEntry](#travelplanentry)
-  - [DailyReport](#dailyreport)
-  - [Visit](#visit)
-- [Relations](#relations)
-- [ER Diagram](#er-diagram)
-- [Practical Use-Cases](#practical-use-cases)
-- [Improvements & Considerations](#improvements-&-considerations)
-- [Indexing & Performance Notes](#indexing-&-performance-notes)
-- [Business Logic / Constraints](#business-logic-/-constraints)
-- [Change Management & Versioning](#change-management-&-versioning)
+### 1.1 Components
 
----
+- **Supabase**
+  - Postgres DB (Prisma-managed schema)
+  - Auth (email/phone + password; optional OAuth later)
+  - RLS for per-user isolation
+  - Cron / scheduled jobs for auto-locking reports, etc.
 
-## Overview
+- **SvelteKit Admin Dashboard**
+  - Uses Prisma Client against Supabase Postgres.
+  - Admin authentication via Supabase.
+  - Admin-only views for:
+    - Travel plan management
+    - Daily report review
+    - Employee & master-data management
+    - Expense exports
 
-This schema supports a field-sales/travel-reporting system where employees (of different tiers) receive monthly travel plans, submit daily reports, and record visits (to doctors, stockists, chemists).
-Key entities include Users, Locations, Routes, TravelPlans & entries, DailyReports, and Visits.
+- **Android (Kotlin) Employee App**
+  - Uses supabase-kt / Supabase Kotlin client.
+  - Handles MR login, daily plan confirmation, visit logging, report locking.
+  - Minimal offline caching for plan/day-view; sync to Supabase when online.
 
----
+### 1.2 User Roles
 
-## Models & Fields
+- **ADMIN**
+  - Creates monthly travel plans (TPs) for all employees before 25th of previous month.
+  - Manages employees, locations, routes, master lists (doctors, stockists, chemists – later).
+  - Reviews daily reports and generates exports.
 
-### User
-
-**Fields**
-
-- `id: String` (PK, UUID)
-- `name: String (max length 100)`
-- `phone: String` (unique)
-- `role: UserRole (EMPLOYEE | ADMIN)`
-- `status: UserStatus (ACTIVE | REVOKED)`
-- `tier?: EmployeeTier (FSO | TABM | ASM)`
-- `hqId?: String` → references `Location.id`
-- `createdAt: DateTime`
-- `updatedAt: DateTime`
-
-**Relations**
-
-- `travelPlans: TravelPlan[]` (for employees)
-- `dailyReports: DailyReport[]` (for employees)
-- `plansCreated: TravelPlan[]` (for admins)
-- `hq: Location?` (employee’s head-quarter)
+- **EMPLOYEE (MR)**
+  - Views travel plan, confirms route each day.
+  - Logs visits (doctor/stockist/chemist).
+  - Locks daily report (or auto-lock at 00:00).
+  - Can request leave for specific days before cutoff.
 
 ---
 
-### Location
+## 2. Data Model Overview (Prisma)
 
-**Fields**
+Prisma schema already roughly defined; key models:
 
-- `id: String` (PK, UUID)
-- `name: String (VarChar(25), unique)`
-- `operational: Boolean` (default true)
-- `createdAt: DateTime`
-- `updatedAt: DateTime`
+- `User`
+  - Fields: `id`, `name`, `phone`, `role`, `status`, `tier`, `hqId`, timestamps.
+  - Relations:
+    - EMPLOYEE: `travelPlans`, `dailyReports`
+    - ADMIN: `plansCreated`
 
-**Relations**
+- `Location`
+  - Fields: `id`, `name`, `operational`, timestamps.
+  - Relations: `employees (hq)`, `routeAsSrc`, `routeAsDest`.
 
-- `employees: User[]` (users having this HQ)
-- `routeAsSrc: Route[]` (routes where this location is source)
-- `routeAsDest: Route[]` (routes where this location is destination)
+- `Route`
+  - `srcLocId`, `destLocId`, `distanceKm`.
+  - Unique on `(srcLocId, destLocId)`.
+  - Used for expense calculation.
 
----
+- `TravelPlan`
+  - One per EMPLOYEE per month.
+  - `employeeId`, `month`, `createdById`.
+  - Relations: `planEntries`.
 
-### Route
+- `TravelPlanEntry`
+  - One per day per `TravelPlan`.
+  - `date`, `dayType (WORK/HOLIDAY/LEAVE)`, optional `routeId`.
 
-**Fields**
+- `DailyReport`
+  - One per EMPLOYEE per date.
+  - `dayType`, optional `routeId`, `ta`, `da`, `totalExpense`, `locked`, `lockedAt`.
+  - Relations: `visits`.
 
-- `id: String` (PK, UUID)
-- `srcLocId: String` → references `Location.id`
-- `destLocId: String` → references `Location.id`
-- `distanceKm: Float`
+- `Visit`
+  - `reportId`, `visitType (DOCTOR/STOCKIST/CHEMIST)`.
+  - Later: link to doctor/stockist/chemist tables, GPS data, etc.
 
-**Relations**
-
-- `srcLoc: Location`
-- `destLoc: Location`
-- `travelPlans: TravelPlanEntry[]` (entries referencing this route)
-- `dailyReports: DailyReport[]` (reports referencing this route)
-
-**Constraint**
-
-- Unique on (srcLocId, destLocId)
-
----
-
-### TravelPlan
-
-**Fields**
-
-- `id: String` (PK, UUID)
-- `employeeId: String` → references `User.id`
-- `month: DateTime` (represents first of that month/year)
-- `createdById: String` → references `User.id` (admin)
-- `createdAt: DateTime`
-- `updatedAt: DateTime`
-
-**Relations**
-
-- `employee: User`
-- `createdBy: User`
-- `planEntries: TravelPlanEntry[]`
-
-**Constraint**
-
-- Unique on (employeeId, month)
+This schema lives in the SvelteKit repo and is applied to the Supabase Postgres DB via Prisma migrations.
 
 ---
 
-### TravelPlanEntry
+## 3. Auth & Security
 
-**Fields**
+### 3.1 Supabase Auth
 
-- `id: String` (PK, UUID)
-- `tpId: String` → references `TravelPlan.id`
-- `date: DateTime`
-- `dayType: DayType (WORK | HOLIDAY | LEAVE)`
-- `routeId?: String` → references `Route.id` (nullable)
-- `createdAt: DateTime`
-- `updatedAt: DateTime`
+- All users (admins + employees) are Supabase auth users.
+- Application `user.id` equals `auth.users.id`.
+- On signup/provision:
+  - Admin creation: via dashboard or script; `role = ADMIN`.
+  - Employee creation: admin-only; `role = EMPLOYEE`, `tier` set, `hqId` set.
 
-**Relations**
+### 3.2 RLS Policies (Core Idea)
 
-- `tp: TravelPlan`
-- `route?: Route`
+- On tables like `TravelPlan`, `TravelPlanEntry`, `DailyReport`, `Visit`:
+  - Employee access condition: `employee_id = auth.uid()`.
+  - Admin access: `exists(...) where user.role = 'ADMIN'` via a secure function or JWT claim.
 
-**Constraint**
+- For listing employees, locations, routes:
+  - Readable by admins.
+  - Restricted read-only subset for employees where needed (e.g. locations list).
 
-- Unique on (tpId, date)
-
----
-
-### DailyReport
-
-**Fields**
-
-- `id: String` (PK, UUID)
-- `employeeId: String` → references `User.id`
-- `date: DateTime`
-- `dayType: DayType (WORK | HOLIDAY | LEAVE)`
-- `routeId?: String` → references `Route.id` (nullable)
-- `ta?: Float`
-- `da?: Float`
-- `totalExpense?: Float`
-- `locked: Boolean` (default false)
-- `lockedAt?: DateTime`
-- `createdAt: DateTime`
-- `updatedAt: DateTime`
-
-**Relations**
-
-- `employee: User`
-- `route?: Route`
-- `visits: Visit[]`
-
-**Constraint**
-
-- Unique on (employeeId, date)
+Policies will be written in Supabase SQL and tested before mobile integration.
 
 ---
 
-### Visit
+## 4. SvelteKit Admin Dashboard Plan
 
-**Fields**
+### 4.1 Project Setup
 
-- `id: String` (PK, UUID)
-- `reportId: String` → references `DailyReport.id`
-- `visitType: VisitType (DOCTOR | STOCKIST | CHEMIST)`
-- `latitude: Float`
-- `longitude: Float`
-- `distanceFrom: Float`
-- `createdAt: DateTime`
-- `updatedAt: DateTime`
+- SvelteKit app with:
+  - Prisma Client connected to Supabase `DATABASE_URL`.
+  - Supabase JS client for auth in hooks/layout.
+  - UI framework: shadcn-svelte.
 
-**Relations**
+Project structure guided by SvelteKit docs (`src/routes`, `+layout`, `+page.server.ts`).
 
-- `report: DailyReport`
+### 4.2 Admin Routes
 
----
+#### 4.2.1 `/auth`
 
-## Relations
+- Simple login page using Supabase auth (email/phone+password).
+- On success:
+  - Store session in cookies via SvelteKit hook.
+  - Redirect to `/admin`.
 
-| From Model      | To Model        | Cardinality         | Description                                    |
-| --------------- | --------------- | ------------------- | ---------------------------------------------- |
-| User (employee) | TravelPlan      | 1 → many            | An employee may have many monthly travel plans |
-| User (employee) | DailyReport     | 1 → many            | An employee may submit many daily reports      |
-| User (admin)    | TravelPlan      | 1 → many            | An admin creates many travel plans             |
-| User (employee) | Location (hq)   | many → 1            | Employee belongs to one HQ location            |
-| Location        | User            | 1 → many            | A location is HQ for many employees            |
-| Location        | Route (src)     | 1 → many            | Many routes may originate from a location      |
-| Location        | Route (dest)    | 1 → many            | Many routes may end at a location              |
-| Route           | TravelPlanEntry | 1 → many            | A route may be used in many plan entries       |
-| Route           | DailyReport     | 1 → many            | A route may appear in many reports             |
-| TravelPlan      | TravelPlanEntry | 1 → many            | A plan consists of many daily entries          |
-| TravelPlanEntry | Route           | many → 1 (nullable) | Day entry may reference a route                |
-| DailyReport     | Route           | many → 1 (nullable) | Report may reference a route                   |
-| DailyReport     | Visit           | 1 → many            | A report may have many visits                  |
-| Visit           | DailyReport     | many → 1            | A visit belongs to one report                  |
+#### 4.2.2 `/admin`
 
----
+- Overview cards:
+  - Number of employees.
+  - Current month: count of employees with TPs created.
+  - Today’s reports locked vs unlocked.
 
-## ER Diagram
+#### 4.2.3 `/admin/travelplan` (List page)
 
-```mermaid
-erDiagram
-    USER ||--o{ TRAVELPLAN : "has"
-    USER ||--o{ DAILYREPORT : "submits"
-    USER ||--o{ TRAVELPLAN : "creates"
-    USER }o--|| LOCATION : "hq of"
-    LOCATION ||--o{ ROUTE : "src"
-    LOCATION ||--o{ ROUTE : "dest"
-    ROUTE ||--o{ TRAVELPLANENTRY : "used in plan"
-    ROUTE ||--o{ DAILYREPORT : "used in report"
-    TRAVELPLAN ||--o{ TRAVELPLANENTRY : "consists of"
-    DAILYREPORT ||--o{ VISIT : "includes"
+**Goal:** Admin view for all travel plans, grouped by month.
 
-    USER {
-        uuid id PK
-        varchar name
-        varchar phone UK
-        enum role
-        enum status
-        enum tier
-        uuid hqId FK
-        datetime createdAt
-        datetime updatedAt
-    }
-    LOCATION {
-        uuid id PK
-        varchar name UK
-        boolean operational
-        datetime createdAt
-        datetime updatedAt
-    }
-    ROUTE {
-        uuid id PK
-        uuid srcLocId FK
-        uuid destLocId FK
-        float distanceKm
-    }
-    TRAVELPLAN {
-        uuid id PK
-        uuid employeeId FK
-        datetime month
-        uuid createdById FK
-        datetime createdAt
-        datetime updatedAt
-    }
-    TRAVELPLANENTRY {
-        uuid id PK
-        uuid tpId FK
-        date date
-        enum dayType
-        uuid routeId FK
-        datetime createdAt
-        datetime updatedAt
-    }
-    DAILYREPORT {
-        uuid id PK
-        uuid employeeId FK
-        date date
-        enum dayType
-        uuid routeId FK
-        float ta
-        float da
-        float totalExpense
-        boolean locked
-        datetime lockedAt
-        datetime createdAt
-        datetime updatedAt
-    }
-    VISIT {
-        uuid id PK
-        uuid reportId FK
-        enum visitType
-        float latitude
-        float longitude
-        float distanceFrom
-        datetime createdAt
-        datetime updatedAt
-    }
-```
+- **Data load (remote functions):**
+  - Fetch months with existing `TravelPlan`s (limit to last 6–12 months).
+  - For each month:
+    - Count employees total vs employees with `TravelPlan` for that month.
+  - Determine next month (relative to today) and which employees still lack plans.
 
-## Practical Use-Cases
+- **UI layout:**
+  - Month sections (accordion or expandable panels):
+    - Month header: e.g. “October 2025”
+    - Badge: “12/15 employees planned”.
+    - List of rows: Employee name, TP status (complete/partial), link to edit.
+  - Top card: **Next month**:
+    - Text: “Create Travel Plans for [Next Month]”
+    - Button `+ Create`:
+      - Opens wizard to create/edit plans for that month.
 
-- **Monthly Travel Plan Generation**
-  An administrator selects an employee and a month, creates a `TravelPlan`, then populates `TravelPlanEntry` rows for each day with `dayType` (WORK / HOLIDAY / LEAVE). For WORK days, a `routeId` is assigned so the system knows the route the employee will travel.
+#### 4.2.4 `/admin/travelplan/[year]-[month]`
 
-- **Employee View of Upcoming Plan**
-  An employee queries the `TravelPlan` by their `employeeId` and chosen `month`, then retrieves the associated `planEntries` to display which days are work, leave, or holiday, and on work days which route and distance is planned.
+**Goal:** Manage all employees’ plans for a specific month.
 
-- **Daily Report Submission**
-  On a given date (D), the employee creates a `DailyReport`. If `dayType = WORK`, they record the `routeId`, travel allowance (`ta`), daily allowance (`da`), and `totalExpense`. If `dayType = HOLIDAY` or `LEAVE`, those fields remain null or empty.
+- **Server:**
+  - Fetch all employees (`User` with `role = EMPLOYEE`).
+  - For each employee:
+    - Fetch (or determine absence of) `TravelPlan` for that month.
+    - Optionally prefetch `TravelPlanEntry[]` for quick view.
 
-- **Visit Recording**
-  For each `DailyReport` (especially WORK days), the employee logs multiple `Visit` records specifying `visitType` (DOCTOR / STOCKIST / CHEMIST), `latitude`, `longitude`, and `distanceFrom` (e.g., from their HQ or route origin). Later analytics query number and type of visits per employee/day, geographic coverage, and average distance travelled.
+- **UI:**
+  - Fetch Travel Plan with all data using remote functions.
+  - Sidebar / list:
+    - All employees with status icons (complete / missing / partial).
+    - Click selects an employee.
+  - Main panel:
+    - Header: Employee name, month, HQ.
+    - Calendar-like table:
+      - One row per date.
+      - Columns: Date, DayType (select), Source, Destination.
+    - Actions:
+      - “Copy previous day”
+      - “Mark as holiday” (bulk for selected range) – later.
+      - “Save Plan for this Employee”.
 
-- **Report Locking & Review Workflow**
-  A manager filters `DailyReport` records where `locked = false`, reviews them, and then sets `locked = true` with `lockedAt` timestamp. This triggers finalisation of expenses and prevents further edits.
+- **Actions (server):**
+  - `createOrUpdateTravelPlan`:
+    - If TP not exists: create `TravelPlan` row for employee + month.
+    - Upsert `TravelPlanEntry[]`:
+      - Ensure `@@unique([tpId, date])` respected.
+    - Return updated plan.
 
-- **Analytics & Reporting**
-  - Compute for an employee: “How many work-days did I complete this month? How many holidays or leaves?” (by counting `planEntries` with each `dayType`).
-  - Compare planned vs actual: “What was the total distance travelled this month?” (sum of `distanceKm` via `Route` for each reported day) vs what was planned.
-  - Coverage by visits: “How many doctor visits did employee X make this week/month?” (by filtering `Visit` records) and “What was average distance per visit?” (by averaging `distanceFrom`).
-  - Route usage: “Which routes are used most frequently across employees this quarter?” (aggregate `TravelPlanEntry.routeId` and `DailyReport.routeId`).
+#### 4.2.5 `/admin/travelplan/[planId]` (optional)
+
+- View a single `TravelPlan` in detail (flattened view, debug-friendly).
+
+#### 4.2.6 `/admin/reports` (Daily reports dashboard)
+
+Later, when daily reports are in place:
+
+- Filter by date range, employee, lock status.
+- Table of `DailyReport` rows.
+- Click to view details: visits and expenses.
 
 ---
 
-## Improvements & Considerations
+## 5. Android MR App Plan
 
-- **Conditional constraints**: Some fields should only exist when `dayType = WORK` (e.g., `routeId`, `ta`, `da`, `totalExpense`). Consider adding database check-constraints or enforce via application logic.
-- **Date normalization**: Use `@db.Date` or ensure time component is zeroed on `date` / `month` fields to avoid duplicates/time-zone issues.
-- **Indexing**: While unique constraints create indexes implicitly, consider additional indexes for frequent filters (for example `DailyReport.locked`, `Visit.visitType`, `Location.operational`).
-- **Route enhancements**: If richer planning is needed, consider adding fields such as `estimatedTimeMinutes`, `costEstimate`, or `region` on `Route`.
-- **Visit entity links**: If you maintain actual `Doctor`/`Stockist`/`Chemist` entities in the future, add foreign keys (e.g., `doctorId`) and adapt `visitType`.
-- **User role enforcement**: Application logic should enforce: if `role = EMPLOYEE`, then `tier` and `hqId` must be non-null; if `role = ADMIN`, they should be null.
-- **Archive / partitioning strategy**: For large tables (especially `Visit`), plan for archiving older data or partitioning by year/month to maintain performance.
-- **OnDelete behaviour clarity**: Document and review your `onDelete: Restrict` vs `Cascade` decisions. For instance, deleting a user is restricted if they have associated reports/plans.
-- **Enum evolution**: When you add new values to enums (e.g., a new `VisitType`), ensure migrations and documentation are planned and executed.
-- **Metadata fields**: Consider adding workflow fields like `status`, `approvedBy`, `approvedAt` to `TravelPlan` or `DailyReport` if business rules require approvals.
+### 5.1 Project Setup
+
+- Android app using Kotlin + supabase-kt.
+- Dependencies:
+  - Kotlin serialization plugin.
+  - Ktor HTTP client.
+  - Supabase modules: Auth + Postgrest.
+
+### 5.2 Auth Flow
+
+- **Login screen:**
+  - Phone + password (or email).
+  - Call Supabase Auth signIn.
+  - On success, store session/token securely.
+
+- **Session handling:**
+  - On app start:
+    - Check cached session; refresh if possible.
+    - If no valid session, show login.
+
+### 5.3 Main Screens
+
+#### 5.3.1 Home / Today Screen
+
+- Shows:
+  - Today’s date.
+  - Day type from travel plan (WORK/HOLIDAY/LEAVE).
+  - Route (source → dest) from `TravelPlanEntry` or fallback.
+  - Lock status of `DailyReport`.
+
+- **Data fetch:**
+  - Query `TravelPlanEntry` for current month for this employee.
+  - Query/create `DailyReport` for today as needed.
+
+#### 5.3.2 Route Confirmation Flow
+
+- If `DailyReport` for today does not exist:
+  - Show default dayType + route from `TravelPlanEntry`.
+  - Allow editing:
+    - DayType select (WORK/HOLIDAY/LEAVE).
+    - For WORK:
+      - Source and destination dropdowns from `Location` list.
+  - Save:
+    - Create `DailyReport` row with chosen `dayType` and `routeId`.
+
+- For future days:
+  - Show read-only plan (no report yet).
+
+#### 5.3.3 Visit Logging Flow
+
+- Only active when:
+  - DayType = WORK.
+  - `DailyReport.locked = false`.
+
+- UI:
+  - List of visits (per report).
+  - “Add Visit” FAB/button:
+    - VisitType selector.
+    - Simple fields for now (e.g., note, maybe contact name).
+    - Later: link to master doctor/stockist/chemist, GPS.
+
+- Data:
+  - Insert into `Visit` table with `reportId`.
+
+#### 5.3.4 Report Locking
+
+- UI:
+  - “Lock Report” button on Today screen (if not locked).
+- Behavior:
+  - On press: set `locked = true`, `lockedAt = now()` for today’s `DailyReport`.
+  - Visits no longer editable after locked.
+
+#### 5.3.5 History Screens (later)
+
+- Monthly calendar listing:
+  - Each date: icon showing locked/unlocked, dayType, expense summary.
+- Tap a day to view report + visits.
+
+### 5.4 Sync Strategy
+
+- Minimal offline:
+  - Cache `TravelPlanEntry[]` and recent `DailyReport[]` locally.
+  - On app start & refresh:
+    - Pull from Supabase.
+  - On create/update:
+    - Post to Supabase; on failure, queue locally.
+
+- No heavy conflict resolution initially; assume mostly online usage.
 
 ---
 
-## Indexing & Performance Notes
+## 6. Business Logic: Expenses & Cron
 
-- Unique constraints provide indexing on:
-  - `TravelPlan(employeeId, month)`
-  - `TravelPlanEntry(tpId, date)`
-  - `DailyReport(employeeId, date)`
-- For `Visit`, the foreign key `reportId` is indexed implicitly; if you frequently query by `visitType` or by geographic range (latitude/longitude), consider explicit indexes.
-- Add index on `DailyReport.locked` if you often list “pending” reports.
-- Add index on `Location.operational` if you filter on `operational = true` often.
-- Monitor table sizes: The `Visit` table may grow very large if the field-force is active; consider partitioning or archiving by year/month to preserve query performance.
+### 6.1 Expense Calculation
 
----
+- **Inputs:**
+  - `User.tier` to pick pay-per-km and DA.
+  - `Route.distanceKm`.
+  - `DayType` and consecutive stay/home city rules (later).
 
-## Business Logic / Constraints
+- **Logic location:**
+  - Implement as backend (SvelteKit) function or Postgres function.
+  - Called:
+    - When `DailyReport` is locked.
+    - Or via nightly cron for all newly locked/unlocked reports.
 
-- Only one `TravelPlan` per employee per month (enforced via `@@unique([employeeId, month])`).
-- Only one `TravelPlanEntry` per plan per date (`@@unique([tpId, date])`).
-- Only one `DailyReport` per employee per date (`@@unique([employeeId, date])`).
-- For a `TravelPlanEntry` with `dayType = WORK`, `routeId` must be non-null; for HOLIDAY or LEAVE, `routeId` must be null.
-- For a `DailyReport` with `dayType = WORK`, expect `routeId`, `ta`, `da`, `totalExpense` to be populated; for HOLIDAY/LEAVE, those should be null or zero.
-- Employees must have `status = ACTIVE` to create plans/reports (enforce via application logic).
-- Only operational HQ/locations (`operational = true`) should be used when assigning employees or routes.
+- **Output:**
+  - Writes `ta`, `da`, `totalExpense` fields into `DailyReport`.
 
----
+### 6.2 Auto-Locking
 
-## Change Management & Versioning
-
-- Maintain a schema version number and update this documentation whenever the schema changes (for example, v1.0 → v1.1).
-- Keep migration scripts in your repository, and update this Markdown document _before_ applying schema migrations.
-- When adding new fields, tables, or enums, update this Markdown documentation file along with your schema changes.
-- Optionally maintain a change log section at the end of this document to note major changes, dates, and authors/owners.
+- Use Supabase Cron / `pg_cron` to schedule a job running shortly after midnight.
+- Job:
+  - For each `DailyReport` with `locked = false` and `date < today`, set `locked = true`, `lockedAt = now()`.
+  - Potentially auto-create missing `DailyReport` entries as fully empty/zero for auditing or leave them absent depending on business decision.
 
 ---
 
-## Appendix
+## 7. Implementation Phases (Roadmap)
 
-**Enum Definitions**
+### Phase 1 – Backend & Schema
 
-- `UserRole`: EMPLOYEE, ADMIN
-- `UserStatus`: ACTIVE, REVOKED
-- `EmployeeTier`: FSO, TABM, ASM
-- `DayType`: WORK, HOLIDAY, LEAVE
-- `VisitType`: DOCTOR, STOCKIST, CHEMIST
-- `ReportStatus`: SAVED, LOCKED (if used)
+- Finalize Prisma schema; run migrations against Supabase.
+- Seed:
+  - Admin user(s).
+  - Some employees.
+  - Basic locations & routes.
+- Implement essential RLS.
 
-**Mapping to DB Table Names**
+### Phase 2 – Admin Travel Plan MVP
 
-- Model `User` → table name `"user"` (via `@@map("user")`)
-- Model `Location` → `"location"`
-- Model `Route` → `"route"`
-- Model `TravelPlan` → `"travelPlan"`
-- Model `TravelPlanEntry` → `"travelPlanEntry"`
-- Model `DailyReport` → `"dailyReport"`
-- Model `Visit` → `"visit"`
+- `/admin/login` with Supabase auth.
+- `/admin/travelplan` list:
+  - Show months, employees, and next-month “create” card.
+- `/admin/travelplan/[year]-[month]`:
+  - Per-employee flat table for dayType and route.
+  - Save plan to DB.
+
+Deliverable: Admin can create monthly plans for all employees.
+
+### Phase 3 – Android “Today + Lock” MVP
+
+- Basic login.
+- Fetch today’s `TravelPlanEntry`.
+- Create `DailyReport` with selected route/dayType.
+- Lock report manually.
+
+Deliverable: End-to-end flow: admin plan → MR confirm+lock.
+
+### Phase 4 – Visits
+
+- Add `Visit` editing in app.
+- Show visits per report in admin dashboard (`/admin/reports` simple list).
+
+Deliverable: MR logging of field visits with admin visibility.
+
+### Phase 5 – Expenses & Cron
+
+- Implement TA/DA/totalExpense calculation.
+- Run it on lock or via nightly cron.
+- Display expense fields in admin reports and exports.
+
+Deliverable: Basic automated expense calculation.
+
+### Phase 6 – Enhancements
+
+- Detailed visit metadata and master lists for doctors/stockists/chemists.
+- Leave request flow.
+- Better UX (bulk operations, copy previous day, better filters).
+- PDF/Excel exports and Drive integration.
+- GPS + distance-from-POI logic in Kotlin app.
+
+---
+
+## 8. Conventions & Notes
+
+- **Dates & Times:**
+  - Store all timestamps as `timestamptz` in Postgres.
+  - Use ISO8601 at API boundaries.
+- **ID Strategy:**
+  - UUID everywhere (already in Prisma schema).
+- **Error Handling:**
+  - Prefer backend validation of business rules (e.g., no leave applied after 9am) with clear error codes.
+- **Security:**
+  - Never leak service role keys to clients; use anon key for client access.
+- **Testing:**
+  - Seed dev DB with 2–3 employees, 1–2 months of plans to iterate on UI.
 
 ---

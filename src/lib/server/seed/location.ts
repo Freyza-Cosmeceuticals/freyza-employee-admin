@@ -1,4 +1,5 @@
 import { type LocationCreate, type RouteCreate } from "$lib/types"
+
 import prisma from "../db/prisma"
 
 type LocationCreateWithID = LocationCreate & { id: string }

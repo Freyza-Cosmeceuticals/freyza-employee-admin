@@ -14,7 +14,8 @@ const config = {
     adapter: adapter(),
 
     alias: {
-      "@/*": "./src/lib/*",
+      "@/*": "./src/*",
+      "@ui/*": "./src/lib/components/ui/*",
       "@db/*": "./src/lib/generated/prisma/*"
     },
 

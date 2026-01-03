@@ -2,13 +2,15 @@
 import "../app.css"
 
 import { invalidate } from "$app/navigation"
-import favicon from "$lib/assets/favicon.svg"
-import { onMount } from "svelte"
 
 import { Toaster } from "$lib/components/ui/sonner"
-import { SUPABASE_AUTH_TAG } from "@/constants"
+
+import favicon from "$lib/assets/favicon.svg"
+import { SUPABASE_AUTH_TAG } from "$lib/constants"
+
 import { Settings } from "luxon"
 import { ModeWatcher } from "mode-watcher"
+import { onMount } from "svelte"
 
 let { data, children } = $props()
 let { session, supabase } = $derived(data)

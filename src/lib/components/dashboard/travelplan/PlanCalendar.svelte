@@ -1,22 +1,22 @@
 <script lang="ts">
-import RouteSelectComboBox from "@/components/dashboard/RouteSelectComboBox.svelte"
-import Calendar from "@/components/ui/calendar/calendar.svelte"
-import PopoverContent from "@/components/ui/popover/popover-content.svelte"
-import PopoverTrigger from "@/components/ui/popover/popover-trigger.svelte"
-import Popover from "@/components/ui/popover/popover.svelte"
-import * as Select from "@/components/ui/select"
+import RouteSelectComboBox from "$lib/components/dashboard/RouteSelectComboBox.svelte"
+import Calendar from "@ui/calendar/calendar.svelte"
+import PopoverContent from "@ui/popover/popover-content.svelte"
+import PopoverTrigger from "@ui/popover/popover-trigger.svelte"
+import Popover from "@ui/popover/popover.svelte"
+import * as Select from "@ui/select"
 
-import { TIMEZONE } from "@/constants"
-import { DayType } from "@/generated/prisma/browser"
+import { TIMEZONE } from "$lib/constants"
+import { DayType } from "@db/browser"
 
 import { isWeekend, parseDate } from "@internationalized/date"
 import Holidays from "date-holidays"
 import { DateTime } from "luxon"
 
 import { dayTypeBadge, routeBadge, statsBadge } from "./snippets.svelte"
-import type { addTravelPlan } from "@/api/travelplan.remote"
-import type { RouteWithName } from "@/types"
 import type { DateValue } from "@internationalized/date"
+import type { addTravelPlan } from "$lib/api/travelplan.remote"
+import type { RouteWithName } from "$lib/types"
 
 interface Props {
   month: DateTime

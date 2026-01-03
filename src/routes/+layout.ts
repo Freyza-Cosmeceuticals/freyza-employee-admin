@@ -1,6 +1,9 @@
 import { PUBLIC_SUPABASE_PUBLISHABLE_KEY, PUBLIC_SUPABASE_URL } from "$env/static/public"
-import { SUPABASE_AUTH_TAG } from "@/constants"
+
+import { SUPABASE_AUTH_TAG } from "$lib/constants"
+
 import { createBrowserClient, createServerClient, isBrowser } from "@supabase/ssr"
+
 import type { LayoutLoad } from "./$types"
 
 export const load: LayoutLoad = async ({ data, depends, fetch }) => {

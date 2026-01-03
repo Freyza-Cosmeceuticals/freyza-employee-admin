@@ -1,4 +1,5 @@
 import { error, fail, redirect } from "@sveltejs/kit"
+
 import { UserRole, UserStatus } from "@db/client"
 
 import * as v from "valibot"
@@ -59,8 +60,8 @@ export const actions: Actions = {
     // FIXME: Fetch user details beforehand, do not log them in
     if (
       loggedInUser &&
-      loggedInUser.user_metadata.role !== UserRole.ADMIN &&
-      loggedInUser.user_metadata.status !== UserStatus.ACTIVE
+      loggedInUser.app_metadata.app_role !== UserRole.ADMIN &&
+      loggedInUser.app_metadata.app_status !== UserStatus.ACTIVE
     ) {
       await supabase.auth.signOut()
 

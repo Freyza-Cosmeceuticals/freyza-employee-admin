@@ -1,5 +1,5 @@
-import { NUM_PAST_MONTHS_TRAVEL_PLAN, TIMEZONE } from "@/constants"
-import { getEmployeeCount } from "@/server/db/user"
+import { NUM_PAST_MONTHS_TRAVEL_PLAN, TIMEZONE } from "$lib/constants"
+import { getEmployeeCount } from "$lib/server/db/user"
 
 import { DateTime } from "luxon"
 

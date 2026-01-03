@@ -1,15 +1,15 @@
 <script lang="ts">
 import { resolve } from "$app/paths"
 
-import * as Avatar from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import * as Card from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
+import * as Avatar from "@ui/avatar"
+import { Badge } from "@ui/badge"
+import * as Card from "@ui/card"
+import { Separator } from "@ui/separator"
 
-import { DayType } from "@/generated/prisma/enums"
+import { DayType } from "@db/enums"
 
 import { statsBadge } from "./snippets.svelte"
-import type { TravelPlanWithEmployee } from "@/types"
+import type { TravelPlanWithEmployee } from "$lib/types"
 
 interface Props {
   travelPlan: TravelPlanWithEmployee

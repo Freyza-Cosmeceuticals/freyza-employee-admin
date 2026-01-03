@@ -1,19 +1,19 @@
 <script lang="ts">
-import Calendar from "@/components/ui/calendar/calendar.svelte"
-import PopoverContent from "@/components/ui/popover/popover-content.svelte"
-import PopoverTrigger from "@/components/ui/popover/popover-trigger.svelte"
-import Popover from "@/components/ui/popover/popover.svelte"
+import Calendar from "@ui/calendar/calendar.svelte"
+import PopoverContent from "@ui/popover/popover-content.svelte"
+import PopoverTrigger from "@ui/popover/popover-trigger.svelte"
+import Popover from "@ui/popover/popover.svelte"
 
-import { TIMEZONE } from "@/constants"
-import { DayType } from "@/generated/prisma/browser"
+import { TIMEZONE } from "$lib/constants"
+import { DayType } from "@db/browser"
 
 import { isWeekend, parseDate } from "@internationalized/date"
 import Holidays from "date-holidays"
 import { DateTime } from "luxon"
 
 import { dayTypeBadge, routeBadge, statsBadge } from "./snippets.svelte"
-import type { TravelPlanEntryWithRoute } from "@/types"
 import type { DateValue } from "@internationalized/date"
+import type { TravelPlanEntryWithRoute } from "$lib/types"
 
 interface Props {
   month: DateTime

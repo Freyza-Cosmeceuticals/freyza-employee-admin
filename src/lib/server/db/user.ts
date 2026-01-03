@@ -1,9 +1,9 @@
-import prisma from "@/server/db/prisma"
+import prisma from "$lib/server/db/prisma"
 import { UserRole, UserStatus } from "@db/client"
 
 import { handleDbError, requireAuthMaybeAdmin } from "./common"
-import type { Employee, EmployeeCreate, EmployeeWithHQ } from "@/types"
 import type { User } from "@db/client"
+import type { Employee, EmployeeCreate, EmployeeWithHQ } from "$lib/types"
 
 /**
  * Gets the user profile associated with the current user
@@ -85,7 +85,7 @@ export async function getAllEmployees(
         }
       },
       include: {
-        hq: true
+        hq: { select: { name: true, id: true, operational: true } }
       },
       orderBy: {
         createdAt: "desc"

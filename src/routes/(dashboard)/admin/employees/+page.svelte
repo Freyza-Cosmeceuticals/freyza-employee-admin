@@ -1,8 +1,8 @@
 <script lang="ts">
-import AddEmployeeButton from "@/components/dashboard/AddEmployeeButton.svelte"
-import EmployeeList from "@/components/dashboard/EmployeeList.svelte"
-import * as Card from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import AddEmployeeButton from "$lib/components/dashboard/AddEmployeeButton.svelte"
+import EmployeeList from "$lib/components/dashboard/EmployeeList.svelte"
+import * as Card from "@ui/card"
+import { Skeleton } from "@ui/skeleton"
 
 let { data } = $props()
 let { employees } = $derived(data)

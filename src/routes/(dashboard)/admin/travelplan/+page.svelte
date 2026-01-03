@@ -1,12 +1,12 @@
 <script lang="ts">
-import AddTravelPlanCard from "@/components/dashboard/travelplan/AddTravelPlanCard.svelte"
-import TravelPlanCard from "@/components/dashboard/travelplan/TravelPlanCard.svelte"
-import * as Card from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import AddTravelPlanCard from "$lib/components/dashboard/travelplan/AddTravelPlanCard.svelte"
+import TravelPlanCard from "$lib/components/dashboard/travelplan/TravelPlanCard.svelte"
+import * as Card from "@ui/card"
+import { Skeleton } from "@ui/skeleton"
 
-import { getTravelPlansForMonth } from "@/api/travelplan.remote.js"
+import { getTravelPlansForMonth } from "$lib/api/travelplan.remote.js"
 
-import type { TravelPlanWithEmployee } from "@/types.js"
+import type { TravelPlanWithEmployee } from "$lib/types"
 
 let { data } = $props()
 let { today, nextMonth, months, employeeCount } = $derived(data)
