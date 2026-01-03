@@ -29,14 +29,14 @@ export const actions: Actions = {
       password: v.pipe(v.string(), v.minLength(8, "Password must be at least 8 characters long"))
     })
 
-    const formData = await request.formData()
-    const { output: data, issues: parseError, success } = v.safeParse(schema, formData)
+    const loginData = Object.fromEntries(await request.formData())
+    const { output: data, issues: parseError, success } = v.safeParse(schema, loginData)
 
     if (!success) {
       console.timeEnd("LOGIN")
       console.debug("Invalid Form Data:", parseError)
       return fail(400, {
-        email: formData.get("email"),
+        email: loginData.email,
         message: parseError[0].message,
         error: true
       })
