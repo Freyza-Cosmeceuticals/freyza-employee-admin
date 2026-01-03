@@ -155,7 +155,7 @@ export async function getTravelPlansForMonth(
 }
 
 /**
- * Get all TravelPlans with employee information for the given months from the db
+ * Get all TravelPlans with employee information for the given months from the db, optionally including stats (expensive)
  * Requires Admin
  */
 export async function getTravelPlansWithEmployeeForMonths(
@@ -165,7 +165,7 @@ export async function getTravelPlansWithEmployeeForMonths(
 ): Promise<
   { data: Map<string, TravelPlanWithEmployee[]>; error: null } | { data: null; error: string }
 > {
-  let TAG = `DB: getTravelPlansWithEmployeeForMonths(${months.length} MONTHS)`
+  let TAG = `DB: getTravelPlansWithEmployeeForMonths(${months.length} MONTHS, includeStats: ${includeStats})`
   console.time(TAG)
   const { user, session } = requireAuthMaybeAdmin(locals)
 
@@ -213,6 +213,68 @@ export async function getTravelPlansWithEmployeeForMonths(
         return map
       }, new Map<string, TravelPlanWithEmployee[]>())
     }
+
+    console.timeEnd(TAG)
+    return { data: grouped, error: null }
+  } catch (e) {
+    return handleDbError(e)
+  }
+}
+
+/**
+ * Get all TravelPlans with employee information and entries for the given months from the db
+ * Requires Admin
+ */
+export async function getTravelPlansWithEmployeeWithEntriesForMonths(
+  locals: App.Locals,
+  months: Date[]
+): Promise<
+  | { data: Map<string, TravelPlanWithEmployeeWithEntries[]>; error: null }
+  | { data: null; error: string }
+> {
+  let TAG = `DB: getTravelPlansWithEmployeeForMonths(${months.length} MONTHS)`
+  console.time(TAG)
+  const { user, session } = requireAuthMaybeAdmin(locals)
+
+  try {
+    const travelPlans: TravelPlanWithEmployeeWithEntries[] = await prisma.travelPlan.findMany({
+      where: {
+        month: {
+          in: months
+        }
+      },
+      include: {
+        employee: {
+          include: {
+            hq: { select: { name: true, id: true, operational: true } }
+          }
+        },
+        planEntries: {
+          include: {
+            route: {
+              include: {
+                srcLoc: { select: { name: true, id: true, operational: true } },
+                destLoc: { select: { name: true, id: true, operational: true } }
+              }
+            }
+          }
+        }
+      },
+      orderBy: {
+        month: "desc"
+      }
+    })
+
+    let grouped: Map<string, TravelPlanWithEmployeeWithEntries[]>
+
+    grouped = travelPlans.reduce((map, travelPlan) => {
+      const key = travelPlan.month.toISOString().split("T", 2)[0]
+      if (!map.has(key)) map.set(key, [])
+
+      map.get(key)!.push(travelPlan)
+
+      return map
+    }, new Map<string, TravelPlanWithEmployeeWithEntries[]>())
 
     console.timeEnd(TAG)
     return { data: grouped, error: null }

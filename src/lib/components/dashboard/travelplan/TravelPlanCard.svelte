@@ -16,6 +16,11 @@ interface Props {
 }
 
 const { travelPlan }: Props = $props()
+
+let travelPlanUrl = $derived.by(() => {
+  const dt = `${(travelPlan.month.getMonth() + 1).toString().padStart(2, "0")}-${travelPlan.month.getFullYear()}`
+  return resolve(`/admin/travelplan/${dt}?employeeId=${travelPlan.employee.id}`)
+})
 </script>
 
 <Card.Root class="w-auto p-3">
@@ -51,11 +56,7 @@ const { travelPlan }: Props = $props()
         </div>
       </div>
 
-      <a
-        href={resolve(`/admin/travelplan/${travelPlan.id}`)}
-        class="ms-auto self-start text-sm hover:underline">
-        View Plan
-      </a>
+      <a href={travelPlanUrl} class="ms-auto self-start text-sm hover:underline"> View Plan </a>
     </div>
     <Separator />
   </Card.Content>

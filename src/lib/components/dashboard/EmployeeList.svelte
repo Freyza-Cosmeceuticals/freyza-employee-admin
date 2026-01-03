@@ -1,5 +1,4 @@
 <script lang="ts">
-import * as Avatar from "@ui/avatar"
 import { Badge } from "@ui/badge"
 import * as Empty from "@ui/empty"
 import * as Item from "@ui/item"
@@ -7,6 +6,7 @@ import * as Item from "@ui/item"
 import { UserStatus } from "@db/browser"
 
 import AddEmployeeButton from "./AddEmployeeButton.svelte"
+import EmployeeItem from "./employee/EmployeeItem.svelte"
 import type { ItemVariant } from "@ui/item/item.svelte"
 import type { EmployeeWithHQ } from "$lib/types"
 
@@ -29,24 +29,7 @@ let { variant = "default", employees }: Props = $props()
 <!-- Wrapped in Card.Content -->
 <Item.Group>
   {#each employees as emp, i (emp.id)}
-    <Item.Root {variant}>
-      <Item.Media variant="icon">
-        <Avatar.Root class="size-10">
-          <Avatar.Image src="https://github.com/harshnarayanjha.png" />
-          <Avatar.Fallback>{emp.name.substring(0, 1)}</Avatar.Fallback>
-        </Avatar.Root>
-      </Item.Media>
-      <Item.Content class="gap-1">
-        <Item.Title class="line-clamp-1">{emp.name}</Item.Title>
-        <Item.Description>{emp.hq?.name}</Item.Description>
-      </Item.Content>
-      <Item.Content class="flex-none text-center">
-        <Item.Description>
-          <Badge variant="default">{emp.tier}</Badge>
-          <!-- {@render employeeStatus(emp.status)} -->
-        </Item.Description>
-      </Item.Content>
-    </Item.Root>
+    <EmployeeItem employee={emp} {variant} />
     {#if i !== employees.length - 1}
       <Item.Separator />
     {/if}

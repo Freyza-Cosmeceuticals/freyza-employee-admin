@@ -6,7 +6,7 @@ import * as Avatar from "@ui/avatar"
 import { Badge } from "@ui/badge"
 import * as Card from "@ui/card"
 
-import { getTravelPlanByIdWithEntries } from "$lib/api/travelplan.remote.js"
+import { getTravelPlanByIdWithEntries } from "$lib/api/travelplan.remote"
 import { DayType } from "@db/browser"
 
 import { DateTime } from "luxon"

@@ -9,6 +9,7 @@ import {
 import {
   createTravelPlan as createTravelPlanDb,
   getTravelPlansWithEmployeeForMonths as getTravelPlansWithEmployeeForMonthsDb,
+  getTravelPlansWithEmployeeWithEntriesForMonths as getTravelPlansWithEmployeeWithEntriesForMonthsDb,
   getTravelPlanWithEmployeeForEmployeeAndMonth as getTravelPlanWithEmployeeForEmployeeAndMonthDb,
   getTravelPlanWithEmployeeOptionalEntriesById as getTravelPlanWithEmployeeOptionalEntriesByIdDb
 } from "$lib/server/db/travelplan"
@@ -173,3 +174,41 @@ export const getTravelPlansForMonth = query.batch(getTravelPlanForMonthsSchema, 
     return travelPlans.get(month.toString())
   }
 })
+
+/**
+ * Remote batch query function to get travel plans for a specific month
+ * Requires Admin
+ */
+export const getTravelPlansWithEntriesForMonth = query.batch(
+  getTravelPlanForMonthsSchema,
+  async (months) => {
+    let TAG = `Remote: getTravelPlansWithEntriesForMonth(${months.length} MONTHS)`
+    console.time(TAG)
+
+    const { locals } = getRequestEvent()
+    const { user, session, supabase } = requireAuthMaybeAdmin(locals)
+    // console.debug("Fetching Travel Plans with entries for months", months)
+
+    if (months.length === 0) {
+      error(400, "No months provided")
+    }
+
+    const { data: travelPlans, error: dbError } =
+      await getTravelPlansWithEmployeeWithEntriesForMonthsDb(locals, months)
+
+    if (dbError !== null) {
+      console.error("Failed to fetch travel plans", dbError)
+      error(500, dbError)
+    }
+
+    // console.debug("Fetched Travel Plans", travelPlans)
+
+    console.timeEnd(TAG)
+    return (month) => {
+      // todo, an error is present here, presumably with sveltekit remote fns
+      // it is supposed to be a parsed Date, but is a string
+      // console.log(typeof month, month, lookup)
+      return travelPlans.get(month.toString())
+    }
+  }
+)
