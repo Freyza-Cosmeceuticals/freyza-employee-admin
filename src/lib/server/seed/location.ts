@@ -1,215 +1,228 @@
-import { type LocationCreate, type RouteCreate } from "$lib/types"
+import { exit } from "process"
 
-import prisma from "../db/prisma"
+import * as schema from "$lib/server/db/schema"
+import {
+  type LocationCreate as LocationCreateOptionalID,
+  type RouteCreate as RouteCreateOptionalID
+} from "$lib/types"
 
-type LocationCreateWithID = LocationCreate & { id: string }
-type RouteCreateWithID = RouteCreate & { id: string }
+import { sql } from "drizzle-orm"
+import { drizzle } from "drizzle-orm/postgres-js"
+import postgres from "postgres"
 
-const PURNEA: LocationCreateWithID = {
+if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is not set")
+
+const client = postgres(process.env.DATABASE_URL)
+const db = drizzle(client, { schema })
+
+type LocationCreate = LocationCreateOptionalID & { id: string }
+type RouteCreate = RouteCreateOptionalID & { id: string }
+
+const PURNEA: LocationCreate = {
   id: "a5703cd0-2bc3-45ee-b640-6345481f1613",
   name: "Purnea",
   operational: true
 }
 
-const KATIHAR: LocationCreateWithID = {
+const KATIHAR: LocationCreate = {
   id: "e1408ee4-a947-474d-b1fc-3f4c60cb42fc",
   name: "Katihar",
   operational: true
 }
 
-const KISHANGANJ: LocationCreateWithID = {
+const KISHANGANJ: LocationCreate = {
   id: "68f3376d-4f37-4f6d-b9fe-02eb499a96ab",
   name: "Kishanganj",
   operational: true
 }
 
-const ARARIA: LocationCreateWithID = {
+const ARARIA: LocationCreate = {
   id: "4ece93c6-4816-4ec8-adeb-67b2f2c93d12",
   name: "Araria",
   operational: true
 }
 
-const MADHEPURA: LocationCreateWithID = {
+const MADHEPURA: LocationCreate = {
   id: "89e2baf1-a223-4585-9d09-124516fcfe18",
   name: "Madhepura",
   operational: true
 }
 
-const SAHARSA: LocationCreateWithID = {
+const SAHARSA: LocationCreate = {
   id: "72729f70-2ca9-4723-9e33-c8593cce617e",
   name: "Saharsa",
   operational: true
 }
 
-const MALDA: LocationCreateWithID = {
+const MALDA: LocationCreate = {
   id: "cbd45637-6d74-47eb-87a5-21f5e6aaf7f3",
   name: "Malda",
   operational: true
 }
 
-const DARBHANGA: LocationCreateWithID = {
+const DARBHANGA: LocationCreate = {
   id: "6b20d406-94d3-4e36-89a4-1b12dd1e561e",
   name: "Darbhanga",
   operational: true
 }
 
-const PATNA: LocationCreateWithID = {
+const PATNA: LocationCreate = {
   id: "cb28fe84-bb93-4a5f-b340-9ed507c93a39",
   name: "Patna",
   operational: true
 }
 
-const MADHUBANI: LocationCreateWithID = {
+const MADHUBANI: LocationCreate = {
   id: "7af9efe5-4c42-41de-bba1-933faca00232",
   name: "Madhubani",
   operational: true
 }
 
-const SUPAUL: LocationCreateWithID = {
+const SUPAUL: LocationCreate = {
   id: "b8f6ef90-32a4-41ba-80fd-2cd9f71298a2",
   name: "Supaul",
   operational: true
 }
 
-const BEGUSARAI: LocationCreateWithID = {
+const BEGUSARAI: LocationCreate = {
   id: "b4683951-d823-4db2-b633-cf033d5847d4",
   name: "Begusarai",
   operational: true
 }
 
-const SAMASTIPUR: LocationCreateWithID = {
+const SAMASTIPUR: LocationCreate = {
   id: "0297a506-75ce-4c4c-96b1-5ee7047ab75e",
   name: "Samastipur",
   operational: true
 }
 
-const SAKRI: LocationCreateWithID = {
+const SAKRI: LocationCreate = {
   id: "f9577dfb-f8c2-44b0-90df-859f0d822b21",
   name: "Sakri",
   operational: true
 }
 
-const JHANJHARPUR: LocationCreateWithID = {
+const JHANJHARPUR: LocationCreate = {
   id: "f2e3f85e-eeee-45f3-85d6-3a6104144951",
   name: "Jhanjharpur",
   operational: true
 }
 
-const BAHERI_BIRAUL: LocationCreateWithID = {
+const BAHERI_BIRAUL: LocationCreate = {
   id: "fe1bf51a-94fc-4039-adf5-9bb63605a773",
   name: "Baheri / Biraul",
   operational: true
 }
 
-const SINGHWARA_BHADWARA: LocationCreateWithID = {
+const SINGHWARA_BHADWARA: LocationCreate = {
   id: "50b66a5d-f160-447d-94a9-a96baa960a39",
   name: "Singhwara / Bhadwara",
   operational: true
 }
 
-const JALE_PUPRI: LocationCreateWithID = {
+const JALE_PUPRI: LocationCreate = {
   id: "b3440bdc-6f29-43dc-8c61-1badd64c8dff",
   name: "Jale / Pupri",
   operational: true
 }
 
-const SITAMARHI: LocationCreateWithID = {
+const SITAMARHI: LocationCreate = {
   id: "4697af47-a6b7-4b3e-a4a6-34e0cabe6e85",
   name: "Sitamarhi",
   operational: true
 }
 
-const MUZAFFARPUR: LocationCreateWithID = {
+const MUZAFFARPUR: LocationCreate = {
   id: "abe31e62-5167-43f1-8f5b-f9ae7f8a8178",
   name: "Muzaffarpur",
   operational: true
 }
 
-const CHHAPRA: LocationCreateWithID = {
+const CHHAPRA: LocationCreate = {
   id: "7696bbfb-5036-48b6-8981-7a00426009d8",
   name: "Chhapra",
   operational: true
 }
 
-const SIWAN: LocationCreateWithID = {
+const SIWAN: LocationCreate = {
   id: "3a956497-6454-4eef-b0ff-03f8708069ad",
   name: "Siwan",
   operational: true
 }
 
-const MOTIHARI: LocationCreateWithID = {
+const MOTIHARI: LocationCreate = {
   id: "ab05e420-1d3e-4c08-9097-a990f657162b",
   name: "Motihari",
   operational: true
 }
 
-const BETTIAH: LocationCreateWithID = {
+const BETTIAH: LocationCreate = {
   id: "d87423bd-ac8b-44db-b334-03405cb78f75",
   name: "Bettiah",
   operational: true
 }
 
-const BHAGALPUR: LocationCreateWithID = {
+const BHAGALPUR: LocationCreate = {
   id: "ec137d5b-7d7c-479c-b131-58142c60759c",
   name: "Bhagalpur",
   operational: true
 }
 
-const MUNGER: LocationCreateWithID = {
+const MUNGER: LocationCreate = {
   id: "49887cdb-b159-436b-95e2-98ed16f6ebde",
   name: "Munger",
   operational: true
 }
 
-const DEOGHAR: LocationCreateWithID = {
+const DEOGHAR: LocationCreate = {
   id: "6247f97e-6aeb-4b5e-b6ef-414cd7938179",
   name: "Deoghar",
   operational: true
 }
 
-const GODDA: LocationCreateWithID = {
+const GODDA: LocationCreate = {
   id: "d72c5701-66dc-463c-b199-aa18afd215ec",
   name: "Godda",
   operational: true
 }
 
-const BANKA: LocationCreateWithID = {
+const BANKA: LocationCreate = {
   id: "3ea247a0-ffc0-4845-8ced-b37082009733",
   name: "Banka",
   operational: true
 }
 
-const HAJIPUR: LocationCreateWithID = {
+const HAJIPUR: LocationCreate = {
   id: "dee9a968-6614-4876-8c51-febea4ee05c1",
   name: "Hajipur",
   operational: true
 }
 
-const ARA: LocationCreateWithID = {
+const ARA: LocationCreate = {
   id: "2c9c8692-359d-4bda-ba54-30b4ecd04f33",
   name: "Ara",
   operational: true
 }
 
-const GAYA: LocationCreateWithID = {
+const GAYA: LocationCreate = {
   id: "4cc4c1b6-daf6-42a2-8f49-30a0422f355f",
   name: "Gaya",
   operational: true
 }
 
-const BIHAR_SHARIF: LocationCreateWithID = {
+const BIHAR_SHARIF: LocationCreate = {
   id: "3798b46a-3119-405e-8b4e-a5eb79af00c9",
   name: "Bihar Sharif",
   operational: true
 }
 
-const DEHRI_ON_SONE: LocationCreateWithID = {
+const DEHRI_ON_SONE: LocationCreate = {
   id: "ce52d574-bd6f-46f1-b077-79b279f73fdf",
   name: "Dehri on Sone",
   operational: true
 }
 
-const locations: LocationCreateWithID[] = [
+const locations: LocationCreate[] = [
   PURNEA,
   KATIHAR,
   KISHANGANJ,
@@ -244,15 +257,27 @@ const locations: LocationCreateWithID[] = [
   GAYA,
   BIHAR_SHARIF,
   DEHRI_ON_SONE
-]
+] as const
 
 try {
-  await prisma.location.createMany({ data: locations })
+  console.log("Seeding locations...")
+  await db
+    .insert(schema.location)
+    .values(locations)
+    .onConflictDoUpdate({
+      target: schema.location.id,
+      set: {
+        name: sql`excluded.name`,
+        operational: sql`excluded.operational`
+      }
+    })
+
+  console.log("Locations seeded successfully")
 } catch (e) {
   console.error(e)
 }
 
-const routes: RouteCreateWithID[] = [
+const routes: RouteCreate[] = [
   {
     id: "8f8a4362-ec61-4efe-89a7-e4b0f5b69916",
     srcLocId: PURNEA.id,
@@ -481,10 +506,25 @@ const routes: RouteCreateWithID[] = [
     destLocId: DEHRI_ON_SONE.id,
     distanceKm: 320
   }
-]
+] as const
 
 try {
-  await prisma.route.createMany({ data: routes })
+  console.log("Seeding routes...")
+  await db
+    .insert(schema.route)
+    .values(routes)
+    .onConflictDoUpdate({
+      target: schema.route.id,
+      set: {
+        srcLocId: sql`excluded."srcLocId"`,
+        destLocId: sql`excluded."destLocId"`,
+        distanceKm: sql`excluded."distanceKm"`
+      }
+    })
+
+  console.log("Routes seeded successfully")
 } catch (e) {
   console.error(e)
 }
+
+exit(0)

@@ -1,6 +1,6 @@
 import { error, fail, redirect } from "@sveltejs/kit"
 
-import { UserRole, UserStatus } from "@db/client"
+import { UserRole, UserStatus } from "$lib/types"
 
 import * as v from "valibot"
 

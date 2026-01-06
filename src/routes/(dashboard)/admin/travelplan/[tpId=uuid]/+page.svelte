@@ -7,7 +7,7 @@ import { Badge } from "@ui/badge"
 import * as Card from "@ui/card"
 
 import { getTravelPlanByIdWithEntries } from "$lib/api/travelplan.remote"
-import { DayType } from "@db/browser"
+import { DayType } from "$lib/types"
 
 import { DateTime } from "luxon"
 

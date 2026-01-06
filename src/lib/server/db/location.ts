@@ -1,6 +1,4 @@
-import prisma from "$lib/server/db/prisma"
-
-import { requireAuthMaybeAdmin } from "./common"
+import { db, requireAuthMaybeAdmin } from "./common"
 import type { LocationWithName } from "$lib/types"
 
 /**
@@ -8,23 +6,25 @@ import type { LocationWithName } from "$lib/types"
  * Does not require ADMIN
  */
 export async function getAllLocations(locals: App.Locals): Promise<LocationWithName[]> {
+  const TAG = "DB: getAllLocations()"
+  console.time(TAG)
   const { user, session } = requireAuthMaybeAdmin(locals, false)
 
   try {
-    const locations: LocationWithName[] = await prisma.location.findMany({
-      where: {
-        operational: true
+    const locations: LocationWithName[] = await db.query.location.findMany({
+      where: (location, { eq }) => eq(location.operational, true),
+      columns: {
+        id: true,
+        name: true
       },
-      select: { name: true, id: true },
-      orderBy: {
-        name: "asc"
-      }
+      orderBy: (location, { asc }) => asc(location.name)
     })
 
-    console.debug(`Found ${locations.length} locations`)
     return locations
   } catch (e) {
     console.error(e)
     return []
+  } finally {
+    console.timeEnd(TAG)
   }
 }

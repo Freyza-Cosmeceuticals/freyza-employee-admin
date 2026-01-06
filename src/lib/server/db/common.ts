@@ -1,6 +1,6 @@
 import { error } from "@sveltejs/kit"
 
-import { Prisma, UserRole, UserStatus } from "@db/client"
+import { UserRole, UserStatus } from "$lib/types"
 
 /**
  * Guard Function to check for Auth, optionally non-Admin, otherwise throw 403 Forbidden
@@ -36,7 +36,7 @@ export function requireAuthMaybeAdmin(
 }
 
 export function handleDbError(e: unknown): { data: null; error: string } {
-  if (e instanceof Prisma.PrismaClientKnownRequestError) {
+  if (e instanceof Error) {
     console.error(e)
     return { data: null, error: e.message }
   }
@@ -44,3 +44,6 @@ export function handleDbError(e: unknown): { data: null; error: string } {
   console.error(e)
   return { data: null, error: "An unknown error has occurred" }
 }
+
+/* The holy drizzle db */
+export { db } from "./index"

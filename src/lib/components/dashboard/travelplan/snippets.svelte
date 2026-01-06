@@ -2,7 +2,7 @@
 import { Badge } from "@ui/badge"
 import * as ButtonGroup from "@ui/button-group"
 
-import { DayType } from "@db/enums"
+import { DayType } from "$lib/types"
 
 import type { RouteWithName } from "$lib/types"
 

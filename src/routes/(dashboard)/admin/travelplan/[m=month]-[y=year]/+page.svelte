@@ -9,7 +9,7 @@ import { Separator } from "@ui/separator"
 import { Spinner } from "@ui/spinner"
 
 import { getTravelPlansWithEntriesForMonth } from "$lib/api/travelplan.remote"
-import { DayType } from "@db/browser"
+import { DayType } from "$lib/types"
 
 import EmployeeItem from "@/lib/components/dashboard/employee/EmployeeItem.svelte"
 

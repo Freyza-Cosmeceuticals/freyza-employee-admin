@@ -6,7 +6,7 @@ import { Badge } from "@ui/badge"
 import * as Card from "@ui/card"
 import { Separator } from "@ui/separator"
 
-import { DayType } from "@db/enums"
+import { DayType } from "$lib/types"
 
 import { statsBadge } from "./snippets.svelte"
 import type { TravelPlanWithEmployee } from "$lib/types"

@@ -3,6 +3,7 @@ import * as Avatar from "$lib/components/ui/avatar"
 import { Button } from "$lib/components/ui/button/index.js"
 import * as Command from "$lib/components/ui/command/index.js"
 import * as Popover from "$lib/components/ui/popover/index.js"
+import { Badge } from "@ui/badge"
 
 import { cn } from "$lib/utils.js"
 
@@ -10,6 +11,7 @@ import CheckIcon from "@lucide/svelte/icons/check"
 import ChevronsUpDownIcon from "@lucide/svelte/icons/chevrons-up-down"
 import { tick } from "svelte"
 
+import EmployeeItem from "./employee/EmployeeItem.svelte"
 import type { EmployeeWithHQ } from "$lib/types"
 
 interface Props {
@@ -27,7 +29,7 @@ let triggerRef = $state<HTMLButtonElement>(null!)
 
 const selectedValue = $derived.by(() => {
   const emp = employees.find((e) => e.id === value)
-  return emp?.name || "Select an employee..."
+  return emp
 })
 
 $effect(() => {
@@ -54,19 +56,30 @@ function closeAndFocusTrigger() {
         {...props}
         variant="outline"
         class={[
-          "justify-between",
+          "w-52 justify-between",
           !value && "text-muted-foreground hover:text-muted-foreground",
           error && "text-destructive hover:text-destructive"
         ]}
         role="combobox"
         aria-invalid={error}
         aria-expanded={open}>
-        {selectedValue || "Select an employee..."}
+        {#if selectedValue}
+          <Avatar.Root class="size-5">
+            <Avatar.Image src="https://github.com/harshnarayanjha.png" />
+            <Avatar.Fallback>{selectedValue.name.substring(0, 1)}</Avatar.Fallback>
+          </Avatar.Root>
+          <span class="me-auto line-clamp-1 truncate">
+            {selectedValue.name}
+          </span>
+        {:else}
+          <span class="me-auto line-clamp-1 truncate"> Select an employee... </span>
+        {/if}
+
         <ChevronsUpDownIcon class="ms-2 size-4 shrink-0 opacity-50" />
       </Button>
     {/snippet}
   </Popover.Trigger>
-  <Popover.Content class="w-75 p-0">
+  <Popover.Content class="w-96 p-0">
     <Command.Root>
       <Command.Input placeholder="Search employee..." />
       <Command.List>
@@ -81,12 +94,10 @@ function closeAndFocusTrigger() {
                 closeAndFocusTrigger()
                 onValueChange?.(value)
               }}>
-              <Avatar.Root>
-                <Avatar.Image src="https://github.com/HarshNarayanJha.png" alt={emp.name} />
-                <Avatar.Fallback>{emp.name.charAt(0).toUpperCase()}</Avatar.Fallback>
-              </Avatar.Root>
-              {emp.name} ({emp.hq?.name || "No HQ"})
-              <CheckIcon class={cn("me-2 size-4", value !== emp.id && "text-transparent")} />
+              <div class="flex w-full flex-row items-center justify-between gap-8">
+                <EmployeeItem employee={emp} compact />
+                <CheckIcon class={cn("me-4 size-4", value !== emp.id && "text-transparent")} />
+              </div>
             </Command.Item>
           {/each}
         </Command.Group>

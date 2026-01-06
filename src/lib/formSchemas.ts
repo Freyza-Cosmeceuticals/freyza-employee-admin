@@ -1,4 +1,4 @@
-import { DayType, EmployeeTier } from "@db/client"
+import { DayType, EmployeeTier } from "$lib/types"
 
 import { DateTime } from "luxon"
 import * as v from "valibot"

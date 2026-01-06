@@ -2,8 +2,6 @@
 import * as Empty from "@ui/empty"
 import * as Item from "@ui/item"
 
-import { DayType } from "@db/browser"
-
 import CalendarIcon from "@lucide/svelte/icons/calendars"
 
 import { dayTypeBadge } from "./travelplan/snippets.svelte"

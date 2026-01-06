@@ -11,3 +11,5 @@ bun.lockb
 *.d.ts
 
 src/lib/components/ui
+/drizzle/
+supabase/

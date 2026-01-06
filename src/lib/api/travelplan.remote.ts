@@ -2,19 +2,19 @@ import { form, getRequestEvent, query } from "$app/server"
 import { error, invalid } from "@sveltejs/kit"
 
 import {
-  addTravelPlanSchema,
-  getTravelPlanByIdSchema,
-  getTravelPlanForMonthsSchema
-} from "$lib/schemas"
-import {
   createTravelPlan as createTravelPlanDb,
   getTravelPlansWithEmployeeForMonths as getTravelPlansWithEmployeeForMonthsDb,
   getTravelPlansWithEmployeeWithEntriesForMonths as getTravelPlansWithEmployeeWithEntriesForMonthsDb,
   getTravelPlanWithEmployeeForEmployeeAndMonth as getTravelPlanWithEmployeeForEmployeeAndMonthDb,
   getTravelPlanWithEmployeeOptionalEntriesById as getTravelPlanWithEmployeeOptionalEntriesByIdDb
 } from "$lib/server/db/travelplan"
-import { DayType } from "@db/client"
+import { DayType } from "$lib/types"
 
+import {
+  addTravelPlanSchema,
+  getTravelPlanByIdSchema,
+  getTravelPlanForMonthsSchema
+} from "@/lib/formSchemas"
 import { DateTime } from "luxon"
 
 import { requireAuthMaybeAdmin } from "./common"
@@ -27,10 +27,11 @@ import type { TravelPlanWithEmployeeWithEntries } from "$lib/types"
  * Requires Admin
  */
 export const addTravelPlan = form(addTravelPlanSchema, async (travelPlan, issue) => {
+  let TAG = `Remote: addTravelPlan(${{ ...travelPlan }})`
+  console.time(TAG)
+
   const { locals } = getRequestEvent()
   const { user, session, supabase } = requireAuthMaybeAdmin(locals)
-
-  console.debug("Adding Travel Plan with data", travelPlan)
 
   // sanity check for all work days have routeId
   const invalidIdx = travelPlan.planEntries.findIndex(
@@ -52,8 +53,6 @@ export const addTravelPlan = form(addTravelPlanSchema, async (travelPlan, issue)
       travelPlan.employeeId,
       travelPlan.month
     )
-
-  console.log("Potential Plan:", potentialPlan, "Error:", dbError)
 
   // if a plan already exists return error, or continue creation if this query failed for some reason
   if (potentialPlan !== null && !dbError) {
@@ -77,10 +76,10 @@ export const addTravelPlan = form(addTravelPlanSchema, async (travelPlan, issue)
     return { success: false, data: null, message: error }
   }
 
-  console.debug("Travel Plan created successfully", travelPlanObject)
   // refresh the get plans for month
   getTravelPlansForMonth(travelPlanObject.month.toISOString().split("T", 2)[0]).refresh()
 
+  console.timeEnd(TAG)
   return { data: travelPlanObject, success: true, message: "Travel plan created successfully" }
 })
 
@@ -93,7 +92,6 @@ export const getTravelPlanById = query(getTravelPlanByIdSchema, async (tpId) => 
 
   const { locals } = getRequestEvent()
   const { user, session, supabase } = requireAuthMaybeAdmin(locals, false)
-  // console.debug("Fetching Travel Plan by Id", tpId)
 
   const { data: travelPlan, error: dbError } = await getTravelPlanWithEmployeeOptionalEntriesByIdDb(
     locals,
@@ -105,7 +103,6 @@ export const getTravelPlanById = query(getTravelPlanByIdSchema, async (tpId) => 
     error(500, "Failed to fetch travel plan")
   }
 
-  console.debug("Travel Plan fetched successfully", travelPlan)
   console.timeEnd(TAG)
   return travelPlan
 })
@@ -119,7 +116,6 @@ export const getTravelPlanByIdWithEntries = query(getTravelPlanByIdSchema, async
 
   const { locals } = getRequestEvent()
   const { user, session, supabase } = requireAuthMaybeAdmin(locals, false)
-  // console.debug("Fetching Travel Plan by Id", tpId)
 
   const { data: travelPlan, error: dbError } = await getTravelPlanWithEmployeeOptionalEntriesByIdDb(
     locals,
@@ -132,7 +128,6 @@ export const getTravelPlanByIdWithEntries = query(getTravelPlanByIdSchema, async
     error(500, "Failed to fetch travel plan")
   }
 
-  // console.debug("Travel Plan fetched successfully", travelPlan)
   console.timeEnd(TAG)
   return travelPlan as TravelPlanWithEmployeeWithEntries | null
 })
@@ -142,12 +137,11 @@ export const getTravelPlanByIdWithEntries = query(getTravelPlanByIdSchema, async
  * Requires Admin
  */
 export const getTravelPlansForMonth = query.batch(getTravelPlanForMonthsSchema, async (months) => {
-  let TAG = `Remote: getTravelPlansForMonth(${months.length} MONTHS)`
+  let TAG = `Remote: getTravelPlansForMonth(${months.map((month) => month.toISOString().split("T")[0]).join(", ")})`
   console.time(TAG)
 
   const { locals } = getRequestEvent()
   const { user, session, supabase } = requireAuthMaybeAdmin(locals)
-  // console.debug("Fetching Travel Plans for months", months)
 
   if (months.length === 0) {
     error(400, "No months provided")
@@ -163,8 +157,6 @@ export const getTravelPlansForMonth = query.batch(getTravelPlanForMonthsSchema, 
     console.error("Failed to fetch travel plans", dbError)
     error(500, dbError)
   }
-
-  // console.debug("Fetched Travel Plans", travelPlans)
 
   console.timeEnd(TAG)
   return (month) => {
@@ -182,12 +174,11 @@ export const getTravelPlansForMonth = query.batch(getTravelPlanForMonthsSchema, 
 export const getTravelPlansWithEntriesForMonth = query.batch(
   getTravelPlanForMonthsSchema,
   async (months) => {
-    let TAG = `Remote: getTravelPlansWithEntriesForMonth(${months.length} MONTHS)`
+    let TAG = `Remote: getTravelPlansWithEntriesForMonth(${months.map((month) => month.toISOString().split("T")[0]).join(", ")})`
     console.time(TAG)
 
     const { locals } = getRequestEvent()
     const { user, session, supabase } = requireAuthMaybeAdmin(locals)
-    // console.debug("Fetching Travel Plans with entries for months", months)
 
     if (months.length === 0) {
       error(400, "No months provided")
@@ -200,8 +191,6 @@ export const getTravelPlansWithEntriesForMonth = query.batch(
       console.error("Failed to fetch travel plans", dbError)
       error(500, dbError)
     }
-
-    // console.debug("Fetched Travel Plans", travelPlans)
 
     console.timeEnd(TAG)
     return (month) => {

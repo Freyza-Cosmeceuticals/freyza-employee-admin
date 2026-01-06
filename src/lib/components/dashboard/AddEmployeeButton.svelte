@@ -15,8 +15,7 @@ import CirclePlus from "@lucide/svelte/icons/circle-plus"
 import LoaderCircle from "@lucide/svelte/icons/loader-circle"
 import { toast } from "svelte-sonner"
 
-import type { EmployeeTier } from "@db/browser"
-import type { LocationWithName } from "$lib/types"
+import type { EmployeeTier, LocationWithName } from "$lib/types"
 
 let open = $state(false)
 

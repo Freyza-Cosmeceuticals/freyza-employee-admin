@@ -1,6 +1,6 @@
 import { error } from "@sveltejs/kit"
 
-import { UserRole, UserStatus } from "@db/client"
+import { UserRole, UserStatus } from "$lib/types"
 
 /**
  * Guard Function to check for Auth, optionally non-Admin, otherwise throw 403 Forbidden

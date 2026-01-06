@@ -1,29 +1,34 @@
-import prisma from "$lib/server/db/prisma"
-import { UserRole, UserStatus } from "@db/client"
+import * as s from "$lib/db/schema"
+import { UserRole, UserStatus } from "$lib/types"
 
-import { handleDbError, requireAuthMaybeAdmin } from "./common"
-import type { User } from "@db/client"
+import { and, desc, eq, notInArray } from "drizzle-orm"
+import { alias } from "drizzle-orm/pg-core"
+
+import { db, handleDbError, requireAuthMaybeAdmin } from "./common"
 import type { Employee, EmployeeCreate, EmployeeWithHQ } from "$lib/types"
+
+const sHq = alias(s.location, "hq")
 
 /**
  * Gets the user profile associated with the current user
  */
-export async function getUser(locals: App.Locals): Promise<User | null> {
+export async function getUser(locals: App.Locals): Promise<Employee | null> {
+  const TAG = "DB: getUser()"
+  console.time(TAG)
   const { user, session } = requireAuthMaybeAdmin(locals, false)
 
-  console.debug("Trying to getUser associated to the current user")
   try {
-    const userProfile: User | null = await prisma.user.findFirst({
-      where: {
-        id: user.id
-      }
-    })
+    const userProfile: Employee | null =
+      (await db.query.user.findFirst({
+        where: (u, { eq }) => eq(u.id, user.id)
+      })) ?? null
 
-    console.debug(userProfile ? "Okay so user profile was found" : "No User profile exists")
     return userProfile
   } catch (e) {
     console.error(e)
     return null
+  } finally {
+    console.timeEnd(TAG)
   }
 }
 
@@ -36,13 +41,14 @@ export async function createEmployee(
   locals: App.Locals,
   employeeData: EmployeeCreate
 ): Promise<{ data: Employee; error: null } | { data: null; error: string }> {
+  const TAG = "DB: createEmployee()"
+  console.time(TAG)
   const { user, session } = requireAuthMaybeAdmin(locals)
 
-  console.debug("Creating employee profile with data", employeeData)
-
   try {
-    const employeeProfile = await prisma.user.create({
-      data: {
+    const [employeeProfile] = await db
+      .insert(s.user)
+      .values({
         id: employeeData.id,
         name: employeeData.name,
         phone: employeeData.phone,
@@ -51,13 +57,14 @@ export async function createEmployee(
         tier: employeeData.tier,
         hqId: employeeData.hqId,
         joiningDate: employeeData.joiningDate
-      }
-    })
+      })
+      .returning()
 
-    console.debug("Created successfully")
     return { data: employeeProfile, error: null }
   } catch (e) {
     return handleDbError(e)
+  } finally {
+    console.timeEnd(TAG)
   }
 }
 
@@ -73,33 +80,40 @@ export async function getAllEmployees(
   limitN?: number,
   excludeIds?: string[]
 ): Promise<EmployeeWithHQ[]> {
+  const TAG = `DB: getAllEmployees(limitN ${limitN}, excludeIds ${excludeIds})`
+  console.time(TAG)
   const { user, session } = requireAuthMaybeAdmin(locals)
 
   try {
-    const employees = await prisma.user.findMany({
-      where: {
-        role: UserRole.EMPLOYEE,
-        status: UserStatus.ACTIVE,
-        id: {
-          notIn: excludeIds || []
-        }
-      },
-      include: {
-        hq: { select: { name: true, id: true, operational: true } }
-      },
-      orderBy: {
-        createdAt: "desc"
-      },
-      take: limitN
-    })
+    const query = db
+      .select()
+      .from(s.user)
+      .innerJoin(sHq, eq(s.user.hqId, sHq.id))
+      .where(
+        and(
+          eq(s.user.role, UserRole.EMPLOYEE),
+          eq(s.user.status, UserStatus.ACTIVE),
+          ...(excludeIds && excludeIds.length > 0 ? [notInArray(s.user.id, excludeIds)] : [])
+        )
+      )
+      .orderBy(desc(s.user.createdAt))
 
-    console.debug(`Found ${employees.length} employees with limitN ${limitN}`)
-    if (excludeIds) console.debug(`...excluding ${excludeIds.length} ids`)
+    if (limitN !== undefined) {
+      query.limit(limitN)
+    }
+
+    const rawEmployees = await query
+    const employees = rawEmployees.map((e) => ({
+      ...e.user,
+      hq: e.hq
+    }))
 
     return employees
   } catch (e) {
     console.error(e)
     return []
+  } finally {
+    console.timeEnd(TAG)
   }
 }
 
@@ -111,19 +125,20 @@ export async function getAllEmployees(
 export async function getEmployeeCount(
   locals: App.Locals
 ): Promise<{ data: number; error: null } | { data: null; error: string }> {
+  const TAG = "DB: getEmployeeCount()"
+  console.time(TAG)
   const { user, session } = requireAuthMaybeAdmin(locals)
 
   try {
-    const count = await prisma.user.count({
-      where: {
-        role: UserRole.EMPLOYEE,
-        status: UserStatus.ACTIVE
-      }
-    })
+    const count = await db.$count(
+      s.user,
+      and(eq(s.user.role, UserRole.EMPLOYEE), eq(s.user.status, UserStatus.ACTIVE))
+    )
 
-    console.debug(`Found ${count} active employees`)
     return { data: count, error: null }
   } catch (e) {
     return handleDbError(e)
+  } finally {
+    console.timeEnd(TAG)
   }
 }

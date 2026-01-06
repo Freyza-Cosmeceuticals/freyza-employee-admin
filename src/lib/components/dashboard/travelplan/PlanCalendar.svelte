@@ -7,7 +7,7 @@ import Popover from "@ui/popover/popover.svelte"
 import * as Select from "@ui/select"
 
 import { TIMEZONE } from "$lib/constants"
-import { DayType } from "@db/browser"
+import { DayType } from "$lib/types"
 
 import { isWeekend, parseDate } from "@internationalized/date"
 import Holidays from "date-holidays"

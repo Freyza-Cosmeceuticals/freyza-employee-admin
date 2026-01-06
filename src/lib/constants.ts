@@ -1,4 +1,35 @@
-import { EmployeeTier } from "@db/browser"
+export enum UserRole {
+  ADMIN = "ADMIN",
+  EMPLOYEE = "EMPLOYEE"
+}
+
+export enum UserStatus {
+  ACTIVE = "ACTIVE",
+  REVOKED = "REVOKED"
+}
+
+export enum EmployeeTier {
+  FSO = "FSO", // field sales officer
+  TABM = "TABM", // training area business manager
+  ASM = "ASM" // area sales manager
+}
+
+export enum DayType {
+  WORK = "WORK",
+  HOLIDAY = "HOLIDAY",
+  LEAVE = "LEAVE"
+}
+
+export enum ReportStatus {
+  SAVED = "SAVED",
+  LOCKED = "LOCKED"
+}
+
+export enum VisitType {
+  DOCTOR = "DOCTOR",
+  STOCKIST = "STOCKIST",
+  CHEMIST = "CHEMIST"
+}
 
 export const TIMEZONE = "Asia/Kolkata"
 export const SUPABASE_AUTH_TAG = "supabase:auth"

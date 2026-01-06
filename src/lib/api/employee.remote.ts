@@ -1,9 +1,10 @@
 import { form, getRequestEvent } from "$app/server"
 
-import { addEmployeeSchema } from "$lib/schemas"
 import { createEmployee } from "$lib/server/db/user"
 import { supabaseAdmin } from "$lib/server/supabaseAdmin"
-import { UserRole, UserStatus } from "@db/client"
+import { UserRole, UserStatus } from "$lib/types"
+
+import { addEmployeeSchema } from "@/lib/formSchemas"
 
 import { requireAuthMaybeAdmin } from "./common"
 import type { EmployeeCreate } from "$lib/types"
@@ -48,6 +49,21 @@ export const addEmployee = form(addEmployeeSchema, async (employee) => {
 
   if (!employeeProfile) {
     console.error("Failed to create employee profile", error)
+
+    // try to delete the auth user
+    // TODO: Collect failed to delete in logs to delete them later
+    try {
+      await supabase.auth.admin.deleteUser(potentialEmployee.data.user.id)
+      console.log(
+        `Successfully undone auth createUser for employee id ${potentialEmployee.data.user.id}`
+      )
+    } catch (error) {
+      console.error(
+        `Failed to undo auth createUser for employee id ${potentialEmployee.data.user.id}`,
+        error
+      )
+    }
+
     return { success: false, data: null, message: error }
   }
 

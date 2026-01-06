@@ -3,7 +3,7 @@ import { Badge } from "@ui/badge"
 import * as Empty from "@ui/empty"
 import * as Item from "@ui/item"
 
-import { UserStatus } from "@db/browser"
+import { UserStatus } from "$lib/types"
 
 import AddEmployeeButton from "./AddEmployeeButton.svelte"
 import EmployeeItem from "./employee/EmployeeItem.svelte"

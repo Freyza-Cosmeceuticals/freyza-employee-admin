@@ -1,88 +1,51 @@
-import { Prisma } from "@db/browser"
+import type { location, route, travelPlan, travelPlanEntry, user } from "@/lib/db/schema"
+import type { InferInsertModel, InferSelectModel } from "drizzle-orm"
 
-import type { Location, Route, TravelPlan, TravelPlanEntry, User } from "@db/browser"
+export {
+  DayType,
+  EmployeeTier,
+  ReportStatus,
+  UserRole,
+  UserStatus,
+  VisitType
+} from "$lib/constants"
 
-export type LocationCreate = Omit<Location, "id" | "createdAt" | "updatedAt">
-export type RouteCreate = Omit<Route, "id" | "createdAt" | "updatedAt">
+export type Location = InferSelectModel<typeof location>
+export type Route = InferSelectModel<typeof route>
+export type User = InferSelectModel<typeof user>
+export type TravelPlan = InferSelectModel<typeof travelPlan>
+export type TravelPlanEntry = InferSelectModel<typeof travelPlanEntry>
+
+export type LocationCreate = InferInsertModel<typeof location>
+export type RouteCreate = InferInsertModel<typeof route>
 
 export type Employee = User
-export type EmployeeCreate = Omit<User, "id" | "createdAt" | "updatedAt"> & { id?: string }
+export type EmployeeCreate = InferInsertModel<typeof user>
+export type UserCreate = InferInsertModel<typeof user>
 
-export type TravelPlanEntryCreate = Omit<
-  TravelPlanEntry,
-  "id" | "tpId" | "createdAt" | "updatedAt"
-> & {
-  id?: string
-  tpId?: string
+export type TravelPlanEntryCreate = Omit<InferInsertModel<typeof travelPlanEntry>, "tpId"> & {
+  tpId?: string | undefined
 }
 
-export type TravelPlanCreate = Omit<TravelPlan, "id" | "createdAt" | "updatedAt"> & {
-  id?: string
+export type TravelPlanCreate = InferInsertModel<typeof travelPlan> & {
   planEntries: TravelPlanEntryCreate[]
 }
 
-const employeeWithHq = {
-  include: { hq: { select: { name: true, id: true, operational: true } } }
-} satisfies Prisma.UserDefaultArgs
+export type EmployeeWithHQ = Employee & {
+  hq: Pick<Location, "id" | "name" | "operational"> | null
+}
 
-export type EmployeeWithHQ = Prisma.UserGetPayload<typeof employeeWithHq>
-export type UserCreate = Omit<User, "id" | "createdAt" | "updatedAt"> & { id?: string }
+export type LocationWithName = Pick<Location, "id" | "name">
 
-const locationWithName = {
-  select: { name: true, id: true }
-} satisfies Prisma.LocationDefaultArgs
+export type RouteWithName = Pick<Route, "id" | "distanceKm"> & {
+  srcLoc: Pick<Location, "id" | "name">
+  destLoc: Pick<Location, "id" | "name">
+}
 
-export type LocationWithName = Prisma.LocationGetPayload<typeof locationWithName>
-
-const routeWithName = {
-  include: {
-    srcLoc: { select: { name: true, id: true } },
-    destLoc: { select: { name: true, id: true } }
-  }
-} satisfies Prisma.RouteDefaultArgs
-
-export type RouteWithName = Prisma.RouteGetPayload<typeof routeWithName>
-
-const travelPlanWithEmployee = {
-  include: {
-    employee: {
-      include: {
-        hq: { select: { name: true, id: true, operational: true } }
-      }
-    }
-  }
-} satisfies Prisma.TravelPlanDefaultArgs
-
-const travelPlanWithEmployeeWithEntries = {
-  include: {
-    employee: {
-      include: {
-        hq: { select: { name: true, id: true, operational: true } }
-      }
-    },
-    planEntries: {
-      include: {
-        route: {
-          include: {
-            srcLoc: { select: { name: true, id: true, operational: true } },
-            destLoc: { select: { name: true, id: true, operational: true } }
-          }
-        }
-      }
-    }
-  }
-} satisfies Prisma.TravelPlanDefaultArgs
-
-const travelPlanEntryWithRoute = {
-  include: {
-    route: {
-      include: {
-        srcLoc: { select: { name: true, id: true, operational: true } },
-        destLoc: { select: { name: true, id: true, operational: true } }
-      }
-    }
-  }
-} satisfies Prisma.TravelPlanEntryDefaultArgs
+export type TravelPlanWithEmployee = TravelPlan & {
+  employee: EmployeeWithHQ
+  stats?: TravelPlanStats
+}
 
 export type TravelPlanStats = {
   workDays: number
@@ -90,14 +53,16 @@ export type TravelPlanStats = {
   holidayDays: number
 }
 
-export type TravelPlanWithEmployee = Prisma.TravelPlanGetPayload<typeof travelPlanWithEmployee> & {
-  stats?: TravelPlanStats
+export type TravelPlanEntryWithRoute = TravelPlanEntry & {
+  route:
+    | (Route & {
+        srcLoc: Pick<Location, "id" | "name" | "operational">
+        destLoc: Pick<Location, "id" | "name" | "operational">
+      })
+    | null
 }
 
-export type TravelPlanWithEmployeeWithEntries = Prisma.TravelPlanGetPayload<
-  typeof travelPlanWithEmployeeWithEntries
->
-
-export type TravelPlanEntryWithRoute = Prisma.TravelPlanEntryGetPayload<
-  typeof travelPlanEntryWithRoute
->
+export type TravelPlanWithEmployeeWithEntries = TravelPlan & {
+  employee: EmployeeWithHQ
+  planEntries: TravelPlanEntryWithRoute[]
+}

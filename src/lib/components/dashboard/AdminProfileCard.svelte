@@ -2,7 +2,7 @@
 import * as Card from "@ui/card"
 
 import AddEmployeeButton from "./AddEmployeeButton.svelte"
-import type { User } from "@db/browser"
+import type { User } from "$lib/types"
 
 interface Props {
   userProfile: User | null

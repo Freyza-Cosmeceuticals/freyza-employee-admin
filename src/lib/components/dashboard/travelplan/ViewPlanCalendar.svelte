@@ -5,7 +5,7 @@ import PopoverTrigger from "@ui/popover/popover-trigger.svelte"
 import Popover from "@ui/popover/popover.svelte"
 
 import { TIMEZONE } from "$lib/constants"
-import { DayType } from "@db/browser"
+import { DayType } from "$lib/types"
 
 import { isWeekend, parseDate } from "@internationalized/date"
 import Holidays from "date-holidays"

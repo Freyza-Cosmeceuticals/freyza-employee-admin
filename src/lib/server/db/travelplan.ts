@@ -1,14 +1,23 @@
-import prisma from "$lib/server/db/prisma"
-import { DayType } from "@db/client"
+import * as s from "$lib/db/schema"
+import { DayType } from "$lib/types"
 
-import { handleDbError, requireAuthMaybeAdmin } from "./common"
-import type { TravelPlan } from "@db/client"
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm"
+import { alias } from "drizzle-orm/pg-core"
+
+import { db, handleDbError, requireAuthMaybeAdmin } from "./common"
 import type {
+  TravelPlan,
   TravelPlanCreate,
+  TravelPlanEntryWithRoute,
   TravelPlanStats,
   TravelPlanWithEmployee,
   TravelPlanWithEmployeeWithEntries
 } from "$lib/types"
+
+const sEmployee = alias(s.user, "employee")
+const sHq = alias(s.location, "hq")
+const sSrc = alias(s.location, "srcLoc")
+const sDest = alias(s.location, "destLoc")
 
 /**
  * Calculate travel plan stats. Requires Admin
@@ -19,27 +28,31 @@ export async function getTravelPlanStats(
   locals: App.Locals,
   travelPlanId: string
 ): Promise<{ data: TravelPlanStats; error: null } | { data: null; error: string }> {
-  try {
-    let TAG = `DB: getTravelPlanStats(${travelPlanId})`
-    console.time(TAG)
-    const { user, session } = requireAuthMaybeAdmin(locals)
+  let TAG = `DB: getTravelPlanStats(${travelPlanId})`
+  console.time(TAG)
+  const { user, session } = requireAuthMaybeAdmin(locals)
 
-    const stats = await prisma.travelPlanEntry.groupBy({
-      by: ["tpId", "dayType"],
-      where: { tpId: travelPlanId },
-      _count: { id: true }
-    })
+  try {
+    const stats = await db
+      .select({
+        dayType: s.travelPlanEntry.dayType,
+        count: sql<number>`count(${s.travelPlanEntry.id})`.mapWith(Number)
+      })
+      .from(s.travelPlanEntry)
+      .where(eq(s.travelPlanEntry.tpId, travelPlanId))
+      .groupBy(s.travelPlanEntry.dayType)
 
     const properStats = {
-      workDays: stats.find((stat) => stat.dayType === DayType.WORK)?._count.id || 0,
-      holidayDays: stats.find((stat) => stat.dayType === DayType.HOLIDAY)?._count.id || 0,
-      leaveDays: stats.find((stat) => stat.dayType === DayType.LEAVE)?._count.id || 0
+      workDays: stats.find((stat) => stat.dayType === DayType.WORK)?.count || 0,
+      holidayDays: stats.find((stat) => stat.dayType === DayType.HOLIDAY)?.count || 0,
+      leaveDays: stats.find((stat) => stat.dayType === DayType.LEAVE)?.count || 0
     }
 
-    console.timeEnd(TAG)
     return { data: properStats, error: null }
   } catch (e) {
     return handleDbError(e)
+  } finally {
+    console.timeEnd(TAG)
   }
 }
 
@@ -55,17 +68,16 @@ export async function getAllTravelPlans(
   const { user, session } = requireAuthMaybeAdmin(locals)
 
   try {
-    const travelPlans: TravelPlan[] = await prisma.travelPlan.findMany({
-      orderBy: {
-        month: "desc"
-      }
-    })
+    const travelPlans: TravelPlan[] = await db
+      .select()
+      .from(s.travelPlan)
+      .orderBy(desc(s.travelPlan.month))
 
-    console.debug(`Found ${travelPlans.length} TravelPlans`)
-    console.timeEnd(TAG)
     return { data: travelPlans, error: null }
   } catch (e) {
     return handleDbError(e)
+  } finally {
+    console.timeEnd(TAG)
   }
 }
 
@@ -83,42 +95,66 @@ export async function getTravelPlanWithEmployeeOptionalEntriesById(
   | { data: TravelPlanWithEmployee | TravelPlanWithEmployeeWithEntries | null; error: null }
   | { data: null; error: string }
 > {
-  const TAG = `DB: getTravelPlanById(${tpId})`
+  const TAG = `DB: getTravelPlanById(${tpId}, includeEntries: ${includeEntries})`
   console.time(TAG)
   const { user, session } = requireAuthMaybeAdmin(locals, false)
 
   try {
-    const travelPlan: TravelPlanWithEmployee | TravelPlanWithEmployeeWithEntries | null =
-      await prisma.travelPlan.findUnique({
-        where: {
-          id: tpId
-        },
-        include: {
-          employee: {
-            include: {
-              hq: { select: { name: true, id: true, operational: true } }
-            }
-          },
-          planEntries: includeEntries
-            ? {
-                include: {
-                  route: {
-                    include: {
-                      srcLoc: { select: { name: true, id: true, operational: true } },
-                      destLoc: { select: { name: true, id: true, operational: true } }
-                    }
-                  }
-                }
-              }
-            : false
-        }
-      })
+    const [rawTravelPlan] = await db
+      .select()
+      .from(s.travelPlan)
+      .innerJoin(sEmployee, eq(s.travelPlan.employeeId, sEmployee.id))
+      .innerJoin(sHq, eq(sEmployee.hqId, sHq.id))
+      .where(eq(s.travelPlan.id, tpId))
+      .limit(1)
 
-    console.debug(`Found TravelPlan ${tpId}`)
-    console.timeEnd(TAG)
-    return { data: travelPlan, error: null }
+    const travelPlan: TravelPlanWithEmployee | null = rawTravelPlan
+      ? {
+          ...rawTravelPlan.travelPlan,
+          employee: {
+            ...rawTravelPlan.employee,
+            hq: rawTravelPlan.hq
+          }
+        }
+      : null
+
+    if (!travelPlan || !includeEntries) {
+      return { data: travelPlan, error: null }
+    }
+
+    // If entries included, fetch them separately
+    const rawPlanEntries = await db
+      .select({
+        entry: s.travelPlanEntry,
+        route: s.route,
+
+        srcLoc: sSrc,
+        destLoc: sDest
+      })
+      .from(s.travelPlanEntry)
+      .leftJoin(s.route, eq(s.travelPlanEntry.routeId, s.route.id))
+      .leftJoin(sSrc, eq(s.route.srcLocId, sSrc.id))
+      .leftJoin(sDest, eq(s.route.destLocId, sDest.id))
+      .where(eq(s.travelPlanEntry.tpId, tpId))
+      .orderBy(s.travelPlanEntry.date)
+
+    const planEntries: TravelPlanEntryWithRoute[] = rawPlanEntries.map((entry) => ({
+      ...entry.entry,
+      route:
+        entry.route && entry.srcLoc && entry.destLoc
+          ? {
+              ...entry.route,
+              srcLoc: entry.srcLoc,
+              destLoc: entry.destLoc
+            }
+          : null
+    }))
+
+    return { data: { ...travelPlan, planEntries }, error: null }
   } catch (e) {
     return handleDbError(e)
+  } finally {
+    console.timeEnd(TAG)
   }
 }
 
@@ -130,27 +166,22 @@ export async function getTravelPlansForMonth(
   locals: App.Locals,
   month: Date
 ): Promise<{ data: TravelPlan[]; error: null } | { data: null; error: string }> {
-  const TAG = `DB: getTravelPlansForMonth(${month})`
+  const TAG = `DB: getTravelPlansForMonth(${month.toISOString().split("T", 2)[0]})`
   console.time(TAG)
   const { user, session } = requireAuthMaybeAdmin(locals)
 
   try {
-    const travelPlans: TravelPlan[] = await prisma.travelPlan.findMany({
-      where: {
-        month
-      },
-      orderBy: {
-        month: "desc"
-      }
-    })
+    const travelPlans: TravelPlan[] = await db
+      .select()
+      .from(s.travelPlan)
+      .where(eq(s.travelPlan.month, month))
+      .orderBy(desc(s.travelPlan.month))
 
-    console.debug(
-      `Found ${travelPlans.length} TravelPlans for month ${month.getFullYear()}-${(month.getMonth() + 1).toString().padStart(2, "0")}`
-    )
-    console.timeEnd(TAG)
     return { data: travelPlans, error: null }
   } catch (e) {
     return handleDbError(e)
+  } finally {
+    console.timeEnd(TAG)
   }
 }
 
@@ -170,23 +201,21 @@ export async function getTravelPlansWithEmployeeForMonths(
   const { user, session } = requireAuthMaybeAdmin(locals)
 
   try {
-    const travelPlans: TravelPlanWithEmployee[] = await prisma.travelPlan.findMany({
-      where: {
-        month: {
-          in: months
-        }
-      },
-      include: {
-        employee: {
-          include: {
-            hq: { select: { name: true, id: true, operational: true } }
-          }
-        }
-      },
-      orderBy: {
-        month: "desc"
+    const rawTravelPlans = await db
+      .select()
+      .from(s.travelPlan)
+      .innerJoin(sEmployee, eq(s.travelPlan.employeeId, sEmployee.id))
+      .innerJoin(sHq, eq(sEmployee.hqId, sHq.id))
+      .where(inArray(s.travelPlan.month, months))
+      .orderBy(desc(s.travelPlan.month))
+
+    const travelPlans: TravelPlanWithEmployee[] = rawTravelPlans.map((tp) => ({
+      ...tp.travelPlan,
+      employee: {
+        ...tp.employee,
+        hq: tp.hq
       }
-    })
+    }))
 
     let grouped: Map<string, TravelPlanWithEmployee[]>
 
@@ -214,10 +243,11 @@ export async function getTravelPlansWithEmployeeForMonths(
       }, new Map<string, TravelPlanWithEmployee[]>())
     }
 
-    console.timeEnd(TAG)
     return { data: grouped, error: null }
   } catch (e) {
     return handleDbError(e)
+  } finally {
+    console.timeEnd(TAG)
   }
 }
 
@@ -237,49 +267,83 @@ export async function getTravelPlansWithEmployeeWithEntriesForMonths(
   const { user, session } = requireAuthMaybeAdmin(locals)
 
   try {
-    const travelPlans: TravelPlanWithEmployeeWithEntries[] = await prisma.travelPlan.findMany({
-      where: {
-        month: {
-          in: months
-        }
-      },
-      include: {
+    // 1) Fetch all travel plans with employee info in one query
+    const plans = await db
+      .select()
+      .from(s.travelPlan)
+      .innerJoin(sEmployee, eq(s.travelPlan.employeeId, sEmployee.id))
+      .innerJoin(sHq, eq(sEmployee.hqId, sHq.id))
+      .where(inArray(s.travelPlan.month, months))
+      .orderBy(desc(s.travelPlan.month))
+
+    // Map of plans by planId
+    const planMap = new Map<string, TravelPlanWithEmployeeWithEntries>()
+
+    plans.forEach((p) => {
+      planMap.set(p.travelPlan.id, {
+        ...p.travelPlan,
         employee: {
-          include: {
-            hq: { select: { name: true, id: true, operational: true } }
-          }
+          ...p.employee,
+          hq: p.hq
         },
-        planEntries: {
-          include: {
-            route: {
-              include: {
-                srcLoc: { select: { name: true, id: true, operational: true } },
-                destLoc: { select: { name: true, id: true, operational: true } }
-              }
-            }
-          }
-        }
-      },
-      orderBy: {
-        month: "desc"
+        planEntries: []
+      })
+    })
+
+    // If no plans, return empty
+    if (planMap.size === 0) {
+      return { data: new Map<string, TravelPlanWithEmployeeWithEntries[]>(), error: null }
+    }
+
+    // 2) Fetch all entries for these plans joined with route + locations
+    const entryRows = await db
+      .select({
+        entry: s.travelPlanEntry,
+        route: s.route,
+
+        srcLoc: sSrc,
+        destLoc: sDest
+      })
+      .from(s.travelPlanEntry)
+      .leftJoin(s.route, eq(s.travelPlanEntry.routeId, s.route.id))
+      .leftJoin(sSrc, eq(s.route.srcLocId, sSrc.id))
+      .leftJoin(sDest, eq(s.route.destLocId, sDest.id))
+      .where(inArray(s.travelPlanEntry.tpId, [...planMap.keys()]))
+      .orderBy(asc(s.travelPlanEntry.date))
+
+    // 3) Attach entries to matching plans in planMap
+    entryRows.forEach((er) => {
+      const plan = planMap.get(er.entry.tpId)
+      if (plan) {
+        plan.planEntries.push({
+          ...er.entry,
+          route:
+            er.route && er.srcLoc && er.destLoc
+              ? {
+                  ...er.route,
+                  srcLoc: er.srcLoc,
+                  destLoc: er.destLoc
+                }
+              : null
+        })
       }
     })
 
-    let grouped: Map<string, TravelPlanWithEmployeeWithEntries[]>
+    // 4) Group plans by month key
+    const grouped = new Map<string, TravelPlanWithEmployeeWithEntries[]>()
 
-    grouped = travelPlans.reduce((map, travelPlan) => {
-      const key = travelPlan.month.toISOString().split("T", 2)[0]
-      if (!map.has(key)) map.set(key, [])
+    for (const plan of planMap.values()) {
+      const key = plan.month.toISOString().split("T", 2)[0]
+      const bucket = grouped.get(key) ?? []
+      bucket.push(plan)
+      grouped.set(key, bucket)
+    }
 
-      map.get(key)!.push(travelPlan)
-
-      return map
-    }, new Map<string, TravelPlanWithEmployeeWithEntries[]>())
-
-    console.timeEnd(TAG)
     return { data: grouped, error: null }
   } catch (e) {
     return handleDbError(e)
+  } finally {
+    console.timeEnd(TAG)
   }
 }
 
@@ -293,37 +357,40 @@ export async function getTravelPlanWithEmployeeForEmployeeAndMonth(
   month: Date,
   includeStats = false
 ): Promise<{ data: TravelPlanWithEmployee | null; error: null } | { data: null; error: string }> {
-  try {
-    let TAG = `DB: getTravelPlanWithEmployeeForEmployeeAndMonth(${employeeId}, ${month.toISOString().split("T", 2)[0]})`
-    console.time(TAG)
-    const { user, session } = requireAuthMaybeAdmin(locals)
+  let TAG = `DB: getTravelPlanWithEmployeeForEmployeeAndMonth(${employeeId}, month: ${month.toISOString().split("T", 2)[0]}, includeStats: ${includeStats})`
+  console.time(TAG)
+  const { user, session } = requireAuthMaybeAdmin(locals)
 
-    const travelPlan: TravelPlanWithEmployee | null = await prisma.travelPlan.findFirst({
-      where: {
-        employeeId,
-        month
-      },
-      include: {
-        employee: {
-          include: {
-            hq: { select: { name: true, id: true, operational: true } }
+  try {
+    const [rawTravelPlan] = await db
+      .select()
+      .from(s.travelPlan)
+      .innerJoin(sEmployee, eq(s.travelPlan.employeeId, sEmployee.id))
+      .innerJoin(sHq, eq(sEmployee.hqId, sHq.id))
+      .where(and(eq(sEmployee.id, employeeId), eq(s.travelPlan.month, month)))
+      .orderBy(desc(s.travelPlan.month))
+      .limit(1)
+
+    const travelPlan: TravelPlanWithEmployee | null = rawTravelPlan
+      ? {
+          ...rawTravelPlan.travelPlan,
+          employee: {
+            ...rawTravelPlan.employee,
+            hq: rawTravelPlan.hq
           }
         }
-      },
-      orderBy: {
-        month: "desc"
-      }
-    })
+      : null
 
     if (includeStats && travelPlan) {
       const stats = await getTravelPlanStats(locals, travelPlan.id)
       if (stats.data !== null) travelPlan.stats = stats.data
     }
 
-    console.timeEnd(TAG)
     return { data: travelPlan, error: null }
   } catch (e) {
     return handleDbError(e)
+  } finally {
+    console.timeEnd(TAG)
   }
 }
 
@@ -339,7 +406,6 @@ export async function createTravelPlan(
   console.time(TAG)
   const { user, session } = requireAuthMaybeAdmin(locals)
 
-  console.debug("Creating TravelPlan", travelPlan)
   console.assert(user.id === travelPlan.createdById, "User ID does not match")
 
   if (user.id !== travelPlan.createdById) {
@@ -347,27 +413,34 @@ export async function createTravelPlan(
   }
 
   try {
-    const travelPlanObject = await prisma.travelPlan.create({
-      data: {
-        month: travelPlan.month,
-        employeeId: travelPlan.employeeId,
-        createdById: travelPlan.createdById,
-        planEntries: {
-          createMany: {
-            data: travelPlan.planEntries.map((entry) => ({
-              date: entry.date,
-              dayType: entry.dayType,
-              routeId: entry.routeId
-            }))
-          }
-        }
-      }
+    const travelPlanObject = await db.transaction(async (tx) => {
+      const [insertedPlan] = await tx
+        .insert(s.travelPlan)
+        .values({
+          month: travelPlan.month,
+          employeeId: travelPlan.employeeId,
+          createdById: travelPlan.createdById
+        })
+        .returning()
+
+      const newPlanId = insertedPlan.id
+
+      await tx.insert(s.travelPlanEntry).values(
+        travelPlan.planEntries.map((entry) => ({
+          tpId: newPlanId,
+          date: entry.date,
+          dayType: entry.dayType,
+          routeId: entry.routeId
+        }))
+      )
+
+      return insertedPlan
     })
 
-    console.debug("Travel Plan Created Successfully")
-    console.timeEnd(TAG)
     return { data: travelPlanObject, error: null }
   } catch (e) {
     return handleDbError(e)
+  } finally {
+    console.timeEnd(TAG)
   }
 }

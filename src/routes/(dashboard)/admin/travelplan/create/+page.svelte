@@ -12,7 +12,7 @@ import * as Card from "@ui/card"
 import { Spinner } from "@ui/spinner"
 
 import { addTravelPlan } from "$lib/api/travelplan.remote"
-import { DayType } from "@db/browser"
+import { DayType } from "$lib/types"
 
 import InfoIcon from "@lucide/svelte/icons/info"
 import { DateTime, Interval } from "luxon"

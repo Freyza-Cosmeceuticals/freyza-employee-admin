@@ -9,12 +9,13 @@ import type { EmployeeWithHQ } from "$lib/types"
 interface Props {
   employee: EmployeeWithHQ
   variant?: ItemVariant
+  compact?: boolean
 }
 
-let { employee, variant }: Props = $props()
+let { employee, variant, compact = false }: Props = $props()
 </script>
 
-<Item.Root {variant}>
+<Item.Root {variant} class={["w-full", compact && "p-2"]}>
   <Item.Media variant="icon">
     <Avatar.Root class="size-10">
       <Avatar.Image src="https://github.com/harshnarayanjha.png" />
