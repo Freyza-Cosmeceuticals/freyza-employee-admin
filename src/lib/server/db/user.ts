@@ -5,7 +5,7 @@ import { and, desc, eq, notInArray } from "drizzle-orm"
 import { alias } from "drizzle-orm/pg-core"
 
 import { db, handleDbError, requireAuthMaybeAdmin } from "./common"
-import type { Employee, EmployeeCreate, EmployeeWithHQ } from "$lib/types"
+import type { Employee, EmployeeCreate, EmployeeWithHQ, User } from "$lib/types"
 
 const sHq = alias(s.location, "hq")
 
@@ -18,7 +18,7 @@ export async function getUser(locals: App.Locals): Promise<Employee | null> {
   const { user, session } = requireAuthMaybeAdmin(locals, false)
 
   try {
-    const userProfile: Employee | null =
+    const userProfile: User | null =
       (await db.query.user.findFirst({
         where: (u, { eq }) => eq(u.id, user.id)
       })) ?? null
@@ -27,6 +27,26 @@ export async function getUser(locals: App.Locals): Promise<Employee | null> {
   } catch (e) {
     console.error(e)
     return null
+  } finally {
+    console.timeEnd(TAG)
+  }
+}
+
+export async function getUserByEmail(
+  email: string
+): Promise<{ data: User | null; error: null } | { data: null; error: string }> {
+  const TAG = `DB: getUserByEmail(${email})`
+  console.time(TAG)
+
+  try {
+    const userProfile: User | null =
+      (await db.query.user.findFirst({
+        where: (u, { eq }) => eq(u.email, email)
+      })) ?? null
+
+    return { data: userProfile, error: null }
+  } catch (e) {
+    return handleDbError(e)
   } finally {
     console.timeEnd(TAG)
   }
@@ -51,6 +71,7 @@ export async function createEmployee(
       .values({
         id: employeeData.id,
         name: employeeData.name,
+        email: employeeData.email,
         phone: employeeData.phone,
         role: employeeData.role,
         status: employeeData.status,

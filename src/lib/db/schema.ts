@@ -50,6 +50,7 @@ export const user = pgTable(
       .default(sql`gen_random_uuid()`),
 
     name: varchar({ length: 100 }).notNull(),
+    email: varchar({ length: 254 }).notNull(),
     phone: varchar({ length: 15 }).notNull(),
 
     // can be ADMIN (null, null, [], [], plansCreated) or EMPLOYEE (tier, hq, travelPlans, dailyReports, [])
@@ -66,6 +67,7 @@ export const user = pgTable(
   },
   (table) => [
     index("idx_user_hqid").on(table.hqId),
+    uniqueIndex("user_email_key").on(table.email),
     uniqueIndex("user_phone_key").on(table.phone),
     foreignKey({
       columns: [table.hqId],

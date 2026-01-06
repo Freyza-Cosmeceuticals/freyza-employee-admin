@@ -36,6 +36,7 @@ export const addEmployee = form(addEmployeeSchema, async (employee) => {
   const employeeData: EmployeeCreate = {
     id: potentialEmployee.data.user.id,
     name: employee.name,
+    email: employee.email,
     phone: employee.phone,
     role: UserRole.EMPLOYEE,
     status: UserStatus.ACTIVE,

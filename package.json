@@ -17,7 +17,9 @@
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
     "supabase:status": "supabase status",
-    "supabase:migrate": "supabase migration up"
+    "supabase:migrate": "supabase migration up",
+    "supabase:dump-local": "supabase db dump --local --data-only -f supabase/local_dump.sql",
+    "supabase:reset": "supabase db reset"
   },
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.7.0",

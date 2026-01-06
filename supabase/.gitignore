@@ -8,3 +8,4 @@
 .env.*.local
 
 snippets
+local_dump.sql
