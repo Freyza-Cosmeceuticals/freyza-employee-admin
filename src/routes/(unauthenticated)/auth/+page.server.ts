@@ -2,6 +2,7 @@ import { error, fail, redirect } from "@sveltejs/kit"
 
 import { UserRole, UserStatus } from "$lib/types"
 
+import { getUserByEmail as getUserByEmailDb } from "@/lib/server/db/user"
 import * as v from "valibot"
 
 import type { Actions } from "./$types"
@@ -33,8 +34,8 @@ export const actions: Actions = {
     const { output: data, issues: parseError, success } = v.safeParse(schema, loginData)
 
     if (!success) {
-      console.timeEnd("LOGIN")
       console.debug("Invalid Form Data:", parseError)
+      console.timeEnd("LOGIN")
       return fail(400, {
         email: loginData.email,
         message: parseError[0].message,
@@ -43,6 +44,24 @@ export const actions: Actions = {
     }
 
     const { email, password } = data
+
+    // check user role first, SHOULD be ACTIVE ADMIn
+    const potentialUser = await getUserByEmailDb(email)
+    if (potentialUser.error || !potentialUser.data) {
+      console.error("Error Fetching User By Email: ", potentialUser.error)
+      console.timeEnd("LOGIN")
+      return fail(500, { email, message: "Internal Server Error", error: true })
+    }
+
+    if (
+      potentialUser.data.role !== UserRole.ADMIN ||
+      potentialUser.data.status !== UserStatus.ACTIVE
+    ) {
+      console.error("User is not active admin")
+      console.timeEnd("LOGIN")
+      error(403, "Employees or Revoked Admins cannot login to Admin Dashboard")
+    }
+
     console.debug(`Performing supabase signInWithPassword ${email}`)
 
     const {
@@ -50,27 +69,30 @@ export const actions: Actions = {
       data: { user: loggedInUser }
     } = await supabase.auth.signInWithPassword({ email, password })
 
-    if (authError) {
+    if (authError || !loggedInUser) {
       console.debug(authError)
       console.timeEnd("LOGIN")
-      return fail(401, { email: email, message: authError.message, error: true })
+      return fail(401, {
+        email: email,
+        message: authError?.message || "An error occurred",
+        error: true
+      })
     }
 
-    // Prevent employees from logging in
-    // FIXME: Fetch user details beforehand, do not log them in
+    // Defensive Check
     if (
-      loggedInUser &&
-      loggedInUser.app_metadata.app_role !== UserRole.ADMIN &&
+      loggedInUser.app_metadata.app_role !== UserRole.ADMIN ||
       loggedInUser.app_metadata.app_status !== UserStatus.ACTIVE
     ) {
       await supabase.auth.signOut()
 
       console.error("User is not active admin")
       console.timeEnd("LOGIN")
-      error(403, "Employees cannot login to Admin Dashboard")
+      error(403, "Employees or Revoked Admins cannot login to Admin Dashboard")
     }
 
     if (url.searchParams.has("redirectTo")) {
+      console.log("Redirecting to ", url.searchParams.get("redirectTo"))
       console.timeEnd("LOGIN")
       redirect(303, url.searchParams.get("redirectTo") ?? "/admin")
     }
