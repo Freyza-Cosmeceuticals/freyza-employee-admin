@@ -1,8 +1,10 @@
+import { randomUUID } from "crypto"
 import { PUBLIC_SUPABASE_PUBLISHABLE_KEY, PUBLIC_SUPABASE_URL } from "$env/static/public"
 import { redirect } from "@sveltejs/kit"
 import { sequence } from "@sveltejs/kit/hooks"
 
 import { createServerClient } from "@supabase/ssr"
+import { DateTime } from "luxon"
 
 import type { Handle } from "@sveltejs/kit"
 
@@ -100,4 +102,22 @@ const authGuard: Handle = async ({ event, resolve }) => {
   return resolve(event)
 }
 
-export const handle: Handle = sequence(supabase, authGuard)
+const logHandle: Handle = async ({ event, resolve }) => {
+  event.locals.requestId = randomUUID()
+  const TAG = `${event.locals.requestId} ${"-".repeat(50)}`
+  console.time(TAG)
+
+  console.log(DateTime.now().toISOTime(), "-".repeat(50))
+  console.log(
+    `START: [Request ID: ${event.locals.requestId}] ${event.request.method} ${event.url.pathname}\nRemote: ${event.isRemoteRequest}\nData: ${event.isDataRequest}\n`
+  )
+
+  const response = await resolve(event)
+
+  console.log(`END: [Request ID: ${event.locals.requestId}]  - ${response.status}`)
+  console.timeEnd(TAG)
+  console.log("\n")
+  return response
+}
+
+export const handle: Handle = sequence(logHandle, supabase, authGuard)

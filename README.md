@@ -1,38 +1,49 @@
-# sv
+# Freyza Employee Admin
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+This is the Sveltekit project for the Admin site of Freyza Employee System.
 
-## Creating a project
+The tech stack is:
 
-If you're seeing this, you've probably already done this step. Congrats!
+- SvelteKit
+- TypeScript
+- Drizzle ORM
+- Supabase (PostgreSQL)
 
-```sh
-# create a new project in the current directory
-npx sv create
+This project also uses supabase cli setup for local development. All values in `.env.local` should refer to local instances.
+We use the `drizzle` postgres user with all drizzle queries. It is created automatically when running `supabase db reset` via the `supabase/roles.sql`.
 
-# create a new project in my-app
-npx sv create my-app
-```
+Edit the file to update the password, and DON'T COMMIT WITH THE PASSWORD (revert it back). Use the set password in `.env.local`.
 
-## Developing
+# Development
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+1. Install Supabase CLI and run `bun supabase:start` to start all the supabase services.
+2. Take a note of addresses and keys in the output or `bun supabase:status` output. Update `.env.local`
+3. Run `bun supabase db reset` to reset the database and apply the migrations.
+4. Run `./drizzle/seed.sh` to seed in all the values (will merge into supabase seed later).
+5. Run `bun dev` to start the development vite server.
 
-```sh
-npm run dev
+## Making a change to the schema
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+Using drizzle and supabase cli can be cumbersome together, but i have this flow...
 
-## Building
+1. Update `./src/lib/db/schema.ts` accordingly.
+2. Add new types to `./src/lib/types.ts` and `./src/lib/constants.ts` if needed.
+3. Run `bun db:generate` to generate the new schema.
+4. Run `bun supabase:migrate` to apply the migrations to the local db.
+5. Run `bun db:studio` to open the drizzle studio or open the local supabase dashboard.
 
-To create a production version of your app:
+NOTE: We use drizzle to generate the migration files into `./supabase/migrations`, and then let supabase handle the actual migration process. NEVER use drizzle to apply migrations.
 
-```sh
-npm run build
-```
+# Staging
 
-You can preview the production build with `npm run preview`.
+TODO
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+PLAN: Use the existing project for staging, and the `dev` git branch for staging. Work in `feature` branch or similar or maybe even `dev`. Do PRs to `staging`.
+On PR to `staging`, or maybe commits, setup GitHub action to push migrations and changes to supabase.
+
+# Production
+
+TODO
+
+PLAN: Create a new project for prod, and use `main` git branch for prod. ALWAYS Open PRs from `staging` to `main` and merge once okay.
+GitHub actions to do supabase migrations.

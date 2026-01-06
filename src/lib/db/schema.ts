@@ -1,11 +1,3 @@
-import {
-  DayType,
-  EmployeeTier,
-  ReportStatus,
-  UserRole,
-  UserStatus,
-  VisitType
-} from "@/lib/constants"
 import { sql } from "drizzle-orm"
 import {
   boolean,
@@ -23,6 +15,8 @@ import {
   varchar
 } from "drizzle-orm/pg-core"
 import { anonRole, authenticatedRole, authUid } from "drizzle-orm/supabase"
+
+import { DayType, EmployeeTier, ReportStatus, UserRole, UserStatus, VisitType } from "../constants"
 
 export function enumToPgEnum<T extends Record<string, string>>(
   myEnum: T

@@ -1,6 +1,6 @@
 import { exit } from "process"
 
-import * as schema from "$lib/server/db/schema"
+import * as schema from "$lib/db/schema"
 import {
   type LocationCreate as LocationCreateOptionalID,
   type RouteCreate as RouteCreateOptionalID
