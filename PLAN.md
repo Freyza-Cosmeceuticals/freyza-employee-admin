@@ -1,7 +1,7 @@
 # PLAN.md – Employee Travel & Expense System
 
 Status: WIP  
-Stack: Android (Kotlin) · Supabase (Postgres, Auth, Cron) · SvelteKit + Prisma
+Stack: Android (Kotlin) · Supabase (Postgres, Auth, Cron) · SvelteKit + Drizzle
 
 ---
 
@@ -10,13 +10,13 @@ Stack: Android (Kotlin) · Supabase (Postgres, Auth, Cron) · SvelteKit + Prisma
 ### 1.1 Components
 
 - **Supabase**
-  - Postgres DB (Prisma-managed schema)
+  - Postgres DB (Drizzle-managed schema)
   - Auth (email/phone + password; optional OAuth later)
   - RLS for per-user isolation
   - Cron / scheduled jobs for auto-locking reports, etc.
 
 - **SvelteKit Admin Dashboard**
-  - Uses Prisma Client against Supabase Postgres.
+  - Uses Drizzle Client against Supabase Postgres.
   - Admin authentication via Supabase.
   - Admin-only views for:
     - Travel plan management
@@ -44,9 +44,9 @@ Stack: Android (Kotlin) · Supabase (Postgres, Auth, Cron) · SvelteKit + Prisma
 
 ---
 
-## 2. Data Model Overview (Prisma)
+## 2. Data Model Overview (Drizzle)
 
-Prisma schema already roughly defined; key models:
+Drizzle schema already roughly defined; key models:
 
 - `User`
   - Fields: `id`, `name`, `phone`, `role`, `status`, `tier`, `hqId`, timestamps.
@@ -81,7 +81,7 @@ Prisma schema already roughly defined; key models:
   - `reportId`, `visitType (DOCTOR/STOCKIST/CHEMIST)`.
   - Later: link to doctor/stockist/chemist tables, GPS data, etc.
 
-This schema lives in the SvelteKit repo and is applied to the Supabase Postgres DB via Prisma migrations.
+This schema lives in the SvelteKit repo and is applied to the Supabase Postgres DB via Drizzle migrations.
 
 ---
 
@@ -114,7 +114,7 @@ Policies will be written in Supabase SQL and tested before mobile integration.
 ### 4.1 Project Setup
 
 - SvelteKit app with:
-  - Prisma Client connected to Supabase `DATABASE_URL`.
+  - Drizzle Client connected to Supabase `DATABASE_URL`.
   - Supabase JS client for auth in hooks/layout.
   - UI framework: shadcn-svelte.
 
@@ -326,7 +326,7 @@ Later, when daily reports are in place:
 
 ### Phase 1 – Backend & Schema
 
-- Finalize Prisma schema; run migrations against Supabase.
+- Finalize Drizzle schema; run migrations against Supabase.
 - Seed:
   - Admin user(s).
   - Some employees.
@@ -384,7 +384,7 @@ Deliverable: Basic automated expense calculation.
   - Store all timestamps as `timestamptz` in Postgres.
   - Use ISO8601 at API boundaries.
 - **ID Strategy:**
-  - UUID everywhere (already in Prisma schema).
+  - UUID everywhere (already in Drizzle schema).
 - **Error Handling:**
   - Prefer backend validation of business rules (e.g., no leave applied after 9am) with clear error codes.
 - **Security:**

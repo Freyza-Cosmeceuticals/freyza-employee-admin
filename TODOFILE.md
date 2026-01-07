@@ -5,3 +5,6 @@
 
 - [ ] Add snapshots to various forms on the pages
 - [x] Add travelPlan stats to the object itself
+
+- [ ] work on android side
+- [ ] begin daily reports/visits and such...

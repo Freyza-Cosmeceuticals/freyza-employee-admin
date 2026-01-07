@@ -1,6 +1,6 @@
 # Database Schema Documentation
 
-> NOTE: AI generated, take this as a grain of salt, schema.prisma and business login are always the source of truth
+> NOTE: AI generated, take this as a grain of salt, schema.ts and business login are always the source of truth
 
 ### MR Travel & Reporting System
 

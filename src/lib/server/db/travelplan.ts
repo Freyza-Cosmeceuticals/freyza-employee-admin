@@ -122,6 +122,24 @@ export async function getTravelPlanWithEmployeeOptionalEntriesById(
       return { data: travelPlan, error: null }
     }
 
+    // TODO: I like the SQL syntax, but maybe migrate to this syntax for complex queries
+    // console.log(
+    //   await db.query.travelPlan.findMany({
+    //     with: {
+    //       travelPlanEntries: {
+    //         with: {
+    //           route: {
+    //             with: {
+    //               srcLoc: true,
+    //               destLoc: true
+    //             }
+    //           }
+    //         }
+    //       }
+    //     }
+    //   })
+    // )
+
     // If entries included, fetch them separately
     const rawPlanEntries = await db
       .select({

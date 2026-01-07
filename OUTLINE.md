@@ -13,14 +13,14 @@
 
 ### Goals
 
-- Supabase project set up with Prisma schema migrated.
+- Supabase project set up with Drizzle schema migrated.
 - Essential RLS policies implemented and tested.
 - Seed data: 2–3 admins, 10 employees, 20 locations, 50 routes.
 - Basic auth working (admin login via SvelteKit).
 
 ### Success Criteria
 
-- Admin can query all employee data via Prisma.
+- Admin can query all employee data via Drizzle.
 - Test employee `auth.uid()` can only see own plans/reports.
 
 **Risks:** RLS complexity, Supabase auth setup.[1]
@@ -165,7 +165,7 @@ Week 9–10 (Feb 27–Mar 07): Polish + Deploy
 
 ## Critical Dependencies
 
-1. **Week 1:** Supabase project + Prisma schema migration working.
+1. **Week 1:** Supabase project + Drizzle schema migration working. Migration using supabase cli.
 2. **Week 3:** Travel plan CRUD fully functional in admin.
 3. **Week 5:** Android login + basic plan fetch working.
 4. **Week 7:** End-to-end employee flow (admin → MR → admin view) verified.

@@ -1,7 +1,6 @@
 import { DATABASE_URL } from "$env/static/private"
 
-import * as relations from "$lib/db/relations"
-import * as schema from "$lib/db/schema"
+import * as schema from "$lib/db/index"
 
 import { drizzle } from "drizzle-orm/postgres-js"
 import postgres from "postgres"
