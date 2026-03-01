@@ -104,19 +104,38 @@ const authGuard: Handle = async ({ event, resolve }) => {
 
 const logHandle: Handle = async ({ event, resolve }) => {
   event.locals.requestId = randomUUID()
-  const TAG = `${event.locals.requestId} ${"-".repeat(50)}`
-  console.time(TAG)
+  const requestId = event.locals.requestId
+  const timestamp = DateTime.now().toISO()
 
-  console.log(DateTime.now().toISOTime(), "-".repeat(50))
+  const requestType = event.isRemoteRequest ? "REMOTE" : event.isDataRequest ? "DATA" : "HTTP"
+  const colors = {
+    reset: "\x1b[0m",
+    dim: "\x1b[2m",
+    bright: "\x1b[1m",
+    cyan: "\x1b[36m",
+    green: "\x1b[32m",
+    yellow: "\x1b[33m",
+    red: "\x1b[31m"
+  }
+
+  // timestamp [requestId] -> method path (requestType)
   console.log(
-    `START: [Request ID: ${event.locals.requestId}] ${event.request.method} ${event.url.pathname}\nRemote: ${event.isRemoteRequest}\nData: ${event.isDataRequest}\n`
+    `${colors.cyan}${timestamp}${colors.reset} ${colors.bright}[${requestId}]${colors.reset} ${colors.green}→${colors.reset} ${event.request.method} ${event.url.pathname} ${colors.dim}(${requestType})${colors.reset}`
   )
 
+  const startTime = Date.now()
   const response = await resolve(event)
+  const duration = Date.now() - startTime
 
-  console.log(`END: [Request ID: ${event.locals.requestId}]  - ${response.status}`)
-  console.timeEnd(TAG)
-  console.log("\n")
+  const statusColor =
+    response.status >= 400 ? colors.red : response.status >= 300 ? colors.yellow : colors.green
+
+  // timestamp [requestId] <- status (duration)
+  console.log(
+    `${colors.cyan}${DateTime.now().toISO()}${colors.reset} ${colors.bright}[${requestId}]${colors.reset} ${colors.green}←${colors.reset} ${statusColor}${response.status}${colors.reset} ${colors.dim}(${duration}ms)${colors.reset}`
+  )
+  console.log("")
+
   return response
 }
 
