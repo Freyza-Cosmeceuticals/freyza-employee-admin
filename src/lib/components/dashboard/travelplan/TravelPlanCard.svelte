@@ -18,7 +18,7 @@ interface Props {
 const { travelPlan }: Props = $props()
 
 let travelPlanUrl = $derived.by(() => {
-  const dt = `${(travelPlan.month.getMonth() + 1).toString().padStart(2, "0")}-${travelPlan.month.getFullYear()}`
+  const dt = `${travelPlan.month.getFullYear()}-${(travelPlan.month.getMonth() + 1).toString().padStart(2, "0")}`
   return resolve(`/admin/travelplan/${dt}?employeeId=${travelPlan.employee.id}`)
 })
 </script>
