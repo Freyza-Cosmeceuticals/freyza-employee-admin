@@ -12,7 +12,7 @@ import { Skeleton } from "@ui/skeleton"
 import { getTravelPlansForMonth } from "$lib/api/travelplan.remote.js"
 
 let { data } = $props()
-let { userProfile: userProfilePromise, employees, upcomingMonth, tasks } = $derived(data)
+let { userProfile: userProfilePromise, employees, thisMonth, upcomingMonth, tasks } = $derived(data)
 
 let userProfile = $derived(await userProfilePromise)
 </script>
@@ -82,14 +82,14 @@ let userProfile = $derived(await userProfilePromise)
     <!-- Upcoming Travel Plans -->
     <Card.Root class="mx-auto w-full max-w-xl">
       <Card.Header>
-        <Card.Title>Travel Plans For {upcomingMonth.monthLong} {upcomingMonth.year}</Card.Title>
-        <Card.Description>Upcoming Travel Plans</Card.Description>
+        <Card.Title>Travel Plans For {thisMonth.monthLong} {thisMonth.year}</Card.Title>
+        <Card.Description>Travel Plans</Card.Description>
         <Card.Action>
           <Button variant="link" href={resolve("/admin/travelplan")}>View All</Button>
         </Card.Action>
       </Card.Header>
       <Card.Content>
-        {#await getTravelPlansForMonth(upcomingMonth.toISODate())}
+        {#await getTravelPlansForMonth(thisMonth.toISODate())}
           <Skeleton class="h-12 w-full" />
         {:then data}
           <TravelPlanList plans={data ?? []} />

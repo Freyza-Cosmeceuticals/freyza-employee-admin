@@ -7,15 +7,22 @@ import { DateTime } from "luxon"
 
 import type { PageServerLoad } from "./$types"
 
-export const load: PageServerLoad = async ({ depends, locals }) => {
+export const load: PageServerLoad = async ({ depends, locals, url }) => {
   // depends(SUPABASE_AUTH_TAG)
 
   const today = DateTime.now().setZone(TIMEZONE) as DateTime<true>
-  const nextMonthForDB = today
-    .plus({ months: 1 })
-    .startOf("month")
-    .setZone("UTC", { keepLocalTime: true })
-    .toJSDate()
+  let nextMonth: DateTime<true> = today.plus({ months: 1 }).startOf("month") as DateTime<true>
+
+  // check if nextMonth is provided in the URL
+  const nextMonthParam = url.searchParams.get("month")
+  if (nextMonthParam) {
+    const maybeNextMonth = DateTime.fromISO(nextMonthParam)
+    if (maybeNextMonth.isValid) {
+      nextMonth = maybeNextMonth.setZone(TIMEZONE).set({ day: 1 }) as DateTime<true>
+    }
+  }
+
+  const nextMonthForDB = nextMonth.setZone("UTC", { keepLocalTime: true }).toJSDate()
 
   const travelPlansForMonth = await getTravelPlansForMonth(locals, nextMonthForDB)
   if (travelPlansForMonth.error !== null) {
@@ -27,8 +34,6 @@ export const load: PageServerLoad = async ({ depends, locals }) => {
     getAllEmployees(locals, undefined, employeesDone),
     getAllRoutes(locals)
   ])
-
-  const nextMonth = today.plus({ months: 1 }).startOf("month")
 
   return { employees, routes, today, nextMonth }
 }

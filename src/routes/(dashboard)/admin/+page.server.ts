@@ -10,10 +10,8 @@ export const load: PageServerLoad = async ({ depends, locals }) => {
 
   const userProfile = getUser(locals)
   const employees = getAllEmployees(locals, N_EMPLOYEES_HOME)
-  const upcomingMonth = DateTime.now()
-    .setZone(TIMEZONE)
-    .plus({ months: 1 })
-    .startOf("month") as DateTime<true>
+  const thisMonth = DateTime.now().setZone(TIMEZONE).startOf("month") as DateTime<true>
+  const upcomingMonth = thisMonth.plus({ months: 1 }).startOf("month")
 
   const tasks: Promise<{ id: number; task: string; urgency: string }[]> = new Promise((resolve) => {
     setTimeout(() => {
@@ -28,5 +26,5 @@ export const load: PageServerLoad = async ({ depends, locals }) => {
   })
 
   // stream promises for faster response
-  return { userProfile, employees, upcomingMonth, tasks }
+  return { userProfile, employees, thisMonth, upcomingMonth, tasks }
 }

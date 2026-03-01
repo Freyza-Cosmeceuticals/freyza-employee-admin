@@ -53,7 +53,7 @@ function isAnyEmployeeLeft(
             {@const travelPlans = await getTravelPlansForMonth(m.toISODate())}
             {@const empCount = await employeeCount}
             {#if i === 0 && isAnyEmployeeLeft(travelPlans, empCount.data)}
-              <AddTravelPlanCard />
+              <AddTravelPlanCard month={nextMonth} />
             {/if}
 
             {#each travelPlans as travelPlan}
@@ -67,7 +67,7 @@ function isAnyEmployeeLeft(
             {#snippet pending()}
               {@const skeletonCount = Array.from({ length: i === 0 ? 4 : 5 }, (_, i) => i + 1)}
               {#if i === 0}
-                <AddTravelPlanCard />
+                <AddTravelPlanCard month={nextMonth} />
               {/if}
               {#each skeletonCount as item, i (item)}
                 <Skeleton class="aspect-video w-32" />
