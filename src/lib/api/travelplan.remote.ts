@@ -77,7 +77,7 @@ export const addTravelPlan = form(addTravelPlanSchema, async (travelPlan, issue)
   }
 
   // refresh the get plans for month
-  getTravelPlansForMonth(travelPlanObject.month.toISOString().split("T", 2)[0]).refresh()
+  getTravelPlansForMonth(travelPlanObject.month.toISOString().split("T", 1)[0]).refresh()
 
   console.timeEnd(TAG)
   return { data: travelPlanObject, success: true, message: "Travel plan created successfully" }
@@ -137,7 +137,7 @@ export const getTravelPlanByIdWithEntries = query(getTravelPlanByIdSchema, async
  * Requires Admin
  */
 export const getTravelPlansForMonth = query.batch(getTravelPlanForMonthsSchema, async (months) => {
-  let TAG = `Remote: getTravelPlansForMonth(${months.map((month) => month.toISOString().split("T")[0]).join(", ")})`
+  let TAG = `Remote: getTravelPlansForMonth(${months.map((month) => month.toISOString().split("T", 1)[0]).join(", ")})`
   console.time(TAG)
 
   const { locals } = getRequestEvent()
@@ -160,10 +160,8 @@ export const getTravelPlansForMonth = query.batch(getTravelPlanForMonthsSchema, 
 
   console.timeEnd(TAG)
   return (month) => {
-    // todo, an error is present here, presumably with sveltekit remote fns
-    // it is supposed to be a parsed Date, but is a string
-    // console.log(typeof month, month, lookup)
-    return travelPlans.get(month.toString())
+    // TODO: Convert this to luxon DateTime so that I can use .toISODate({precision: "month"})
+    return travelPlans.get(month.toISOString().split("T", 1)[0])
   }
 })
 
@@ -174,7 +172,7 @@ export const getTravelPlansForMonth = query.batch(getTravelPlanForMonthsSchema, 
 export const getTravelPlansWithEntriesForMonth = query.batch(
   getTravelPlanForMonthsSchema,
   async (months) => {
-    let TAG = `Remote: getTravelPlansWithEntriesForMonth(${months.map((month) => month.toISOString().split("T")[0]).join(", ")})`
+    let TAG = `Remote: getTravelPlansWithEntriesForMonth(${months.map((month) => month.toISOString().split("T", 1)[0]).join(", ")})`
     console.time(TAG)
 
     const { locals } = getRequestEvent()
@@ -194,10 +192,8 @@ export const getTravelPlansWithEntriesForMonth = query.batch(
 
     console.timeEnd(TAG)
     return (month) => {
-      // todo, an error is present here, presumably with sveltekit remote fns
-      // it is supposed to be a parsed Date, but is a string
-      // console.log(typeof month, month, lookup)
-      return travelPlans.get(month.toString())
+      // TODO: Convert this to luxon DateTime so that I can use .toISODate({precision: "month"})
+      return travelPlans.get(month.toISOString().split("T", 1)[0])
     }
   }
 )

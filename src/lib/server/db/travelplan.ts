@@ -239,7 +239,7 @@ export async function getTravelPlansWithEmployeeForMonths(
 
     if (includeStats) {
       grouped = await travelPlans.reduce(async (map, travelPlan) => {
-        const key = travelPlan.month.toISOString().split("T", 2)[0]
+        const key = travelPlan.month.toISOString().split("T", 1)[0]
         const acc = await map
         if (!acc.has(key)) acc.set(key, [])
 
@@ -351,7 +351,7 @@ export async function getTravelPlansWithEmployeeWithEntriesForMonths(
     const grouped = new Map<string, TravelPlanWithEmployeeWithEntries[]>()
 
     for (const plan of planMap.values()) {
-      const key = plan.month.toISOString().split("T", 2)[0]
+      const key = plan.month.toISOString().split("T", 1)[0]
       const bucket = grouped.get(key) ?? []
       bucket.push(plan)
       grouped.set(key, bucket)
