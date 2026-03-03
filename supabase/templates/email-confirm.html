@@ -1,0 +1,17 @@
+<div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+  <div style="background-color: #4B0082; padding: 30px; text-align: center; border-bottom: 4px solid #D4AF37;">
+    <h1 style="color: #D4AF37; margin: 0; font-size: 24px; letter-spacing: 2px; text-transform: uppercase;">Freyza</h1>
+    <p style="color: #ffffff; margin: 5px 0 0 0; font-size: 12px; letter-spacing: 1px;">COSMECEUTICALS</p>
+  </div>
+  <div style="padding: 40px; background-color: #ffffff; line-height: 1.6;">
+    <h2 style="color: #4B0082; margin-top: 0;">Welcome to Freyza</h2>
+    <p style="color: #444444;">Thank you for joining Freyza Cosmeceuticals. We are delighted to have you. Please confirm your account.</p>
+    <div style="text-align: center; margin: 35px 0;">
+      <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email" style="background-color: #D4AF37; color: #1a1a1a; padding: 15px 30px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">Confirm My Account</a>
+    </div>
+    <p style="color: #888888; font-size: 13px;">If the button doesn't work, copy and paste this link: <br> {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email </p>
+  </div>
+  <div style="background-color: #f9f9f9; padding: 20px; text-align: center; color: #999999; font-size: 12px;">
+    &copy; 2026 Freyza Cosmeceuticals. All rights reserved.
+  </div>
+</div>
