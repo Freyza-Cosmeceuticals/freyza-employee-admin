@@ -1,81 +1,78 @@
 <script lang="ts">
-import AddTravelPlanCard from "$lib/components/dashboard/travelplan/AddTravelPlanCard.svelte"
-import TravelPlanCard from "$lib/components/dashboard/travelplan/TravelPlanCard.svelte"
+import DailyReportCard from "$lib/components/dashboard/dailyreport/DailyReportCard.svelte"
 import * as Card from "@ui/card"
 import { Skeleton } from "@ui/skeleton"
 
-import { getTravelPlansForMonth } from "$lib/api/travelplan.remote.js"
+import { getDailyReportsForDate } from "$lib/api/dailyreport.remote"
 
-import type { TravelPlanWithEmployee } from "$lib/types"
+import { DateTime } from "luxon"
+
+import type { DailyReportWithEmployee } from "$lib/types"
 
 let { data } = $props()
-let { today, nextMonth, months, employeeCount } = $derived(data)
+let { today, days, employeeCount } = $derived(data)
 
 function isAnyEmployeeLeft(
-  travelPlans: TravelPlanWithEmployee[] | undefined,
+  dailyReports: DailyReportWithEmployee[] | undefined,
   empCount: number | null
 ) {
   // we aren't sure, so say yes
   if (empCount === null) return true
 
-  return (travelPlans ?? []).length < empCount
+  return (dailyReports ?? []).length < empCount
 }
 </script>
 
 <svelte:head>
-  <title>Travel Plans | Freyza Cosmeceuticals Employee System</title>
-  <meta name="description" content="Travel Plans for Freyza Cosmeceuticals Employee System" />
+  <title>Daily Reports | Freyza Cosmeceuticals Employee System</title>
+  <meta name="description" content="Daily Reports for Freyza Cosmeceuticals Employee System" />
 </svelte:head>
 
 <div class="h-auto w-full space-y-8 px-4 py-8">
   <Card.Root class="w-full border-0 bg-transparent shadow-none">
     <Card.Header>
-      <Card.Title class="text-2xl">Travel Plans</Card.Title>
-      <Card.Description>get them tight on schedule</Card.Description>
+      <Card.Title class="text-2xl">Daily Reports</Card.Title>
+      <Card.Description>see how the progress is going</Card.Description>
     </Card.Header>
   </Card.Root>
 
   <div class="mx-auto max-w-5xl">
-    {#each months as m, i (m.toString())}
+    {#each days as d, i (d.toString())}
       <Card.Root class="w-full gap-2 border-0 bg-transparent shadow-none">
         <Card.Header>
           <Card.Title class="text-lg font-semibold">
-            {m.monthLong}
-            {m.year}
+            {d.toLocaleString(DateTime.DATE_MED)}
             {#if i === 0}
-              <span class="font-normal italic"> (Upcoming Month) </span>
+              <span class="font-normal italic"> (Today) </span>
             {/if}
           </Card.Title>
         </Card.Header>
         <Card.Content class="flex flex-row flex-wrap items-stretch gap-4">
           <svelte:boundary>
             <!-- pass YYYY-MM-DD format ISODate to the remote query function, same is used there as well -->
-            {@const travelPlans = await getTravelPlansForMonth(m.toISODate())}
+            {@const dailyReports = await getDailyReportsForDate(d.toISODate())}
             {@const empCount = await employeeCount}
-            {#if i === 0 && isAnyEmployeeLeft(travelPlans, empCount.data)}
-              <AddTravelPlanCard month={nextMonth} />
-            {/if}
 
-            {#each travelPlans as travelPlan}
-              <TravelPlanCard {travelPlan} />
+            {#each dailyReports as dailyReport}
+              <DailyReportCard {dailyReport} />
             {:else}
-              {#if i !== 0}
-                <p class="text-muted-foreground">No Travel Plans for this month</p>
-              {/if}
+              <p class="text-muted-foreground">No Daily Reports for this date</p>
             {/each}
+
+            {#if (dailyReports ?? []).length !== 0 && isAnyEmployeeLeft(dailyReports, empCount.data)}
+              Employees remaining...
+            {/if}
 
             {#snippet pending()}
               {@const skeletonCount = Array.from({ length: i === 0 ? 4 : 5 }, (_, i) => i + 1)}
-              {#if i === 0}
-                <AddTravelPlanCard month={nextMonth} />
-              {/if}
+
               {#each skeletonCount as item, i (item)}
                 <Skeleton class="aspect-video w-32" />
               {/each}
             {/snippet}
             {#snippet failed(error)}
               <p class="text-center text-lg font-medium text-destructive">
-                An error occurred while fetching travel plans.
+                An error occurred while fetching daily reports.
               </p>
             {/snippet}
           </svelte:boundary>
