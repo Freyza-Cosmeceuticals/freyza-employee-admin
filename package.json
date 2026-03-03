@@ -54,6 +54,7 @@
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.98.0",
+    "@sveltejs/adapter-vercel": "^6.3.3",
     "date-holidays": "^3.26.8",
     "luxon": "^3.7.2",
     "mode-watcher": "^1.1.0",
