@@ -4,6 +4,8 @@
  * send a server request, and thus trigger `hooks.server.ts`.
  **/
 
+// @ts-ignore
+import { VERCEL_GIT_COMMIT_REF } from "$env/static/private"
 import { redirect } from "@sveltejs/kit"
 
 import { SUPABASE_AUTH_TAG } from "$lib/constants"
@@ -21,5 +23,5 @@ export const load = async ({ locals, setHeaders, depends }) => {
     "cache-control": "no-store"
   })
 
-  return { user, session }
+  return { user, session, deploymentGitBranch: VERCEL_GIT_COMMIT_REF }
 }

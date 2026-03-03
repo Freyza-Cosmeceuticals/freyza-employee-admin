@@ -16,9 +16,10 @@ interface Props {
   session: Session | null
   user: User | null
   supabase: SupabaseClient
+  deploymentGitBranch?: string
 }
 
-const { session, user, supabase }: Props = $props()
+const { session, user, supabase, deploymentGitBranch }: Props = $props()
 </script>
 
 <!-- Dashboard Navbar -->
@@ -36,7 +37,12 @@ const { session, user, supabase }: Props = $props()
     <div class="flex flex-row gap-2">
       {#if dev}
         <Badge variant="outline" class="bg-accent">DEV MODE</Badge>
+      {:else if deploymentGitBranch && deploymentGitBranch != "main"}
+        <Badge variant="outline" class="bg-accent" title="Deployed from branch">
+          {deploymentGitBranch?.toUpperCase()}
+        </Badge>
       {/if}
+
       {#if session !== null && user !== null}
         <AccountDropdown {session} {user} {supabase} />
       {/if}

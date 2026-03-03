@@ -35,7 +35,7 @@ const { session, user, supabase, deploymentGitBranch }: Props = $props()
     <div class="flex flex-row gap-2">
       {#if dev}
         <Badge variant="outline" class="bg-accent">DEV MODE</Badge>
-      {:else if deploymentGitBranch}
+      {:else if deploymentGitBranch && deploymentGitBranch != "main"}
         <Badge variant="outline" class="bg-accent" title="Deployed from branch">
           {deploymentGitBranch?.toUpperCase()}
         </Badge>
