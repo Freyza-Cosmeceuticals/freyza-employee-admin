@@ -1,8 +1,11 @@
 <script lang="ts">
+import { dev } from "$app/environment"
+import { resolve } from "$app/paths"
 import { navigating } from "$app/state"
 
 import AccountDropdown from "$lib/components/reusable/AccountDropdown.svelte"
 import ColorModeToggle from "$lib/components/reusable/ColorModeToggle.svelte"
+import { Badge } from "@ui/badge"
 import * as Sidebar from "@ui/sidebar"
 
 import { fade } from "svelte/transition"
@@ -26,11 +29,14 @@ const { session, user, supabase }: Props = $props()
     ]}>
     <div class="flex flex-row items-center gap-4">
       <Sidebar.Trigger class="-ml-1" />
-      <a href="/admin/employees"> Employees </a>
-      <a href="/admin/expenses">Expenses</a>
+      <a href={resolve("/admin/employees")}> Employees </a>
+      <a href={resolve("/admin/dailyreport")}> Reports </a>
     </div>
 
     <div class="flex flex-row gap-2">
+      {#if dev}
+        <Badge variant="outline" class="bg-accent">DEV MODE</Badge>
+      {/if}
       {#if session !== null && user !== null}
         <AccountDropdown {session} {user} {supabase} />
       {/if}

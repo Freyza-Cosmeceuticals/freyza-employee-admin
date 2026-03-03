@@ -43,7 +43,8 @@ Never push directly to the `preview` branch. Use other branches to work (no buil
 Vercel will create a preview deployment for each PR automatically. Upon merging a PR, the preview deployment will be promoted to the preview environment.
 With that, the `supabase-preview` workflow will run and apply any pending migrations to the preview supabase project.
 
-All new development branched should be created on the `preview` branch.
+All new development branches should be created on the `preview` branch.
+Always seed only ONCE to the preview db running `bun run --env-file=.env.preview ./src/lib/server/seed/location.ts`
 
 ## Production
 
@@ -51,3 +52,5 @@ Create a PR from `preview` to `main` and merge once okay. This will NOT create a
 Upon merging, vercel deploys the build to the `prod` vercel project with migrations pushed to the `prod` supabase project using the `supabase-production` workflow.
 
 NEVER EVER push to `main` directly, don't even think of doing that. Only tested code should flow into `main`.
+
+Always seed only ONCE to the preview db running `bun run --env-file=.env.production ./src/lib/server/seed/location.ts`

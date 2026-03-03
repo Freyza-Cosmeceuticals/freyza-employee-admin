@@ -1,0 +1,17 @@
+
+<div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+  <div style="background-color: #4B0082; padding: 30px; text-align: center; border-bottom: 4px solid #D4AF37;">
+    <h1 style="color: #D4AF37; margin: 0; font-size: 24px; letter-spacing: 2px;">Freyza</h1>
+  </div>
+  <div style="padding: 40px; background-color: #ffffff; line-height: 1.6;">
+    <h2 style="color: #4B0082; margin-top: 0;">Employee Invite</h2>
+    <p style="color: #444444;">You have been invited to join the <strong>Freyza Cosmeceuticals</strong>. This account will allow you to login to the Freyza Employee mobile app.</p>
+    <div style="text-align: center; margin: 35px 0;">
+      <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email" style="background-color: #4B0082; color: #D4AF37; padding: 15px 30px; text-decoration: none; border-radius: 4px; border: 2px solid #D4AF37; font-weight: bold; display: inline-block;">Accept Invitation</a>
+    </div>
+
+    <p style="color: #888888; font-size: 13px;">If the button doesn't work, copy and paste this link: <br> {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email </p>
+
+    <p style="color: #888888; font-size: 13px;">If you weren't expecting this invitation, please contact your manager.</p>
+  </div>
+</div>
