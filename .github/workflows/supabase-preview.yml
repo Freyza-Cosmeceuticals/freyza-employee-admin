@@ -28,3 +28,6 @@ jobs:
         run: |
           supabase link --project-ref $PROJECT_ID --password $DB_PASSWORD
           supabase db push --linked --password $DB_PASSWORD
+        env:
+          PROJECT_ID: ${{ vars.PROJECT_ID }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
