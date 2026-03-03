@@ -1,8 +1,8 @@
 // @ts-ignore
-import { VERCEL_COMMIT_REF } from "$env/static/private"
+import { VITE_VERCEL_COMMIT_REF } from "$env/static/private"
 
 export const load = async () => {
   return {
-    deploymentGitBranch: VERCEL_COMMIT_REF
+    deploymentGitBranch: VITE_VERCEL_COMMIT_REF
   }
 }
