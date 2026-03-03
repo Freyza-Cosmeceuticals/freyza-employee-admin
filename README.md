@@ -34,16 +34,17 @@ Using drizzle and supabase cli can be cumbersome together, but i have this flow.
 
 NOTE: We use drizzle to generate the migration files into `./supabase/migrations`, and then let supabase handle the actual migration process. NEVER use drizzle to apply migrations.
 
-# Staging
+# Preview
 
-TODO
+All preview deployments are sourced from the `preview` branch here on github, deployed to the `preview` vercel project with migrations pushed to the `preview` supabase project.
+Never push directly to the `preview` branch. Use other branches to work (no builds are created for commits to those branches), and open a PR to the preview branch.
 
-PLAN: Use the existing project for staging, and the `dev` git branch for staging. Work in `feature` branch or similar or maybe even `dev`. Do PRs to `staging`.
-On PR to `staging`, or maybe commits, setup GitHub action to push migrations and changes to supabase.
+Vercel will create a preview deployment for each PR automatically. Upon merging a PR, the preview deployment will be promoted to the preview environment.
+With that, the `supabase-preview` workflow will run and apply any pending migrations to the preview supabase project.
 
 # Production
 
-TODO
+Create a PR from `preview` to `main` and merge once okay. This will NOT create any preview deployments.
+Upon merging, vercel deploys the build to the `prod` vercel project with migrations pushed to the `prod` supabase project using the `supabase-production` workflow.
 
-PLAN: Create a new project for prod, and use `main` git branch for prod. ALWAYS Open PRs from `staging` to `main` and merge once okay.
-GitHub actions to do supabase migrations.
+NEVER EVER push to `main` directly, don't even think of doing that. Only tested code should flow into `main`.
