@@ -9,6 +9,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # vercel naming scheme for auto created environments (This is the _production_ deployment for the preview project)
     environment: "Production – freyza-employee-admin-preview"
     permissions:
       contents: read
@@ -23,13 +24,7 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 
-      - name: Dummy Echo Stuff
+      - name: Link and Push Migrations
         run: |
-          echo "PROJECT_ID=$PROJECT_ID"
-        env:
-          PROJECT_ID: ${{ vars.PROJECT_ID }}
-
-      # - name: Link and Push Migrations
-      #   run: |
-      #     supabase link --project-ref $PROJECT_ID --password $DB_PASSWORD
-      #     supabase db push --password $DB_PASSWORD
+          supabase link --project-ref $PROJECT_ID --password $DB_PASSWORD
+          supabase db push --linked --password $DB_PASSWORD
