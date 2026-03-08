@@ -12,14 +12,8 @@ import type { DailyReportWithEmployee } from "$lib/types"
 let { data } = $props()
 let { today, days, employeeCount } = $derived(data)
 
-function isAnyEmployeeLeft(
-  dailyReports: DailyReportWithEmployee[] | undefined,
-  empCount: number | null
-) {
-  // we aren't sure, so say yes
-  if (empCount === null) return true
-
-  return (dailyReports ?? []).length < empCount
+function employeesRemaining(dailyReports: DailyReportWithEmployee[], empCount: number) {
+  return Math.max(0, empCount - dailyReports.length)
 }
 </script>
 
@@ -50,17 +44,23 @@ function isAnyEmployeeLeft(
         <Card.Content class="flex flex-row flex-wrap items-stretch gap-4">
           <svelte:boundary>
             <!-- pass YYYY-MM-DD format ISODate to the remote query function, same is used there as well -->
-            {@const dailyReports = await getDailyReportsForDate(d.toISODate())}
-            {@const empCount = await employeeCount}
+            {@const dailyReports = (await getDailyReportsForDate(d.toISODate())) ?? []}
+            {@const empCount = employeeCount.data ?? 0}
 
             {#each dailyReports as dailyReport}
               <DailyReportCard {dailyReport} />
             {:else}
-              <p class="text-muted-foreground">No Daily Reports for this date</p>
+              <p class="text-muted-foreground">No reports submitted for this date</p>
             {/each}
 
-            {#if (dailyReports ?? []).length !== 0 && isAnyEmployeeLeft(dailyReports, empCount.data)}
-              Employees remaining...
+            {#if dailyReports.length !== 0 && employeesRemaining(dailyReports, empCount) > 0}
+              <div
+                class="ms-8 aspect-square w-28 self-center rounded-full border border-dashed border-sidebar-accent-foreground/45 bg-sidebar-accent/50 p-4 text-center">
+                <span class="text-xl font-medium">
+                  {employeesRemaining(dailyReports, empCount)}
+                </span>
+                <p class="text-muted-foreground">report remains</p>
+              </div>
             {/if}
 
             {#snippet pending()}

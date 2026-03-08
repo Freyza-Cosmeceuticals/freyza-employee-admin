@@ -1,13 +1,17 @@
 <script lang="ts">
 import { page } from "$app/state"
 
-import * as Avatar from "@ui/avatar"
-import { Badge } from "@ui/badge"
 import * as Card from "@ui/card"
 
 import { getDailyReportByIdWithVisits } from "$lib/api/dailyreport.remote"
-import { DayType } from "$lib/types"
+import { DayType, VisitType } from "$lib/types"
 
+import {
+  dayTypeBadge,
+  routeBadge,
+  statsBadge
+} from "@/lib/components/dashboard/dailyreport/snippets.svelte"
+import EmployeeItem from "@/lib/components/dashboard/employee/EmployeeItem.svelte"
 import { DateTime } from "luxon"
 
 let { data } = $props()
@@ -44,36 +48,20 @@ $inspect(reportId).with(console.log)
             {date.toLocaleString(DateTime.DATE_MED)}
           </Card.Title>
           <Card.Action>
-            <div class="flex flex-row items-center justify-end gap-3">
-              <Avatar.Root class="size-8 shrink-0 self-start">
-                <Avatar.Image src="https://github.com/harshnarayanjha.png" />
-                <Avatar.Fallback>
-                  {dailyReport.employee.name.slice(0, 1)}
-                </Avatar.Fallback>
-              </Avatar.Root>
-
-              <div class="flex min-w-0 flex-col">
-                <span class="font-semibold">
-                  {dailyReport.employee.name}
-                </span>
-                <div class="flex flex-row items-center gap-2">
-                  {#if dailyReport.employee.tier}
-                    <Badge class="mt-0.5 w-fit px-1.5 py-0 text-xs">
-                      {dailyReport.employee.tier.toUpperCase()}
-                    </Badge>
-                  {/if}
-
-                  {#if dailyReport.employee.hq}
-                    <span class="text-sm text-muted-foreground italic">
-                      {dailyReport.employee.hq.name}
-                    </span>
-                  {/if}
-                </div>
-              </div>
-            </div>
+            <EmployeeItem employee={dailyReport.employee} class="p-0" />
           </Card.Action>
         </Card.Header>
         <Card.Content class="space-y-4">
+          {@render dayTypeBadge(dailyReport.dayType)}
+          {#if dailyReport.dayType == DayType.WORK}
+            {@render routeBadge(null)}
+          {/if}
+          <div class="flex gap-2">
+            {@render statsBadge(VisitType.DOCTOR, 0)}
+            {@render statsBadge(VisitType.STOCKIST, 0)}
+            {@render statsBadge(VisitType.CHEMIST, 0)}
+          </div>
+
           <p>
             Did {dailyReport.visits.length} visits in total
           </p>

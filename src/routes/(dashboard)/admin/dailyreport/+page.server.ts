@@ -13,7 +13,7 @@ export const load: PageServerLoad = async ({ depends, locals }) => {
     days.push(today.minus({ days: i }).startOf("day"))
   }
 
-  const employeeCount = getEmployeeCount(locals)
+  const employeeCount = await getEmployeeCount(locals)
 
   return { today, days, employeeCount }
 }

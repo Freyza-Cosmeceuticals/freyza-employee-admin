@@ -2,10 +2,12 @@ import { sql } from "drizzle-orm"
 import {
   boolean,
   date,
+  decimal,
   doublePrecision,
   foreignKey,
   index,
   integer,
+  jsonb,
   pgEnum,
   pgPolicy,
   pgTable,
@@ -14,7 +16,7 @@ import {
   uniqueIndex,
   varchar
 } from "drizzle-orm/pg-core"
-import { anonRole, authenticatedRole, authUid } from "drizzle-orm/supabase"
+import { authenticatedRole, authUid } from "drizzle-orm/supabase"
 
 import { DayType, EmployeeTier, ReportStatus, UserRole, UserStatus, VisitType } from "../constants"
 
@@ -210,22 +212,48 @@ export const visit = pgTable(
 
     // report this visit is a part of
     reportId: text().notNull(),
+    // visit done by
+    employeeId: text().notNull(),
     visitType: visitType().notNull(),
 
     // GPS coordinates at which visit was marked
     latitude: doublePrecision().notNull(),
     longitude: doublePrecision().notNull(),
-
     // distance from the point of interest in meters
     distanceMetersFromPOI: integer().notNull(),
 
-    // doctor, doctorId, stockist, stockistId, chemist, chemistId
-    // related fields to be added
+    // target IDs, only one is to be filled according to visitType, others must be NULL
+    // currently name, will upgrade later
+    doctorName: text(),
+    chemistName: text(),
+    stockistName: text(),
+
+    // doctor/chemist specific fields
+    productsShown: jsonb()
+      .$type<string[]>()
+      .default(sql`'[]'::jsonb`)
+      .notNull(),
+    samplesGiven: jsonb()
+      .$type<string[]>()
+      .default(sql`'[]'::jsonb`)
+      .notNull(),
+    orderTaken: boolean().default(false).notNull(),
+
+    // stockist specific fields
+    billNo: text(),
+    paymentCollected: boolean().default(false).notNull(),
+    amountWithGST: decimal({ precision: 12, scale: 2 }),
+    amountWithoutGST: decimal({ precision: 12, scale: 2 }),
+    stockChecked: boolean().default(false).notNull(),
+
+    // common
+    additionalNotes: text(),
 
     ...timestamps
   },
   (table) => [
     index("idx_visit_reportid").on(table.reportId),
+    index("idx_visit_visitType").on(table.visitType),
     foreignKey({
       columns: [table.reportId],
       foreignColumns: [dailyReport.id],
@@ -238,12 +266,7 @@ export const visit = pgTable(
       as: "permissive",
       for: "select",
       to: authenticatedRole,
-      using: sql`(EXISTS (
-                    SELECT 1
-                        FROM "dailyReport" dr
-                        WHERE ((dr.id = visit."reportId") AND (dr."employeeId" = ${authUid}::text))
-                    )
-                  )`
+      using: sql`(${authUid}::text = "employeeId")`
     }),
     pgPolicy("Admins can select all visits", {
       as: "permissive",
@@ -260,6 +283,7 @@ export const visit = pgTable(
           FROM public."dailyReport" dr
           WHERE dr.id = visit."reportId"
             AND dr."employeeId" = ${authUid}::text
+            AND dr."locked" = false
         )`
     }),
     pgPolicy("Employees can update their own visits if report not locked", {
@@ -477,6 +501,7 @@ export const dailyReport = pgTable(
   (table) => [
     index("idx_dailyreport_employeeid").on(table.employeeId),
     index("idx_dailyreport_routeid").on(table.routeId),
+    uniqueIndex("idx_dailyReport_employeeId_date").on(table.employeeId, table.date),
     foreignKey({
       columns: [table.employeeId],
       foreignColumns: [user.id],

@@ -46,7 +46,7 @@ With that, the `supabase-preview` workflow will run and apply any pending migrat
 All new development branches should be created on the `preview` branch.
 Always seed only ONCE to the preview db running `bun run --env-file=.env.preview ./src/lib/server/seed/location.ts`
 
-When merging a PR to `preview`, do **squash and merge** using github's UI.
+When merging a PR to `preview`, do **squash and merge** (or **rebase** if want to save commits) using GitHub's UI.
 
 ## Production
 
@@ -58,3 +58,15 @@ NEVER EVER push to `main` directly, don't even think of doing that. Only tested 
 Always seed only ONCE to the preview db running `bun run --env-file=.env.production ./src/lib/server/seed/location.ts`
 
 When merging a PR to `main`, just open the PR, but **merge using the command line locally**, to prevent creating additional merge commits.
+
+```
+git switch preview 
+git pull origin preview
+
+git switch main
+git pull origin main
+
+git merge --ff-only preview
+
+git push origin main
+```

@@ -6,6 +6,10 @@ import { Badge } from "@ui/badge"
 import * as Card from "@ui/card"
 import { Separator } from "@ui/separator"
 
+import { DayType, VisitType } from "$lib/types"
+
+import EmployeeItem from "../employee/EmployeeItem.svelte"
+import { dayTypeBadge, routeBadge, statsBadge } from "./snippets.svelte"
 import type { DailyReportWithEmployee } from "$lib/types"
 
 interface Props {
@@ -21,7 +25,7 @@ let dailyReportUrl = $derived.by(() => {
 })
 </script>
 
-<Card.Root class="w-auto p-3">
+<Card.Root class="w-auto min-w-80 p-3">
   <Card.Content class="flex flex-col gap-4 p-1">
     <!-- Header -->
     <div class="flex w-full flex-row items-center justify-start gap-3">
@@ -57,9 +61,17 @@ let dailyReportUrl = $derived.by(() => {
       <a href={dailyReportUrl} class="ms-auto self-start text-sm hover:underline"> View Report </a>
     </div>
     <Separator />
+    {@render dayTypeBadge(dailyReport.dayType)}
+    {#if dailyReport.dayType == DayType.WORK}
+      {@render routeBadge(null)}
+    {/if}
   </Card.Content>
   <Card.Footer>
     <!-- Stats -->
-    TODO: Stats
+    <div class="flex gap-2">
+      {@render statsBadge(VisitType.DOCTOR, 0)}
+      {@render statsBadge(VisitType.STOCKIST, 0)}
+      {@render statsBadge(VisitType.CHEMIST, 0)}
+    </div>
   </Card.Footer>
 </Card.Root>
