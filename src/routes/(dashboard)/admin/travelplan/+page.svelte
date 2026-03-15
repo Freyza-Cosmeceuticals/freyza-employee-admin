@@ -18,7 +18,7 @@ function isAnyEmployeeLeft(
   // we aren't sure, so say yes
   if (empCount === null) return true
 
-  return (travelPlans ?? []).map((tp) => tp.employeeId).length < empCount
+  return (travelPlans ?? []).length < empCount
 }
 </script>
 

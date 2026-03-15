@@ -42,3 +42,4 @@ export const EMPLOYEE_TIERS: { value: EmployeeTier; label: string }[] = [
 ] as const
 
 export const NUM_PAST_MONTHS_TRAVEL_PLAN = 2
+export const NUM_PAST_DAYS_DAILY_REPORT = 5

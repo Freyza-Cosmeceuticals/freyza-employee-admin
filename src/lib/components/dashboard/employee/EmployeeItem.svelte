@@ -5,17 +5,19 @@ import * as Item from "@ui/item"
 
 import type { ItemVariant } from "@ui/item/item.svelte"
 import type { EmployeeWithHQ } from "$lib/types"
+import type { ClassValue } from "svelte/elements"
 
 interface Props {
   employee: EmployeeWithHQ
   variant?: ItemVariant
   compact?: boolean
+  class?: ClassValue
 }
 
-let { employee, variant, compact = false }: Props = $props()
+let { employee, variant, compact = false, class: itemClass }: Props = $props()
 </script>
 
-<Item.Root {variant} class={["w-full", compact && "p-2"]}>
+<Item.Root {variant} class={["w-full", compact && "p-2", itemClass]}>
   <Item.Media variant="icon">
     <Avatar.Root class="size-10">
       <Avatar.Image src="https://github.com/harshnarayanjha.png" />
