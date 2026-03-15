@@ -254,6 +254,7 @@ export const visit = pgTable(
   (table) => [
     index("idx_visit_reportid").on(table.reportId),
     index("idx_visit_visitType").on(table.visitType),
+    index("idx_visit_reportId_employeeId").on(table.reportId, table.employeeId),
     foreignKey({
       columns: [table.reportId],
       foreignColumns: [dailyReport.id],
@@ -261,6 +262,14 @@ export const visit = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("cascade"),
+
+    foreignKey({
+      columns: [table.employeeId],
+      foreignColumns: [user.id],
+      name: "visit_employeeId_fkey"
+    })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
 
     pgPolicy("Employees can select their own visits", {
       as: "permissive",
@@ -335,6 +344,7 @@ export const travelPlan = pgTable(
   },
   (table) => [
     index("idx_travelplan_createdbyid").on(table.createdById),
+    index("idx_employeeId").on(table.employeeId),
     uniqueIndex("travelPlan_employeeId_month_key").on(table.employeeId, table.month),
     foreignKey({
       columns: [table.createdById],
@@ -502,6 +512,7 @@ export const dailyReport = pgTable(
     index("idx_dailyreport_employeeid").on(table.employeeId),
     index("idx_dailyreport_routeid").on(table.routeId),
     uniqueIndex("idx_dailyReport_employeeId_date").on(table.employeeId, table.date),
+    index("idx_dailyReport_employeeId_locked").on(table.employeeId, table.locked),
     foreignKey({
       columns: [table.employeeId],
       foreignColumns: [user.id],
@@ -540,7 +551,7 @@ export const dailyReport = pgTable(
       for: "update",
       to: authenticatedRole,
       using: sql`(${authUid}::text = "employeeId")`,
-      withCheck: sql`(${authUid}::text = "employeeId" AND "locked" = false)`
+      withCheck: sql`(${authUid}::text = "employeeId")`
     }),
     pgPolicy("Admins can update all daily reports", {
       as: "permissive",

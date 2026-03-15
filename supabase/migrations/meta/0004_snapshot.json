@@ -1,0 +1,1370 @@
+{
+  "id": "45fd21f1-a617-40a1-bebe-4ba0490e8f36",
+  "prevId": "dcd74d93-e453-42b6-b35d-e6379494673c",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.dailyReport": {
+      "name": "dailyReport",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "employeeId": {
+          "name": "employeeId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "date": {
+          "name": "date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dayType": {
+          "name": "dayType",
+          "type": "DayType",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'WORK'"
+        },
+        "routeId": {
+          "name": "routeId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ta": {
+          "name": "ta",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "da": {
+          "name": "da",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "totalExpense": {
+          "name": "totalExpense",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "locked": {
+          "name": "locked",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "lockedAt": {
+          "name": "lockedAt",
+          "type": "timestamp(3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "idx_dailyreport_employeeid": {
+          "name": "idx_dailyreport_employeeid",
+          "columns": [
+            {
+              "expression": "employeeId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_dailyreport_routeid": {
+          "name": "idx_dailyreport_routeid",
+          "columns": [
+            {
+              "expression": "routeId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_dailyReport_employeeId_date": {
+          "name": "idx_dailyReport_employeeId_date",
+          "columns": [
+            {
+              "expression": "employeeId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_dailyReport_employeeId_locked": {
+          "name": "idx_dailyReport_employeeId_locked",
+          "columns": [
+            {
+              "expression": "employeeId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "locked",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "dailyReport_employeeId_fkey": {
+          "name": "dailyReport_employeeId_fkey",
+          "tableFrom": "dailyReport",
+          "tableTo": "user",
+          "columnsFrom": [
+            "employeeId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "dailyReport_routeId_fkey": {
+          "name": "dailyReport_routeId_fkey",
+          "tableFrom": "dailyReport",
+          "tableTo": "route",
+          "columnsFrom": [
+            "routeId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "Users can view their own daily reports": {
+          "name": "Users can view their own daily reports",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "((select auth.uid())::text = \"employeeId\")"
+        },
+        "Admins can view any daily reports": {
+          "name": "Admins can view any daily reports",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(SELECT auth.jwt() -> 'app_metadata' ->> 'app_role'::text) = 'ADMIN'"
+        },
+        "Users can insert their own daily reports": {
+          "name": "Users can insert their own daily reports",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "authenticated"
+          ],
+          "withCheck": "((select auth.uid())::text = \"employeeId\")"
+        },
+        "Users can update their own daily reports if not locked": {
+          "name": "Users can update their own daily reports if not locked",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "authenticated"
+          ],
+          "using": "((select auth.uid())::text = \"employeeId\")",
+          "withCheck": "((select auth.uid())::text = \"employeeId\")"
+        },
+        "Admins can update all daily reports": {
+          "name": "Admins can update all daily reports",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "authenticated"
+          ],
+          "using": "((SELECT auth.jwt() -> 'app_metadata' ->> 'app_role'::text) = 'ADMIN')",
+          "withCheck": "(SELECT auth.jwt() -> 'app_metadata' ->> 'app_role'::text) = 'ADMIN'"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.location": {
+      "name": "location",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(25)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "operational": {
+          "name": "operational",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "location_name_key": {
+          "name": "location_name_key",
+          "columns": [
+            {
+              "expression": "name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "Authenticated users can view all locations": {
+          "name": "Authenticated users can view all locations",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "true"
+        },
+        "Only admins can insert locations": {
+          "name": "Only admins can insert locations",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "authenticated"
+          ],
+          "withCheck": "(SELECT auth.jwt() -> 'app_metadata' ->> 'app_role'::text) = 'ADMIN'"
+        },
+        "Only admins can update locations": {
+          "name": "Only admins can update locations",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(SELECT auth.jwt() -> 'app_metadata' ->> 'app_role'::text) = 'ADMIN'",
+          "withCheck": "(SELECT auth.jwt() -> 'app_metadata' ->> 'app_role'::text) = 'ADMIN'"
+        },
+        "Only admins can delete locations": {
+          "name": "Only admins can delete locations",
+          "as": "PERMISSIVE",
+          "for": "DELETE",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(SELECT auth.jwt() -> 'app_metadata' ->> 'app_role'::text) = 'ADMIN'"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.route": {
+      "name": "route",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "srcLocId": {
+          "name": "srcLocId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "destLocId": {
+          "name": "destLocId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "distanceKm": {
+          "name": "distanceKm",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "idx_route_destlocid": {
+          "name": "idx_route_destlocid",
+          "columns": [
+            {
+              "expression": "destLocId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "route_srcLocId_destLocId_key": {
+          "name": "route_srcLocId_destLocId_key",
+          "columns": [
+            {
+              "expression": "srcLocId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "destLocId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "route_destLocId_fkey": {
+          "name": "route_destLocId_fkey",
+          "tableFrom": "route",
+          "tableTo": "location",
+          "columnsFrom": [
+            "destLocId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "route_srcLocId_fkey": {
+          "name": "route_srcLocId_fkey",
+          "tableFrom": "route",
+          "tableTo": "location",
+          "columnsFrom": [
+            "srcLocId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "Authenticated users can view all routes": {
+          "name": "Authenticated users can view all routes",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "true"
+        },
+        "Only admins can insert routes": {
+          "name": "Only admins can insert routes",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "authenticated"
+          ],
+          "withCheck": "(SELECT auth.jwt() -> 'app_metadata' ->> 'app_role'::text) = 'ADMIN'"
+        },
+        "Only admins can update routes": {
+          "name": "Only admins can update routes",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(SELECT auth.jwt() -> 'app_metadata' ->> 'app_role'::text) = 'ADMIN'",
+          "withCheck": "(SELECT auth.jwt() -> 'app_metadata' ->> 'app_role'::text) = 'ADMIN'"
+        },
+        "Only admins can delete routes": {
+          "name": "Only admins can delete routes",
+          "as": "PERMISSIVE",
+          "for": "DELETE",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(SELECT auth.jwt() -> 'app_metadata' ->> 'app_role'::text) = 'ADMIN'"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.travelPlan": {
+      "name": "travelPlan",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "employeeId": {
+          "name": "employeeId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "month": {
+          "name": "month",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdById": {
+          "name": "createdById",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "idx_travelplan_createdbyid": {
+          "name": "idx_travelplan_createdbyid",
+          "columns": [
+            {
+              "expression": "createdById",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_employeeId": {
+          "name": "idx_employeeId",
+          "columns": [
+            {
+              "expression": "employeeId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "travelPlan_employeeId_month_key": {
+          "name": "travelPlan_employeeId_month_key",
+          "columns": [
+            {
+              "expression": "employeeId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "month",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "travelPlan_createdById_fkey": {
+          "name": "travelPlan_createdById_fkey",
+          "tableFrom": "travelPlan",
+          "tableTo": "user",
+          "columnsFrom": [
+            "createdById"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "travelPlan_employeeId_fkey": {
+          "name": "travelPlan_employeeId_fkey",
+          "tableFrom": "travelPlan",
+          "tableTo": "user",
+          "columnsFrom": [
+            "employeeId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "Users can view their own travel plans": {
+          "name": "Users can view their own travel plans",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "((select auth.uid())::text = \"employeeId\")"
+        },
+        "Admins can view all travel plans": {
+          "name": "Admins can view all travel plans",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(SELECT auth.jwt() -> 'app_metadata' ->> 'app_role'::text) = 'ADMIN'"
+        },
+        "Only admins can create travel plans for employees": {
+          "name": "Only admins can create travel plans for employees",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "authenticated"
+          ],
+          "withCheck": "(SELECT auth.jwt() -> 'app_metadata' ->> 'app_role'::text) = 'ADMIN'"
+        },
+        "Users can update their own travel plans": {
+          "name": "Users can update their own travel plans",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "authenticated"
+          ],
+          "using": "((select auth.uid())::text = \"employeeId\")",
+          "withCheck": "(select auth.uid())::text = \"employeeId\""
+        },
+        "Admins can update all travel plans": {
+          "name": "Admins can update all travel plans",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(SELECT auth.jwt() -> 'app_metadata' ->> 'app_role'::text) = 'ADMIN'",
+          "withCheck": "(SELECT auth.jwt() -> 'app_metadata' ->> 'app_role'::text) = 'ADMIN'"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.travelPlanEntry": {
+      "name": "travelPlanEntry",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "tpId": {
+          "name": "tpId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "date": {
+          "name": "date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dayType": {
+          "name": "dayType",
+          "type": "DayType",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'WORK'"
+        },
+        "routeId": {
+          "name": "routeId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "idx_travelplanentry_routeid": {
+          "name": "idx_travelplanentry_routeid",
+          "columns": [
+            {
+              "expression": "routeId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "travelPlanEntry_tpId_date_key": {
+          "name": "travelPlanEntry_tpId_date_key",
+          "columns": [
+            {
+              "expression": "tpId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "travelPlanEntry_routeId_fkey": {
+          "name": "travelPlanEntry_routeId_fkey",
+          "tableFrom": "travelPlanEntry",
+          "tableTo": "route",
+          "columnsFrom": [
+            "routeId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "travelPlanEntry_tpId_fkey": {
+          "name": "travelPlanEntry_tpId_fkey",
+          "tableFrom": "travelPlanEntry",
+          "tableTo": "travelPlan",
+          "columnsFrom": [
+            "tpId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "Employees can select their own travel plan entries": {
+          "name": "Employees can select their own travel plan entries",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "EXISTS (\n          SELECT 1\n          FROM public.\"travelPlan\" tp\n          WHERE tp.id = \"travelPlanEntry\".\"tpId\"\n            AND tp.\"employeeId\" = (select auth.uid())::text\n        )"
+        },
+        "Admins can select all travel plan entries": {
+          "name": "Admins can select all travel plan entries",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(SELECT auth.jwt() -> 'app_metadata' ->> 'app_role'::text) = 'ADMIN'"
+        },
+        "Only admins can insert travel plan entries": {
+          "name": "Only admins can insert travel plan entries",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "authenticated"
+          ],
+          "withCheck": "(SELECT auth.jwt() -> 'app_metadata' ->> 'app_role'::text) = 'ADMIN'"
+        },
+        "Employees can update their own travel plan entries": {
+          "name": "Employees can update their own travel plan entries",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "authenticated"
+          ],
+          "using": "EXISTS (\n          SELECT 1\n          FROM public.\"travelPlan\" tp\n          WHERE tp.id = \"travelPlanEntry\".\"tpId\"\n            AND tp.\"employeeId\" = (select auth.uid())::text\n        )",
+          "withCheck": "EXISTS (\n          SELECT 1\n          FROM public.\"travelPlan\" tp\n          WHERE tp.id = \"travelPlanEntry\".\"tpId\"\n            AND tp.\"employeeId\" = (select auth.uid())::text\n        )"
+        },
+        "Admins can update all travel plan entries": {
+          "name": "Admins can update all travel plan entries",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(SELECT auth.jwt() -> 'app_metadata' ->> 'app_role'::text) = 'ADMIN'",
+          "withCheck": "(SELECT auth.jwt() -> 'app_metadata' ->> 'app_role'::text) = 'ADMIN'"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.user": {
+      "name": "user",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(254)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "phone": {
+          "name": "phone",
+          "type": "varchar(15)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "UserRole",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "UserStatus",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tier": {
+          "name": "tier",
+          "type": "EmployeeTier",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hqId": {
+          "name": "hqId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "joiningDate": {
+          "name": "joiningDate",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "resignDate": {
+          "name": "resignDate",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "idx_user_hqid": {
+          "name": "idx_user_hqid",
+          "columns": [
+            {
+              "expression": "hqId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "user_email_key": {
+          "name": "user_email_key",
+          "columns": [
+            {
+              "expression": "email",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "user_phone_key": {
+          "name": "user_phone_key",
+          "columns": [
+            {
+              "expression": "phone",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "user_hqId_fkey": {
+          "name": "user_hqId_fkey",
+          "tableFrom": "user",
+          "tableTo": "location",
+          "columnsFrom": [
+            "hqId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "Employees can view their own user data": {
+          "name": "Employees can view their own user data",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(select auth.uid())::text = \"user\".\"id\""
+        },
+        "Admins can view all user data": {
+          "name": "Admins can view all user data",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(SELECT auth.jwt() -> 'app_metadata' ->> 'app_role'::text) = 'ADMIN'"
+        },
+        "Admins can insert users": {
+          "name": "Admins can insert users",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "authenticated"
+          ],
+          "withCheck": "(SELECT auth.jwt() -> 'app_metadata' ->> 'app_role'::text) = 'ADMIN'"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.visit": {
+      "name": "visit",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "reportId": {
+          "name": "reportId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "employeeId": {
+          "name": "employeeId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "visitType": {
+          "name": "visitType",
+          "type": "VisitType",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "latitude": {
+          "name": "latitude",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "longitude": {
+          "name": "longitude",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "distanceMetersFromPOI": {
+          "name": "distanceMetersFromPOI",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "doctorName": {
+          "name": "doctorName",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "chemistName": {
+          "name": "chemistName",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stockistName": {
+          "name": "stockistName",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "productsShown": {
+          "name": "productsShown",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "samplesGiven": {
+          "name": "samplesGiven",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "orderTaken": {
+          "name": "orderTaken",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "billNo": {
+          "name": "billNo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "paymentCollected": {
+          "name": "paymentCollected",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "amountWithGST": {
+          "name": "amountWithGST",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "amountWithoutGST": {
+          "name": "amountWithoutGST",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stockChecked": {
+          "name": "stockChecked",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "additionalNotes": {
+          "name": "additionalNotes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "idx_visit_reportid": {
+          "name": "idx_visit_reportid",
+          "columns": [
+            {
+              "expression": "reportId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_visit_visitType": {
+          "name": "idx_visit_visitType",
+          "columns": [
+            {
+              "expression": "visitType",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "idx_visit_reportId_employeeId": {
+          "name": "idx_visit_reportId_employeeId",
+          "columns": [
+            {
+              "expression": "reportId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "employeeId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "visit_reportId_fkey": {
+          "name": "visit_reportId_fkey",
+          "tableFrom": "visit",
+          "tableTo": "dailyReport",
+          "columnsFrom": [
+            "reportId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "visit_employeeId_fkey": {
+          "name": "visit_employeeId_fkey",
+          "tableFrom": "visit",
+          "tableTo": "user",
+          "columnsFrom": [
+            "employeeId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "Employees can select their own visits": {
+          "name": "Employees can select their own visits",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "((select auth.uid())::text = \"employeeId\")"
+        },
+        "Admins can select all visits": {
+          "name": "Admins can select all visits",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(SELECT auth.jwt() -> 'app_metadata' ->> 'app_role'::text) = 'ADMIN'"
+        },
+        "Employees can insert their own visits": {
+          "name": "Employees can insert their own visits",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "authenticated"
+          ],
+          "withCheck": "EXISTS (\n          SELECT 1\n          FROM public.\"dailyReport\" dr\n          WHERE dr.id = visit.\"reportId\"\n            AND dr.\"employeeId\" = (select auth.uid())::text\n            AND dr.\"locked\" = false\n        )"
+        },
+        "Employees can update their own visits if report not locked": {
+          "name": "Employees can update their own visits if report not locked",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "authenticated"
+          ],
+          "using": "EXISTS (\n          SELECT 1\n          FROM public.\"dailyReport\" dr\n          WHERE dr.id = visit.\"reportId\"\n            AND dr.\"employeeId\" = (select auth.uid())::text\n            AND dr.\"locked\" = false\n        )",
+          "withCheck": "EXISTS (\n          SELECT 1\n          FROM public.\"dailyReport\" dr\n          WHERE dr.id = visit.\"reportId\"\n            AND dr.\"employeeId\" = (select auth.uid())::text\n            AND dr.\"locked\" = false\n        )"
+        },
+        "Admins can update all visits": {
+          "name": "Admins can update all visits",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(SELECT auth.jwt() -> 'app_metadata' ->> 'app_role'::text) = 'ADMIN'",
+          "withCheck": "(SELECT auth.jwt() -> 'app_metadata' ->> 'app_role'::text) = 'ADMIN'"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.DayType": {
+      "name": "DayType",
+      "schema": "public",
+      "values": [
+        "WORK",
+        "HOLIDAY",
+        "LEAVE"
+      ]
+    },
+    "public.EmployeeTier": {
+      "name": "EmployeeTier",
+      "schema": "public",
+      "values": [
+        "FSO",
+        "TABM",
+        "ASM"
+      ]
+    },
+    "public.ReportStatus": {
+      "name": "ReportStatus",
+      "schema": "public",
+      "values": [
+        "SAVED",
+        "LOCKED"
+      ]
+    },
+    "public.UserRole": {
+      "name": "UserRole",
+      "schema": "public",
+      "values": [
+        "ADMIN",
+        "EMPLOYEE"
+      ]
+    },
+    "public.UserStatus": {
+      "name": "UserStatus",
+      "schema": "public",
+      "values": [
+        "ACTIVE",
+        "REVOKED"
+      ]
+    },
+    "public.VisitType": {
+      "name": "VisitType",
+      "schema": "public",
+      "values": [
+        "DOCTOR",
+        "STOCKIST",
+        "CHEMIST"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
