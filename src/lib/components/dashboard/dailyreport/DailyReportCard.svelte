@@ -6,17 +6,22 @@ import { Badge } from "@ui/badge"
 import * as Card from "@ui/card"
 import { Separator } from "@ui/separator"
 
-import { DayType, VisitType } from "$lib/types"
+import { fetchRoutes } from "$lib/api/route.remote"
+import { DayType } from "$lib/types"
 
-import EmployeeItem from "../employee/EmployeeItem.svelte"
 import { dayTypeBadge, routeBadge, statsBadge } from "./snippets.svelte"
-import type { DailyReportWithEmployee } from "$lib/types"
+import type { DailyReportWithEmployee, RouteWithName } from "$lib/types"
 
 interface Props {
   dailyReport: DailyReportWithEmployee
 }
 
 const { dailyReport }: Props = $props()
+
+let routes = $state<RouteWithName[] | null>(null)
+routes = await fetchRoutes()
+
+let reportRoute = $derived(routes?.find((it) => it.id == dailyReport?.routeId) ?? null)
 
 let dailyReportUrl = $derived.by(() => {
   // skip sidebar based for now
@@ -63,15 +68,21 @@ let dailyReportUrl = $derived.by(() => {
     <Separator />
     {@render dayTypeBadge(dailyReport.dayType)}
     {#if dailyReport.dayType == DayType.WORK}
-      {@render routeBadge(null)}
+      {@render routeBadge(reportRoute, "w-min")}
+    {/if}
+    <Badge>
+      {dailyReport.locked ? "LOCKED" : "UNLOCKED"}
+    </Badge>
+    {#if dailyReport.locked == true}
+      <small>{dailyReport.lockedAt}</small>
     {/if}
   </Card.Content>
-  <Card.Footer>
-    <!-- Stats -->
+  <!-- Stats -->
+  <!-- <Card.Footer>
     <div class="flex gap-2">
       {@render statsBadge(VisitType.DOCTOR, 0)}
       {@render statsBadge(VisitType.STOCKIST, 0)}
       {@render statsBadge(VisitType.CHEMIST, 0)}
     </div>
-  </Card.Footer>
+  </Card.Footer> -->
 </Card.Root>

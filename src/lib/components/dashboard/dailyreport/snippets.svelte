@@ -33,13 +33,14 @@ export { dayTypeBadge, routeBadge, statsBadge }
   {/if}
 {/snippet}
 
-{#snippet routeBadge(route: RouteWithName | null)}
+{#snippet routeBadge(route: RouteWithName | null, className: String = "")}
   {#if route}
-    <Badge class="w-full rounded-sm bg-freyza-route">
-      {`${route.srcLoc.name.substring(0, 3)} → ${route.destLoc.name.substring(0, 3)}`}
+    <Badge class={["w-full rounded-sm bg-freyza-route", className]}>
+      {`${route.srcLoc.name} → ${route.destLoc.name}`}
     </Badge>
   {:else}
-    <Badge variant="destructive" class="w-full rounded-sm bg-freyza-invalid-route">NO ROUTE</Badge>
+    <Badge variant="destructive" class={["w-full rounded-sm bg-freyza-invalid-route", className]}
+      >NO ROUTE</Badge>
   {/if}
 {/snippet}
 

@@ -504,7 +504,7 @@ export const dailyReport = pgTable(
     totalExpense: doublePrecision(),
 
     locked: boolean().default(false).notNull(),
-    lockedAt: timestamp({ precision: 3, mode: "string" }),
+    lockedAt: timestamp({ precision: 3, mode: "string", withTimezone: true }),
 
     ...timestamps
   },
