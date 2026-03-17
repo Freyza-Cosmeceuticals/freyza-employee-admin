@@ -35,7 +35,7 @@ import UserRoundIcon from "@lucide/svelte/icons/user-round"
           <Sidebar.MenuItem>
             <Sidebar.MenuButton>
               {#snippet child({ props })}
-                <a href="##" {...props}>
+                <a href={resolve("/admin/dailyreport")} {...props}>
                   <NotebookTabsIcon />
                   <span>Daily Reports</span>
                 </a>
