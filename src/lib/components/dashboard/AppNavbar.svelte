@@ -26,7 +26,7 @@ const { session, user, supabase, deploymentGitBranch }: Props = $props()
 <header>
   <nav
     class={[
-      "mx-auto flex h-16 w-full flex-row items-center justify-between rounded-md px-4 py-2 shadow-sm"
+      "mx-auto flex h-16 w-full flex-row items-center justify-between rounded-none bg-sidebar px-4 py-2 shadow-sm"
     ]}>
     <div class="flex flex-row items-center gap-4">
       <Sidebar.Trigger class="-ml-1" />
@@ -34,7 +34,7 @@ const { session, user, supabase, deploymentGitBranch }: Props = $props()
       <a href={resolve("/admin/dailyreport")}> Reports </a>
     </div>
 
-    <div class="flex flex-row gap-2">
+    <div class="flex flex-row items-center gap-2">
       {#if dev}
         <Badge variant="outline" class="bg-accent">DEV MODE</Badge>
       {:else if deploymentGitBranch && deploymentGitBranch != "main"}

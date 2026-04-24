@@ -66,16 +66,18 @@ let dailyReportUrl = $derived.by(() => {
       <a href={dailyReportUrl} class="ms-auto self-start text-sm hover:underline"> View Report </a>
     </div>
     <Separator />
-    {@render dayTypeBadge(dailyReport.dayType)}
-    {#if dailyReport.dayType == DayType.WORK}
-      {@render routeBadge(reportRoute, "w-min")}
-    {/if}
-    <Badge>
-      {dailyReport.locked ? "LOCKED" : "UNLOCKED"}
-    </Badge>
-    {#if dailyReport.locked == true}
-      <small>{dailyReport.lockedAt}</small>
-    {/if}
+    <div class="flex items-center gap-2">
+      {@render dayTypeBadge(dailyReport.dayType)}
+      {#if dailyReport.dayType == DayType.WORK}
+        {@render routeBadge(reportRoute, "w-min")}
+      {/if}
+      <Badge>
+        {dailyReport.locked ? "LOCKED" : "UNLOCKED"}
+      </Badge>
+      {#if dailyReport.locked == true}
+        <small>{dailyReport.lockedAt}</small>
+      {/if}
+    </div>
   </Card.Content>
   <!-- Stats -->
   <!-- <Card.Footer>

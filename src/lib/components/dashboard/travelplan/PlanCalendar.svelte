@@ -51,17 +51,22 @@ const setInitialDays = () => {
 setInitialDays()
 
 let workDaysCount = $derived(
-  planEntries.value()?.reduce((acc, entry) => acc + (entry.dayType === DayType.WORK ? 1 : 0), 0) ??
-    0
+  planEntries.value()?.reduce((acc, entry) => {
+    if (!entry) return acc
+    return acc + (entry.dayType === DayType.WORK ? 1 : 0)
+  }, 0) ?? 0
 )
 let holidayDaysCount = $derived(
-  planEntries
-    .value()
-    ?.reduce((acc, entry) => acc + (entry.dayType === DayType.HOLIDAY ? 1 : 0), 0) ?? 0
+  planEntries.value()?.reduce((acc, entry) => {
+    if (!entry) return acc
+    return acc + (entry.dayType === DayType.HOLIDAY ? 1 : 0)
+  }, 0) ?? 0
 )
 let leaveDaysCount = $derived(
-  planEntries.value()?.reduce((acc, entry) => acc + (entry.dayType === DayType.LEAVE ? 1 : 0), 0) ??
-    0
+  planEntries.value()?.reduce((acc, entry) => {
+    if (!entry) return acc
+    return acc + (entry.dayType === DayType.LEAVE ? 1 : 0)
+  }, 0) ?? 0
 )
 
 const getDateKey = (date: DateValue): string =>

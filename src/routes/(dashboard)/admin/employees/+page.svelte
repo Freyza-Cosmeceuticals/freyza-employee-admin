@@ -14,7 +14,7 @@ let { employees } = $derived(data)
 </svelte:head>
 
 <div class="h-auto w-full space-y-8 px-4 py-8">
-  <Card.Root class="w-full border-0 bg-transparent shadow-none">
+  <Card.Root class="w-full border-0 bg-transparent shadow-none ring-0">
     <Card.Header>
       <Card.Title class="text-2xl">Employees</Card.Title>
       <Card.Description>all people working for you</Card.Description>

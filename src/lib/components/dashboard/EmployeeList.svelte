@@ -30,9 +30,6 @@ let { variant = "default", employees }: Props = $props()
 <Item.Group>
   {#each employees as emp, i (emp.id)}
     <EmployeeItem employee={emp} {variant} />
-    {#if i !== employees.length - 1}
-      <Item.Separator />
-    {/if}
   {:else}
     <Empty.Root>
       <Empty.Header>
