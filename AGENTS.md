@@ -267,3 +267,200 @@ let { title, count = 0, class: itemClass }: Props = $props()
   {title} - {count}
 </div>
 ```
+
+## Data Fetching Conventions
+
+This project follows a three-layer data fetching architecture: **Remote Functions** (client-safe server logic), **Drizzle DB Queries** (server-only database access), and **Frontend Data Fetching** (component-level async rendering).
+
+### Remote Functions
+
+Remote functions are SvelteKit server functions exposed to the client via `$app/server` utilities. They provide a type-safe bridge between client and server.
+
+**File Location**: `$lib/api/*.remote.ts`
+
+**Pattern**:
+
+- Use `query()` for read operations or `form()` for mutations
+- Use `query.batch()` for batch operations (multiple requests collapsed into one)
+- Always validate input with Valibot schemas
+- Call Drizzle DB functions for data access
+- Use `getRequestEvent()` to access `locals`
+- Use `requireAuthMaybeAdmin()` for authentication checks
+- Return data directly (remote functions handle serialization)
+- Use `error()` from `@sveltejs/kit` for HTTP errors
+- Include timing logs with `console.time(TAG)` / `console.timeEnd(TAG)`
+
+```typescript
+// $lib/api/dailyreport.remote.ts
+import { getRequestEvent, query } from "$app/server"
+import { error } from "@sveltejs/kit"
+
+import { getDailyReportsWithEmployeeForDatesDb } from "$lib/server/db/dailyreport"
+
+import { getDailyReportForDatesSchema } from "@/lib/formSchemas"
+
+import { requireAuthMaybeAdmin } from "./common"
+
+/**
+ * Remote batch query function to get daily reports for specific dates
+ * Batch queries collapse multiple identical requests into a single server call
+ */
+export const getDailyReportsForDate = query.batch(getDailyReportForDatesSchema, async (dates) => {
+  const TAG = `Remote: getDailyReportsForDate(${dates.length} dates)`
+  console.time(TAG)
+
+  const { locals } = getRequestEvent()
+  const { user, session } = requireAuthMaybeAdmin(locals) // Requires admin
+
+  if (dates.length === 0) {
+    error(400, "No dates provided")
+  }
+
+  const { data: dailyReports, error: dbError } = await getDailyReportsWithEmployeeForDatesDb(
+    locals,
+    dates
+  )
+
+  if (dbError !== null) {
+    console.error("Failed to fetch daily reports", dbError)
+    error(500, dbError)
+  }
+
+  console.timeEnd(TAG)
+  // For batch queries, return a mapping function
+  return (date) => dailyReports.get(date.toISOString().split("T", 1)[0])
+})
+```
+
+### Drizzle DB Queries
+
+Database queries are server-only functions that interact directly with the database. They always return a consistent result object.
+
+**File Location**: `$lib/server/db/*.ts`
+
+**Pattern**:
+
+- Accept `locals: App.Locals` as first parameter for auth checks
+- Use `requireAuthMaybeAdmin(locals)` to ensure authorization
+- Always return: `{ data: T, error: null } | { data: null, error: string }`
+- Use `handleDbError(e)` for consistent error handling
+- Include timing logs with `console.time(TAG)` and `console.timeEnd(TAG)`
+- Use Drizzle query API (`db.select()`, `db.insert()`, `db.update()`, etc.)
+- Use `db.query.*` for typed query builder
+- Wrap operations in try/catch blocks
+
+```typescript
+// $lib/server/db/dailyreport.ts
+import { db, handleDbError, requireAuthMaybeAdmin } from "./common"
+import type { DailyReportWithEmployee } from "$lib/types"
+
+/**
+ * Gets daily reports with employee info for given dates
+ */
+export async function getDailyReportsWithEmployeeForDatesDb(
+  locals: App.Locals,
+  dates: Date[]
+): Promise<
+  { data: Map<string, DailyReportWithEmployee[]>; error: null } | { data: null; error: string }
+> {
+  const TAG = `DB: getDailyReportsWithEmployeeForDatesDb(${dates.length} dates)`
+  console.time(TAG)
+  const { user, session } = requireAuthMaybeAdmin(locals)
+
+  try {
+    const dateStrings = dates.map((d) => d.toISOString().split("T", 1)[0])
+
+    const reports = await db
+      .select()
+      .from(s.dailyReport)
+      .where(inArray(s.dailyReport.reportDate, dateStrings))
+      .innerJoin(s.user, eq(s.dailyReport.employeeId, s.user.id))
+
+    // Map results by date for easy lookup
+    const reportsByDate = new Map<string, DailyReportWithEmployee[]>()
+    for (const { dailyReport, user } of reports) {
+      const dateKey = dailyReport.reportDate
+      if (!reportsByDate.has(dateKey)) {
+        reportsByDate.set(dateKey, [])
+      }
+      reportsByDate.get(dateKey)!.push({ ...dailyReport, employee: user })
+    }
+
+    return { data: reportsByDate, error: null }
+  } catch (e) {
+    return handleDbError(e)
+  } finally {
+    console.timeEnd(TAG)
+  }
+}
+```
+
+### Frontend Data Fetching
+
+Frontend components fetch data using remote functions within `svelte:boundary` blocks. This enables streaming and progressive enhancement.
+
+**Pattern**:
+
+- Call remote functions directly in component code (not in `load` functions)
+- Wrap async operations in `svelte:boundary` with `{#await}` blocks
+- Use `pending()`, `then()`, and `failed()` snippets for different states
+- Use `$derived` to extract and transform data
+- Can use batch queries for multiple related requests
+- Never call Drizzle functions directly from components (use remote functions)
+
+```svelte
+<!-- +page.svelte -->
+<script lang="ts">
+import { getDailyReportsForDate } from "$lib/api/dailyreport.remote"
+
+import { DateTime } from "luxon"
+
+let { data } = $props()
+let { days } = $derived(data)
+</script>
+
+<div class="space-y-8">
+  {#each days as d, i (d.toString())}
+    <div>
+      <h2>{d.toLocaleString(DateTime.DATE_MED)}</h2>
+
+      <svelte:boundary>
+        <!-- Call remote function directly; can be batched if called multiple times -->
+        {@const dailyReports = (await getDailyReportsForDate(d)) ?? []}
+
+        {#each dailyReports as report}
+          <DailyReportCard {report} />
+        {:else}
+          <p>No reports submitted for this date</p>
+        {/each}
+
+        {#snippet pending()}
+          <Skeleton class="aspect-video w-32" />
+        {/snippet}
+
+        {#snippet failed(error)}
+          <p class="text-destructive">Error loading reports: {error.message}</p>
+        {/snippet}
+      </svelte:boundary>
+    </div>
+  {/each}
+</div>
+```
+
+**Note**: SvelteKit's `remoteFunctions: true` experimental feature (enabled in `svelte.config.js`) handles automatic batching of identical queries and provides type safety for remote function calls.
+
+### Data Flow Summary
+
+```
+Component (Browser)
+    ↓ calls
+Remote Function ($lib/api/*.remote.ts)
+    ↓ calls
+Drizzle DB Query ($lib/server/db/*.ts)
+    ↓ accesses
+Database (Supabase PostgreSQL)
+```
+
+- **Remote functions**: Validation → Auth → DB Call → Error Handling → Return Data
+- **DB functions**: Auth → Query Building → Error Handling → Structured Return
+- **Components**: Await Remote → Handle States (pending/failed/success) → Render

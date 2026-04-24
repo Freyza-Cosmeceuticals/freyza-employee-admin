@@ -13,22 +13,25 @@ import { isWeekend, parseDate } from "@internationalized/date"
 import Holidays from "date-holidays"
 import { DateTime } from "luxon"
 
-import { dayTypeBadge, routeBadge, statsBadge } from "./snippets.svelte"
+import { dayTypeBadge, routeBadge, statsBadge } from "../snippets.svelte"
 import type { DateValue } from "@internationalized/date"
 import type { addTravelPlan } from "$lib/api/travelplan.remote"
 import type { RouteWithName } from "$lib/types"
+import type { ClassValue } from "svelte/elements"
 
 interface Props {
+  className?: ClassValue
   month: DateTime
   days: DateTime<true>[]
-  dayTypes: string[]
+  dayTypes: DayType[]
   routes: RouteWithName[]
   planEntries: typeof addTravelPlan.fields.planEntries
   disabled: boolean
   onInput: () => void
 }
 
-let { month, days, dayTypes, routes, planEntries, disabled, onInput }: Props = $props()
+let { className, month, days, dayTypes, routes, planEntries, disabled, onInput, ...rest }: Props =
+  $props()
 
 let selectedMonth = $derived(parseDate(month.toISODate()!))
 
@@ -85,7 +88,7 @@ const formatDateDisplay = (date: DateValue): string =>
 // $inspect(planEntries.allIssues()).with(console.log)
 </script>
 
-<div class="w-full">
+<div class={["w-full", className]}>
   <div class="container my-2 flex flex-row justify-center gap-4 p-4">
     {@render statsBadge(DayType.WORK, workDaysCount, true)}
     {@render statsBadge(DayType.HOLIDAY, holidayDaysCount, true)}
@@ -180,10 +183,8 @@ const formatDateDisplay = (date: DateValue): string =>
                   () => thisDayType,
                   (value) => {
                     planEntries[i].dayType.set(value)
-                    // selectedDayTypes[i] = value
                     if (value !== DayType.WORK) {
                       planEntries[i].routeId.set("")
-                      // selectedRoutes[i] = null
                     }
                   }
                 }
@@ -212,7 +213,6 @@ const formatDateDisplay = (date: DateValue): string =>
                     () => thisRouteId ?? undefined,
                     (value) => {
                       planEntries[i].routeId.set(value ?? "")
-                      // selectedRoutes[i] = value ?? null
                     }
                   }
                   {disabled}

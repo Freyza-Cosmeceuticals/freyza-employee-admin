@@ -14,6 +14,7 @@ import { Spinner } from "@ui/spinner"
 import { addTravelPlan } from "$lib/api/travelplan.remote"
 import { DayType } from "$lib/types"
 
+import PageHeader from "@/lib/components/dashboard/PageHeader.svelte"
 import InfoIcon from "@lucide/svelte/icons/info"
 import { DateTime, Interval } from "luxon"
 import { toast } from "svelte-sonner"
@@ -69,12 +70,7 @@ let employeeSelectError = $state<string | null>(null)
 </svelte:head>
 
 <div class="h-auto w-full space-y-8 px-4 py-8">
-  <Card.Root class="w-full border-0 bg-transparent shadow-none ring-0">
-    <Card.Header>
-      <Card.Title class="text-2xl">Create Travel Plan</Card.Title>
-      <Card.Description>prepare to get them suffer</Card.Description>
-    </Card.Header>
-  </Card.Root>
+  <PageHeader title="Create Travel Plan" description="Prepare to get them suffer" />
 
   {#if employees.length === 0}
     <Alert.Root class="mx-auto max-w-5xl">

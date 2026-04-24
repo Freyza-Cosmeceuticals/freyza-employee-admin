@@ -49,7 +49,7 @@ const { session, user, supabase, deploymentGitBranch }: Props = $props()
       <ColorModeToggle />
     </div>
   </nav>
-  <div class="5 h-0 w-full">
+  <div class="h-0 w-full">
     {#if navigating.from}
       <div class="progress h-0.5 bg-freyza-brand-secondary" out:fade={{ duration: 100 }}></div>
     {/if}

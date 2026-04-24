@@ -1,5 +1,6 @@
 <script lang="ts">
 import DailyReportCard from "$lib/components/dashboard/dailyreport/DailyReportCard.svelte"
+import PageHeader from "$lib/components/dashboard/PageHeader.svelte"
 import * as Card from "@ui/card"
 import { Skeleton } from "@ui/skeleton"
 
@@ -23,12 +24,7 @@ function employeesRemaining(dailyReports: DailyReportWithEmployee[], empCount: n
 </svelte:head>
 
 <div class="h-auto w-full space-y-8 px-4 py-8">
-  <Card.Root class="w-full border-0 bg-transparent shadow-none ring-0">
-    <Card.Header>
-      <Card.Title class="text-2xl">Daily Reports</Card.Title>
-      <Card.Description>see how the progress is going</Card.Description>
-    </Card.Header>
-  </Card.Root>
+  <PageHeader title="Daily Reports" description="see how the progress is going" />
 
   <div class="mx-auto max-w-5xl">
     {#each days as d, i (d.toString())}

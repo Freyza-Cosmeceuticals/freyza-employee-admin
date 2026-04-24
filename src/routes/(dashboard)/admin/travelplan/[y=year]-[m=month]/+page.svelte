@@ -1,5 +1,6 @@
 <script lang="ts">
 import { replaceState } from "$app/navigation"
+import { resolve } from "$app/paths"
 import { page } from "$app/state"
 
 import ViewPlanCalendar from "$lib/components/dashboard/travelplan/ViewPlanCalendar.svelte"
@@ -12,6 +13,7 @@ import { getTravelPlansWithEntriesForMonth } from "$lib/api/travelplan.remote"
 import { DayType } from "$lib/types"
 
 import EmployeeItem from "@/lib/components/dashboard/employee/EmployeeItem.svelte"
+import ArrowLeft from "@lucide/svelte/icons/arrow-left"
 
 let { data } = $props()
 let { user, tpMonth, employees } = $derived(data)
@@ -51,6 +53,14 @@ function changeEmployee(newId: string) {
   <!-- employees sidebar -->
   <aside class="flex w-96 flex-col rounded-md border-t border-r bg-muted/20">
     <div class="flex flex-col gap-1 p-6 pb-4">
+      <a
+        href={resolve("/admin/travelplan")}
+        class="text-xs text-muted-foreground transition-colors hover:text-foreground/80">
+        <span class="flex items-center gap-1">
+          <ArrowLeft class="inline size-4" />
+          All Travel Plans
+        </span>
+      </a>
       <h3 class="text-xl font-bold tracking-tight">Employees</h3>
       <p class="text-xs font-medium tracking-wider text-muted-foreground uppercase">
         Select a team member

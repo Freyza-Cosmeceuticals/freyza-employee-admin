@@ -1,4 +1,5 @@
 <script lang="ts">
+import PageHeader from "$lib/components/dashboard/PageHeader.svelte"
 import AddTravelPlanCard from "$lib/components/dashboard/travelplan/AddTravelPlanCard.svelte"
 import TravelPlanCard from "$lib/components/dashboard/travelplan/TravelPlanCard.svelte"
 import * as Card from "@ui/card"
@@ -28,12 +29,7 @@ function isAnyEmployeeLeft(
 </svelte:head>
 
 <div class="h-auto w-full space-y-8 px-4 py-8">
-  <Card.Root class="w-full border-0 bg-transparent shadow-none ring-0">
-    <Card.Header>
-      <Card.Title class="text-2xl">Travel Plans</Card.Title>
-      <Card.Description>get them tight on schedule</Card.Description>
-    </Card.Header>
-  </Card.Root>
+  <PageHeader title="Travel Plans" description="get them tight on schedule" />
 
   <div class="mx-auto max-w-5xl">
     {#each months as m, i (m.toString())}

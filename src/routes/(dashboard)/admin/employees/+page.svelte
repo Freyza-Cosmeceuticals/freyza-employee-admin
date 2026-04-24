@@ -1,7 +1,7 @@
 <script lang="ts">
 import AddEmployeeButton from "$lib/components/dashboard/AddEmployeeButton.svelte"
 import EmployeeList from "$lib/components/dashboard/EmployeeList.svelte"
-import * as Card from "@ui/card"
+import PageHeader from "$lib/components/dashboard/PageHeader.svelte"
 import { Skeleton } from "@ui/skeleton"
 
 let { data } = $props()
@@ -14,15 +14,14 @@ let { employees } = $derived(data)
 </svelte:head>
 
 <div class="h-auto w-full space-y-8 px-4 py-8">
-  <Card.Root class="w-full border-0 bg-transparent shadow-none ring-0">
-    <Card.Header>
-      <Card.Title class="text-2xl">Employees</Card.Title>
-      <Card.Description>all people working for you</Card.Description>
-      <Card.Action>
-        <AddEmployeeButton />
-      </Card.Action>
-    </Card.Header>
-  </Card.Root>
+  {#snippet addEmployeeAction()}
+    <AddEmployeeButton />
+  {/snippet}
+
+  <PageHeader
+    title="Employees"
+    description="all people working for you"
+    action={addEmployeeAction} />
 
   <div class="mx-auto max-w-5xl">
     {#await employees}

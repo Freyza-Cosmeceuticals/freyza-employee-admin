@@ -4,7 +4,10 @@ import * as ButtonGroup from "@ui/button-group"
 
 import { DayType, VisitType } from "$lib/types"
 
+import ArrowRight from "@lucide/svelte/icons/arrow-right"
+
 import type { RouteWithName } from "$lib/types"
+import type { ClassValue } from "svelte/elements"
 
 export { dayTypeBadge, routeBadge, statsBadge }
 </script>
@@ -33,20 +36,25 @@ export { dayTypeBadge, routeBadge, statsBadge }
   {/if}
 {/snippet}
 
-{#snippet routeBadge(route: RouteWithName | null, className: String = "")}
+{#snippet routeBadge(route: RouteWithName | null, className: ClassValue = "")}
   {#if route}
     <Badge class={["w-full rounded-sm bg-freyza-route", className]}>
-      {`${route.srcLoc.name} → ${route.destLoc.name}`}
+      {route.srcLoc.name.substring(0, 3).toUpperCase()}
+      <ArrowRight class="mx-1 size-3" />
+      {route.destLoc.name.substring(0, 3).toUpperCase()}
     </Badge>
   {:else}
-    <Badge variant="destructive" class={["w-full rounded-sm bg-freyza-invalid-route", className]}
-      >NO ROUTE</Badge>
+    <Badge variant="destructive" class={["w-full rounded-sm", className]}>NO ROUTE</Badge>
   {/if}
 {/snippet}
 
-{#snippet statsBadge(type: VisitType, value: number, big: boolean = false)}
+{#snippet statsBadge(type: VisitType | DayType, value: number, big: boolean = false)}
   <ButtonGroup.Root>
-    {@render visitTypeBadge(type)}
+    {#if Object.values(VisitType).includes(type as VisitType)}
+      {@render visitTypeBadge(type as VisitType)}
+    {:else if Object.values(DayType).includes(type as DayType)}
+      {@render dayTypeBadge(type as DayType)}
+    {/if}
     <ButtonGroup.Text>
       <span class={["font-mono text-sm font-medium", big && "text-xl"]}>
         {value.toString().padStart(2, "0")}

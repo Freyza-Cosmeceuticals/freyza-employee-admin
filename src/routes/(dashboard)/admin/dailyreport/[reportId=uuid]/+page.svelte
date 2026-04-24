@@ -1,20 +1,24 @@
 <script lang="ts">
+import { resolve } from "$app/paths"
 import { page } from "$app/state"
 
+import { buttonVariants } from "@ui/button"
 import * as Card from "@ui/card"
+import * as Collapsible from "@ui/collapsible"
 import { Separator } from "@ui/separator"
 
 import { getDailyReportByIdWithVisits } from "$lib/api/dailyreport.remote"
 import { fetchRoutes } from "$lib/api/route.remote.js"
 import { DayType, VisitType } from "$lib/types"
 
-import {
-  dayTypeBadge,
-  routeBadge,
-  statsBadge
-} from "@/lib/components/dashboard/dailyreport/snippets.svelte"
 import EmployeeItem from "@/lib/components/dashboard/employee/EmployeeItem.svelte"
+import PageHeader from "@/lib/components/dashboard/PageHeader.svelte"
+import { dayTypeBadge, routeBadge, statsBadge } from "@/lib/components/dashboard/snippets.svelte"
+import VisitCard from "@/lib/components/dashboard/VisitCard.svelte"
 import Badge from "@/lib/components/ui/badge/badge.svelte"
+import { getVisitName, getVisitTypeLabel } from "@/lib/helpers.js"
+import ArrowLeft from "@lucide/svelte/icons/arrow-left"
+import ChevronsUpDownIcon from "@lucide/svelte/icons/chevrons-up-down"
 import { DateTime } from "luxon"
 
 import type { RouteWithName } from "$lib/types"
@@ -45,94 +49,70 @@ $inspect(reportId).with(console.log)
 <div class="h-auto w-full space-y-8 px-4 py-8">
   {#if dailyReport}
     {@const date = reportDate!}
-    <Card.Root class="w-full border-0 bg-transparent shadow-none ring-0">
-      <Card.Header>
-        <Card.Title class="text-2xl">Daily Report</Card.Title>
-        <Card.Description></Card.Description>
-      </Card.Header>
-    </Card.Root>
+
+    {#snippet subheader()}
+      <a
+        href={resolve("/admin/dailyreport")}
+        class="text-muted-foreground transition-colors hover:text-foreground/80">
+        <span class="flex items-center gap-1">
+          <ArrowLeft class="inline size-4" />
+          All Reports
+        </span>
+      </a>
+    {/snippet}
+
+    <PageHeader title="Daily Report" {subheader} />
     <div class="mx-auto max-w-5xl">
       <Card.Root class="w-full">
         <Card.Header>
           <Card.Title class="text-xl font-bold">
             {date.toLocaleString(DateTime.DATE_MED)}
-            <br />
+          </Card.Title>
+          <Card.Description>
             {@render dayTypeBadge(dailyReport.dayType)}
             {#if dailyReport.dayType == DayType.WORK}
               {@render routeBadge(reportRoute, "w-min")}
             {/if}
-            <br />
             <Badge>
               {dailyReport.locked ? "LOCKED" : "UNLOCKED"}
             </Badge>
             {#if dailyReport.locked == true}
               <small>{dailyReport.lockedAt}</small>
             {/if}
-          </Card.Title>
+          </Card.Description>
           <Card.Action>
-            <EmployeeItem employee={dailyReport.employee} class="p-0" />
+            <EmployeeItem employee={dailyReport.employee} class="p-1" />
           </Card.Action>
         </Card.Header>
         <Separator />
+
         <Card.Content class="space-y-4">
           <p>
-            {dailyReport.visits.length} visits recorded.
+            <b>{dailyReport.visits.length} visits recorded.</b>
           </p>
 
           {#each dailyReport.visits.toReversed() as visit (visit.id)}
-            <div>
-              {visit.id} <br />
-              Visit Type: {visit.visitType} <br />
+            <Collapsible.Root class="space-y-2">
+              <Collapsible.Trigger
+                class={buttonVariants({ variant: "ghost", size: "lg", class: "" })}>
+                <div class="flex items-center justify-between space-x-4 px-4">
+                  <span class="text-lg">{getVisitName(visit)}</span>
+                  <Badge variant="secondary">{getVisitTypeLabel(visit.visitType)}</Badge>
 
-              {#if visit.visitType == VisitType.DOCTOR}
-                Doctor Name: {visit.doctorName} <br />
-                Products Shown: {visit.productDetails
-                  .map((p) => `${p.name} (${p.rate} x ${p.quantity})`)
-                  .join(", ")} <br />
-                Samples Given: {visit.samplesGiven.join(", ")} <br />
-                {visit.orderTaken ? "Order Taken" : "Order Not Taken"} <br />
-                {visit.paymentCollected ? "Payment Collected" : "Payment Not Collected"} <br />
-                {#if visit.paymentCollected}
-                  With GST: {visit.amountWithGST} <br />
-                  Without GST: {visit.amountWithoutGST} <br />
-                {/if}
-                Outstanding Amount: {visit.outstandingAmount} <br />
-                Order Amount: {visit.orderAmount} <br />
-              {:else if visit.visitType == VisitType.STOCKIST}
-                Stockist Name: {visit.stockistName} <br />
-                {visit.stockChecked ? "Stock Checked" : "Stock not Checked"} <br />
-                Products Shown: {visit.productDetails
-                  .map((p) => `${p.name} (${p.rate} x ${p.quantity})`)
-                  .join(", ")} <br />
-                Samples Given: {visit.samplesGiven.join(", ")} <br />
-                {visit.orderTaken ? "Order Taken" : "Order Not Taken"} <br />
-                {visit.paymentCollected ? "Payment Collected" : "Payment Not Collected"} <br />
-                {#if visit.paymentCollected}
-                  With GST: {visit.amountWithGST} <br />
-                  Without GST: {visit.amountWithoutGST} <br />
-                {/if}
-                Outstanding Amount: {visit.outstandingAmount} <br />
-                Order Amount: {visit.orderAmount} <br />
-              {:else if visit.visitType == VisitType.CHEMIST}
-                Chemist Name: {visit.chemistName} <br />
-                Products Shown: {visit.productDetails
-                  .map((p) => `${p.name} (${p.rate} x ${p.quantity})`)
-                  .join(", ")} <br />
-                {visit.orderTaken ? "Order Taken" : "Order Not Taken"} <br />
-                {#if visit.paymentCollected}
-                  With GST: {visit.amountWithGST} <br />
-                  Without GST: {visit.amountWithoutGST} <br />
-                {/if}
-                Outstanding Amount: {visit.outstandingAmount} <br />
-                Order Amount: {visit.orderAmount} <br />
-              {/if}
-            </div>
-            <Separator />
+                  <ChevronsUpDownIcon />
+                  <span class="sr-only">Toggle</span>
+                </div>
+              </Collapsible.Trigger>
+              <Collapsible.Content class="space-y-2">
+                <VisitCard {visit} />
+              </Collapsible.Content>
+            </Collapsible.Root>
           {:else}
             <p>No Visits recorded.</p>
           {/each}
         </Card.Content>
         <Separator />
+
         <Card.Footer>
           <div class="flex gap-2">
             {@render statsBadge(
@@ -152,11 +132,6 @@ $inspect(reportId).with(console.log)
       </Card.Root>
     </div>
   {:else}
-    <Card.Root class="w-full border-0 bg-transparent shadow-none ring-0">
-      <Card.Header>
-        <Card.Title class="text-2xl">Daily Report Not Found</Card.Title>
-        <Card.Description>404 Not Found</Card.Description>
-      </Card.Header>
-    </Card.Root>
+    <PageHeader title="Daily Report Not Found" description="404 Not Found" />
   {/if}
 </div>
