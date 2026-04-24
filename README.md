@@ -60,7 +60,7 @@ Always seed only ONCE to the preview db running `bun run --env-file=.env.product
 When merging a PR to `main`, just open the PR, but **merge using the command line locally**, to prevent creating additional merge commits.
 
 ```
-git switch preview 
+git switch preview
 git pull origin preview
 
 git switch main

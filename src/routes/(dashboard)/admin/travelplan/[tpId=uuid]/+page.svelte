@@ -1,4 +1,5 @@
 <script lang="ts">
+import { resolve } from "$app/paths"
 import { page } from "$app/state"
 
 import ViewPlanCalendar from "$lib/components/dashboard/travelplan/ViewPlanCalendar.svelte"
@@ -9,6 +10,8 @@ import * as Card from "@ui/card"
 import { getTravelPlanByIdWithEntries } from "$lib/api/travelplan.remote"
 import { DayType } from "$lib/types"
 
+import PageHeader from "@/lib/components/dashboard/PageHeader.svelte"
+import ArrowLeft from "@lucide/svelte/icons/arrow-left"
 import { DateTime } from "luxon"
 
 let { data } = $props()
@@ -32,12 +35,19 @@ $inspect(tpId).with(console.log)
 <div class="h-auto w-full space-y-8 px-4 py-8">
   {#if travelPlan}
     {@const month = tpMonth!}
-    <Card.Root class="w-full border-0 bg-transparent shadow-none">
-      <Card.Header>
-        <Card.Title class="text-2xl">Travel Plan</Card.Title>
-        <Card.Description></Card.Description>
-      </Card.Header>
-    </Card.Root>
+
+    {#snippet subheader()}
+      <a
+        href={resolve("/admin/travelplan")}
+        class="text-muted-foreground transition-colors hover:text-foreground/80">
+        <span class="flex items-center gap-1">
+          <ArrowLeft class="inline size-4" />
+          All Travel Plans
+        </span>
+      </a>
+    {/snippet}
+
+    <PageHeader title="Travel Plan" description="" {subheader} />
     <div class="mx-auto max-w-5xl">
       <Card.Root class="w-full">
         <Card.Header>
@@ -82,11 +92,6 @@ $inspect(tpId).with(console.log)
       </Card.Root>
     </div>
   {:else}
-    <Card.Root class="w-full border-0 bg-transparent shadow-none">
-      <Card.Header>
-        <Card.Title class="text-2xl">Travel Plan Not Found</Card.Title>
-        <Card.Description>404 Not Found</Card.Description>
-      </Card.Header>
-    </Card.Root>
+    <PageHeader title="Travel Plan Not Found" description="404 Not Found" />
   {/if}
 </div>

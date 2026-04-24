@@ -11,7 +11,7 @@ import { isWeekend, parseDate } from "@internationalized/date"
 import Holidays from "date-holidays"
 import { DateTime } from "luxon"
 
-import { dayTypeBadge, routeBadge, statsBadge } from "./snippets.svelte"
+import { dayTypeBadge, routeBadge, statsBadge } from "../snippets.svelte"
 import type { DateValue } from "@internationalized/date"
 import type { TravelPlanEntryWithRoute } from "$lib/types"
 
