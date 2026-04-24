@@ -11,8 +11,8 @@ interface Props {
 let { userProfile }: Props = $props()
 </script>
 
-{#if userProfile}
-  <Card.Root class="w-full border-0 bg-transparent shadow-none">
+<Card.Root class="w-full border-0 bg-transparent shadow-none ring-0">
+  {#if userProfile}
     <Card.Header>
       <Card.Title class="text-2xl">
         Welcome, {userProfile.name}
@@ -22,9 +22,7 @@ let { userProfile }: Props = $props()
         <AddEmployeeButton />
       </Card.Action>
     </Card.Header>
-  </Card.Root>
-{:else}
-  <Card.Root>
+  {:else}
     <Card.Content>No valid User Profile was found</Card.Content>
-  </Card.Root>
-{/if}
+  {/if}
+</Card.Root>

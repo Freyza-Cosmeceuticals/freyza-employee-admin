@@ -23,7 +23,7 @@ function employeesRemaining(dailyReports: DailyReportWithEmployee[], empCount: n
 </svelte:head>
 
 <div class="h-auto w-full space-y-8 px-4 py-8">
-  <Card.Root class="w-full border-0 bg-transparent shadow-none">
+  <Card.Root class="w-full border-0 bg-transparent shadow-none ring-0">
     <Card.Header>
       <Card.Title class="text-2xl">Daily Reports</Card.Title>
       <Card.Description>see how the progress is going</Card.Description>
@@ -32,7 +32,7 @@ function employeesRemaining(dailyReports: DailyReportWithEmployee[], empCount: n
 
   <div class="mx-auto max-w-5xl">
     {#each days as d, i (d.toString())}
-      <Card.Root class="w-full gap-2 border-0 bg-transparent shadow-none">
+      <Card.Root class="w-full gap-2 border-0 bg-transparent shadow-none ring-0">
         <Card.Header>
           <Card.Title class="text-lg font-semibold">
             {d.toLocaleString(DateTime.DATE_MED)}

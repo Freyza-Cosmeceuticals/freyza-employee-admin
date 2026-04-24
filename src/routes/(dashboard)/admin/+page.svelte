@@ -55,21 +55,21 @@ let userProfile = $derived(await userProfilePromise)
       </Card.Header>
       <Separator />
       <Card.Content class="h-full">
-        {#await getTravelPlansForMonth(thisMonth.toISODate())}
-          <Skeleton class="h-12 w-full" />
-        {:then plans}
+        <svelte:boundary>
+          {@const travelPlans = (await getTravelPlansForMonth(thisMonth.toISODate())) ?? []}
+
           <Item.Group>
-            {#each plans as plan, i (plan.id)}
+            {#each travelPlans as plan, i (plan.id)}
               <Item.Root>
                 <Item.Content>
                   <TravelPlanCard travelPlan={plan} />
                 </Item.Content>
               </Item.Root>
-              {#if i !== (plans ?? []).length - 1}
+              {#if i !== travelPlans.length - 1}
                 <Item.Separator />
               {/if}
             {:else}
-              <Empty.Root>
+              <Empty.Root class="h-full">
                 <Empty.Header>
                   <Empty.Media variant="icon">
                     <CalendarIcon />
@@ -80,18 +80,24 @@ let userProfile = $derived(await userProfilePromise)
               </Empty.Root>
             {/each}
           </Item.Group>
-        {:catch error}
-          <p>
-            Error loading Travel Plans: {error}
-          </p>
-        {/await}
+
+          {#snippet pending()}
+            <Skeleton class="h-12 w-full" />
+          {/snippet}
+
+          {#snippet failed(error)}
+            <p>
+              Error loading Travel Plans: {error}
+            </p>
+          {/snippet}
+        </svelte:boundary>
       </Card.Content>
     </Card.Root>
 
     <!-- Daily Reports List -->
     <Card.Root class="mx-auto w-full max-w-xl">
       <Card.Header>
-        <Card.Title>Daily Reports for Today</Card.Title>
+        <Card.Title>Daily Reports for {today.day} {today.monthLong}</Card.Title>
         <Card.Description>Latest reports submitted</Card.Description>
         <Card.Action>
           <Button variant="link" href={resolve("/admin/dailyreport")}>View All</Button>
@@ -99,17 +105,17 @@ let userProfile = $derived(await userProfilePromise)
       </Card.Header>
       <Separator />
       <Card.Content class="h-full">
-        {#await getDailyReportsForDate(today.toISODate())}
-          <Skeleton class="h-12 w-full" />
-        {:then reports}
+        <svelte:boundary>
+          {@const dailyReports = (await getDailyReportsForDate(today.toISODate())) ?? []}
+
           <Item.Group class="h-full">
-            {#each reports as report, i (report.id)}
+            {#each dailyReports as report, i (report.id)}
               <Item.Root>
                 <Item.Content>
                   <DailyReportCard dailyReport={report} />
                 </Item.Content>
               </Item.Root>
-              {#if i !== (reports ?? []).length - 1}
+              {#if i !== dailyReports.length - 1}
                 <Item.Separator />
               {/if}
             {:else}
@@ -124,11 +130,17 @@ let userProfile = $derived(await userProfilePromise)
               </Empty.Root>
             {/each}
           </Item.Group>
-        {:catch error}
-          <p>
-            Error loading Daily Reports: {error}
-          </p>
-        {/await}
+
+          {#snippet pending()}
+            <Skeleton class="h-12 w-full" />
+          {/snippet}
+
+          {#snippet failed(error)}
+            <p>
+              Error loading Daily Reports: {error}
+            </p>
+          {/snippet}
+        </svelte:boundary>
       </Card.Content>
     </Card.Root>
 

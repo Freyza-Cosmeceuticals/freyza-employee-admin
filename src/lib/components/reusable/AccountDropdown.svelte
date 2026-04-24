@@ -29,7 +29,8 @@ const logout = async () => {
 
 <DropdownMenu.Root>
   <DropdownMenu.Trigger>
-    <span class={buttonVariants({ variant: "outline", size: "sm" })}><UserIcon /></span>
+    <span class={buttonVariants({ variant: "outline", size: "default" })}
+      ><UserIcon /> Account</span>
   </DropdownMenu.Trigger>
   <DropdownMenu.Content class="min-w-64">
     <DropdownMenu.Label>Account</DropdownMenu.Label>

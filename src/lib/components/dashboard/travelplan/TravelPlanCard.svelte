@@ -23,8 +23,8 @@ let travelPlanUrl = $derived.by(() => {
 })
 </script>
 
-<Card.Root class="w-auto p-3">
-  <Card.Content class="flex flex-col gap-4 p-1">
+<Card.Root class="w-auto">
+  <Card.Content class="flex flex-col gap-4 p-2">
     <!-- Header -->
     <div class="flex w-full flex-row items-center justify-start gap-3">
       <Avatar.Root class="size-8 shrink-0">
