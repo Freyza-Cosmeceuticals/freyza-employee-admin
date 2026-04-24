@@ -45,7 +45,7 @@ $inspect(reportId).with(console.log)
 <div class="h-auto w-full space-y-8 px-4 py-8">
   {#if dailyReport}
     {@const date = reportDate!}
-    <Card.Root class="w-full border-0 bg-transparent shadow-none">
+    <Card.Root class="w-full border-0 bg-transparent shadow-none ring-0">
       <Card.Header>
         <Card.Title class="text-2xl">Daily Report</Card.Title>
         <Card.Description></Card.Description>
@@ -86,24 +86,45 @@ $inspect(reportId).with(console.log)
 
               {#if visit.visitType == VisitType.DOCTOR}
                 Doctor Name: {visit.doctorName} <br />
-                Products Shown: {visit.productsShown.join(", ")} <br />
+                Products Shown: {visit.productDetails
+                  .map((p) => `${p.name} (${p.rate} x ${p.quantity})`)
+                  .join(", ")} <br />
                 Samples Given: {visit.samplesGiven.join(", ")} <br />
                 {visit.orderTaken ? "Order Taken" : "Order Not Taken"} <br />
+                {visit.paymentCollected ? "Payment Collected" : "Payment Not Collected"} <br />
+                {#if visit.paymentCollected}
+                  With GST: {visit.amountWithGST} <br />
+                  Without GST: {visit.amountWithoutGST} <br />
+                {/if}
+                Outstanding Amount: {visit.outstandingAmount} <br />
+                Order Amount: {visit.orderAmount} <br />
               {:else if visit.visitType == VisitType.STOCKIST}
                 Stockist Name: {visit.stockistName} <br />
                 {visit.stockChecked ? "Stock Checked" : "Stock not Checked"} <br />
-                Products Shown: {visit.productsShown.join(", ")} <br />
+                Products Shown: {visit.productDetails
+                  .map((p) => `${p.name} (${p.rate} x ${p.quantity})`)
+                  .join(", ")} <br />
                 Samples Given: {visit.samplesGiven.join(", ")} <br />
                 {visit.orderTaken ? "Order Taken" : "Order Not Taken"} <br />
-                {visit.paymentCollected ? "Payment Collected" : "Payment Not Collected"}
+                {visit.paymentCollected ? "Payment Collected" : "Payment Not Collected"} <br />
                 {#if visit.paymentCollected}
                   With GST: {visit.amountWithGST} <br />
-                  Without GST: {visit.amountWithoutGST}
+                  Without GST: {visit.amountWithoutGST} <br />
                 {/if}
+                Outstanding Amount: {visit.outstandingAmount} <br />
+                Order Amount: {visit.orderAmount} <br />
               {:else if visit.visitType == VisitType.CHEMIST}
                 Chemist Name: {visit.chemistName} <br />
-                Products Shown: {visit.productsShown.join(", ")} <br />
+                Products Shown: {visit.productDetails
+                  .map((p) => `${p.name} (${p.rate} x ${p.quantity})`)
+                  .join(", ")} <br />
                 {visit.orderTaken ? "Order Taken" : "Order Not Taken"} <br />
+                {#if visit.paymentCollected}
+                  With GST: {visit.amountWithGST} <br />
+                  Without GST: {visit.amountWithoutGST} <br />
+                {/if}
+                Outstanding Amount: {visit.outstandingAmount} <br />
+                Order Amount: {visit.orderAmount} <br />
               {/if}
             </div>
             <Separator />
@@ -131,7 +152,7 @@ $inspect(reportId).with(console.log)
       </Card.Root>
     </div>
   {:else}
-    <Card.Root class="w-full border-0 bg-transparent shadow-none">
+    <Card.Root class="w-full border-0 bg-transparent shadow-none ring-0">
       <Card.Header>
         <Card.Title class="text-2xl">Daily Report Not Found</Card.Title>
         <Card.Description>404 Not Found</Card.Description>
