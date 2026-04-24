@@ -229,8 +229,8 @@ export const visit = pgTable(
     stockistName: text(),
 
     // doctor/chemist specific fields
-    productsShown: jsonb()
-      .$type<string[]>()
+    productDetails: jsonb()
+      .$type<{ name: string; rate: number; quantity: number }[]>()
       .default(sql`'[]'::jsonb`)
       .notNull(),
     samplesGiven: jsonb()
@@ -244,6 +244,8 @@ export const visit = pgTable(
     paymentCollected: boolean().default(false).notNull(),
     amountWithGST: decimal({ precision: 12, scale: 2 }),
     amountWithoutGST: decimal({ precision: 12, scale: 2 }),
+    outstandingAmount: decimal({ precision: 12, scale: 2 }),
+    orderAmount: decimal({ precision: 12, scale: 2 }),
     stockChecked: boolean().default(false).notNull(),
 
     // common
