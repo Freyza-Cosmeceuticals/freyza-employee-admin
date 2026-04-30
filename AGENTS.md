@@ -186,7 +186,6 @@ try {
 ### CSS / TailwindCSS
 
 - Use TailwindCSS v4 (no `tailwind.config.js` - config in CSS)
-- Use `cn()` utility from `$lib/utils` for class merging
 - Custom components in `$lib/components/ui/` follow bits-ui patterns
 
 ### File Organization
@@ -263,7 +262,7 @@ interface Props {
 let { title, count = 0, class: itemClass }: Props = $props()
 </script>
 
-<div class={cn("base-classes", itemClass)}>
+<div class={["base-classes", itemClass]}>
   {title} - {count}
 </div>
 ```
