@@ -96,7 +96,7 @@ function closeAndFocusTrigger() {
               }}>
               <div class="flex w-full flex-row items-center justify-between gap-8">
                 <EmployeeItem employee={emp} compact />
-                <CheckIcon class={cn("me-4 size-4", value !== emp.id && "text-transparent")} />
+                <CheckIcon class={["me-4 size-4", value !== emp.id && "text-transparent"]} />
               </div>
             </Command.Item>
           {/each}

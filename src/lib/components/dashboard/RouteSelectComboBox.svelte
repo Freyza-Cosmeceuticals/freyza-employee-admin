@@ -70,7 +70,7 @@ function closeAndFocusTrigger() {
                 closeAndFocusTrigger()
                 onValueChange?.(value)
               }}>
-              <CheckIcon class={cn("my-2 me-2 size-4", value !== r.id && "text-transparent")} />
+              <CheckIcon class={["my-2 me-2 size-4", value !== r.id && "text-transparent"]} />
               <span>
                 {r.srcLoc.name} &RightArrow; {r.destLoc.name} ({r.distanceKm}km)
               </span>
