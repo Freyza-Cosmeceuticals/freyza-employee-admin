@@ -85,48 +85,47 @@ let employeeSelectError = $state<string | null>(null)
     <div class="mx-auto max-w-5xl">
       <!-- TODO: Add .preflight here to do preflight validation -->
       <form
-        {...addTravelPlan.enhance(async ({ submit, data }) => {
+        {...addTravelPlan.enhance(async (form) => {
           employeeSelectError = null
+          console.debug(form.fields.value())
 
-          console.log(data)
-
-          if (!data.employeeId) {
-            console.log(data.employeeId)
+          if (!form.fields.value().employeeId) {
+            console.log(form.fields.value().employeeId)
             employeeSelectError = "Please select an Employee"
             toast.error("Please select an Employee")
             return
           }
 
-          const toastId = toast.loading("Hold tight! Creating Travel Plan...", {
+          const toastId = toast.loading("Creating Travel Plan...", {
             duration: 15000
           })
-          console.log("Submitting data", data)
+          console.debug("Submitting data", form.fields.value())
 
           try {
-            await submit()
+            if (await form.submit()) {
+              const result = form.result
+              if (!result || !result.data || !result.success) {
+                toast.error("Unexpected Error", { id: toastId })
+                console.error(
+                  "Unexpected Error: result or result.data is null even when submit succeeded",
+                  result
+                )
+                return
+              }
 
-            if (addTravelPlan.result?.success && addTravelPlan.result.data) {
-              const monthName = DateTime.fromJSDate(addTravelPlan.result.data.month).monthLong
-              const year = addTravelPlan.result.data.month.getFullYear()
-              toast.success(addTravelPlan.result.message, {
+              const monthName = DateTime.fromJSDate(result.data.month).monthLong
+              const year = result.data.month.getFullYear()
+              toast.success(result.message, {
                 id: toastId,
                 description: `Travel Plan created for ${monthName} ${year}.`,
                 duration: undefined
               })
 
-              console.log(addTravelPlan.result.message, addTravelPlan.result.data)
+              console.log(result.message, result.data)
               goto(resolve("/admin/travelplan"))
             } else {
-              if (addTravelPlan.fields.allIssues()) {
-                toast.error("Look for issues in the calendar", { id: toastId, duration: undefined })
-                console.debug(addTravelPlan.fields.allIssues())
-              } else {
-                toast.error(addTravelPlan.result?.message ?? "An Internal Error Occurred", {
-                  id: toastId,
-                  duration: undefined
-                })
-                console.error(addTravelPlan.result?.message)
-              }
+              toast.error("Look for issues in the calendar", { id: toastId, duration: undefined })
+              console.warn(form.fields.allIssues())
             }
           } catch (error) {
             toast.error("An Internal Error Occurred", {

@@ -69,39 +69,38 @@ let hqLabel = $derived.by(() => {
     </Dialog.Header>
 
     <form
-      {...addEmployee.enhance(async ({ form, data, submit }) => {
-        const toastId = toast.loading("Hold tight! Creating employee...")
-        console.debug("Submitting data", data)
+      {...addEmployee.enhance(async (form) => {
+        const toastId = toast.loading("Adding employee...")
+        console.debug("Submitting data", form.fields.value())
 
         try {
-          await submit()
+          if (await form.submit()) {
+            const result = form.result
+            if (!result || !result.data || !result.success) {
+              toast.error("Unexpected Error", { id: toastId })
+              console.error(
+                "Unexpected Error: result or result.data is null even when submit succeeded",
+                result
+              )
+              return
+            }
 
-          if (addEmployee.result?.success && addEmployee.result.data) {
-            form.reset()
+            form.element.reset()
             open = false
 
-            toast.success(addEmployee.result.message, {
+            toast.success(result.message, {
               id: toastId,
-              description: `${addEmployee.result.data.name} has joined the team`
+              description: `${result.data.name} has joined the team`
             })
-            console.log(addEmployee.result.message, addEmployee.result.data)
+            console.debug(result.message, result.data)
           } else {
-            if (addEmployee.fields.allIssues()) {
-              toast.error("Look for validation errors in the form", { id: toastId })
-              console.error(addEmployee.fields.allIssues())
-            } else {
-              toast.error(addEmployee.result?.message ?? "An Internal Error Occurred", {
-                id: toastId
-              })
-
-              console.error(addEmployee.result?.message)
-            }
+            toast.error("Look for validation errors in the form", { id: toastId })
+            console.warn(form.fields.allIssues())
           }
         } catch (error) {
           toast.error("An Internal Error Occurred", {
             id: toastId
           })
-
           console.error(error)
         }
       })}>
