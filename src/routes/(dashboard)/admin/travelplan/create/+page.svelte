@@ -87,7 +87,7 @@ let employeeSelectError = $state<string | null>(null)
       <form
         {...addTravelPlan.enhance(async (form) => {
           employeeSelectError = null
-          console.debug(form.fields.value())
+          console.debug($state.snapshot(form.fields.value()))
 
           if (!form.fields.value().employeeId) {
             console.log(form.fields.value().employeeId)
@@ -99,7 +99,7 @@ let employeeSelectError = $state<string | null>(null)
           const toastId = toast.loading("Creating Travel Plan...", {
             duration: 15000
           })
-          console.debug("Submitting data", form.fields.value())
+          console.debug("Submitting data", $state.snapshot(form.fields.value()))
 
           try {
             if (await form.submit()) {
@@ -125,7 +125,7 @@ let employeeSelectError = $state<string | null>(null)
               goto(resolve("/admin/travelplan"))
             } else {
               toast.error("Look for issues in the calendar", { id: toastId, duration: undefined })
-              console.warn(form.fields.allIssues())
+              console.warn("Issues:", form.fields.allIssues())
             }
           } catch (error) {
             toast.error("An Internal Error Occurred", {

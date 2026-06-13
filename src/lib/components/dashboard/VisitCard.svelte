@@ -5,6 +5,7 @@ import * as Card from "@ui/card"
 import { VisitType } from "$lib/types"
 
 import { getVisitName, getVisitTypeLabel } from "@/lib/helpers"
+import { DateTime } from "luxon"
 
 import type { Visit } from "$lib/types"
 import type { ClassValue } from "svelte/elements"
@@ -30,7 +31,10 @@ const visitName = $derived(getVisitName(visit))
         </div>
         <p class="text-sm text-muted-foreground">
           {visit.latitude.toFixed(4)}, {visit.longitude.toFixed(4)} - {visit.distanceMetersFromPOI}m
-          away
+          away - Created {DateTime.fromSQL(visit.createdAt).toLocaleString(DateTime.TIME_SIMPLE)}
+          {#if visit.updatedAt !== visit.createdAt}
+            - Updated {DateTime.fromSQL(visit.updatedAt).toLocaleString(DateTime.TIME_SIMPLE)}
+          {/if}
         </p>
       </div>
     </div>

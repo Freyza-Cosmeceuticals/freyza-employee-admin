@@ -71,7 +71,7 @@ let hqLabel = $derived.by(() => {
     <form
       {...addEmployee.enhance(async (form) => {
         const toastId = toast.loading("Adding employee...")
-        console.debug("Submitting data", form.fields.value())
+        console.debug("Submitting data", $state.snapshot(form.fields.value()))
 
         try {
           if (await form.submit()) {
