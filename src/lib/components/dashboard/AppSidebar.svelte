@@ -78,7 +78,7 @@ import UserRoundIcon from "@lucide/svelte/icons/user-round"
           <Sidebar.MenuItem>
             <Sidebar.MenuButton>
               {#snippet child({ props })}
-                <a href="##" {...props}>
+                <a href="/admin/locations" {...props}>
                   <MapPinIcon />
                   <span>Locations</span>
                 </a>
@@ -88,7 +88,7 @@ import UserRoundIcon from "@lucide/svelte/icons/user-round"
           <Sidebar.MenuItem>
             <Sidebar.MenuButton>
               {#snippet child({ props })}
-                <a href="##" {...props}>
+                <a href="/admin/routes" {...props}>
                   <RouteIcon />
                   <span>Routes</span>
                 </a>
