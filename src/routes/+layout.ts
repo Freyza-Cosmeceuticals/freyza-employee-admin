@@ -4,9 +4,7 @@ import { SUPABASE_AUTH_TAG } from "$lib/constants"
 
 import { createBrowserClient, createServerClient, isBrowser } from "@supabase/ssr"
 
-import type { LayoutLoad } from "./$types"
-
-export const load: LayoutLoad = async ({ data, depends, fetch }) => {
+export const load = async ({ data, depends, fetch }) => {
   /**
    * Declare a dependency so the layout can be invalidated, for example, on
    * session refresh.

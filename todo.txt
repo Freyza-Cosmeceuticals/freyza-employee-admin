@@ -5,3 +5,4 @@
 2026-06-24 update employee details +employee
 (C) App-centric api routes +api
 2026-06-26 add snapshots to forms on pages
+(B) money calculation abstractions

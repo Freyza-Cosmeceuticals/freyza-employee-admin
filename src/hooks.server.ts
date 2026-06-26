@@ -11,8 +11,20 @@ import type { Handle } from "@sveltejs/kit"
 const SUPABASE_HANDLE_TAG = "Supabase Handle"
 const AUTH_GUARD_TAG = "Auth Guard"
 
+const colors = {
+  reset: "\x1b[0m",
+  dim: "\x1b[2m",
+  bright: "\x1b[1m",
+  cyan: "\x1b[36m",
+  green: "\x1b[32m",
+  yellow: "\x1b[33m",
+  red: "\x1b[31m"
+}
+
 const supabase: Handle = async ({ event, resolve }) => {
-  console.time(SUPABASE_HANDLE_TAG)
+  console.time(
+    `${colors.dim}[${event.locals.requestId.substr(0, 5)}]${colors.reset} ${SUPABASE_HANDLE_TAG}`
+  )
 
   /**
    * Creates a Supabase client specific to this server request.
@@ -22,15 +34,19 @@ const supabase: Handle = async ({ event, resolve }) => {
   event.locals.supabase = createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
     cookies: {
       getAll: () => event.cookies.getAll(),
-      /**
-       * SvelteKit's cookies API requires `path` to be explicitly set in
-       * the cookie options. Setting `path` to `/` replicates previous/
-       * standard behavior.
-       */
-      setAll: (cookiesToSet) => {
+      setAll: (cookiesToSet, headers) => {
+        /**
+         * Note: You have to add the `path` variable to the
+         * set and remove method due to sveltekit's cookie API
+         * requiring this to be set, setting the path to `/`
+         * will replicate previous/standard behavior (https://kit.svelte.dev/docs/types#public-types-cookies)
+         */
         cookiesToSet.forEach(({ name, value, options }) => {
           event.cookies.set(name, value, { ...options, path: "/" })
         })
+        if (Object.keys(headers).length > 0) {
+          event.setHeaders(headers)
+        }
       }
     }
   })
@@ -48,6 +64,7 @@ const supabase: Handle = async ({ event, resolve }) => {
    * Unlike `supabase.auth.getSession()`, which returns the session _without_
    * validating the JWT, this function also calls `getUser()` to validate the
    * JWT before returning the session.
+   * TODO: Look into using .getClaims() instead of .getUser(), which is now faster and safer
    */
   event.locals.safeGetSession = async () => {
     const {
@@ -69,7 +86,9 @@ const supabase: Handle = async ({ event, resolve }) => {
     return { session, user }
   }
 
-  console.timeEnd(SUPABASE_HANDLE_TAG)
+  console.timeEnd(
+    `${colors.dim}[${event.locals.requestId.substr(0, 5)}]${colors.reset} ${SUPABASE_HANDLE_TAG}`
+  )
 
   return resolve(event, {
     filterSerializedResponseHeaders(name) {
@@ -83,7 +102,9 @@ const supabase: Handle = async ({ event, resolve }) => {
 }
 
 const authGuard: Handle = async ({ event, resolve }) => {
-  console.time(AUTH_GUARD_TAG)
+  console.time(
+    `${colors.dim}[${event.locals.requestId.substr(0, 5)}]${colors.reset} ${AUTH_GUARD_TAG}`
+  )
 
   const { session, user } = await event.locals.safeGetSession()
   event.locals.session = session
@@ -97,7 +118,9 @@ const authGuard: Handle = async ({ event, resolve }) => {
     redirect(303, "/admin")
   }
 
-  console.timeEnd(AUTH_GUARD_TAG)
+  console.timeEnd(
+    `${colors.dim}[${event.locals.requestId.substr(0, 5)}]${colors.reset} ${AUTH_GUARD_TAG}`
+  )
 
   return resolve(event)
 }
@@ -108,15 +131,6 @@ const logHandle: Handle = async ({ event, resolve }) => {
   const timestamp = DateTime.now().toISO()
 
   const requestType = event.isRemoteRequest ? "REMOTE" : event.isDataRequest ? "DATA" : "HTTP"
-  const colors = {
-    reset: "\x1b[0m",
-    dim: "\x1b[2m",
-    bright: "\x1b[1m",
-    cyan: "\x1b[36m",
-    green: "\x1b[32m",
-    yellow: "\x1b[33m",
-    red: "\x1b[31m"
-  }
 
   // timestamp [requestId] -> method path (requestType)
   console.log(

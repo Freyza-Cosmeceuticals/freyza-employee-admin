@@ -39,7 +39,6 @@ function employeesRemaining(dailyReports: DailyReportWithEmployee[], empCount: n
         </Card.Header>
         <Card.Content class="flex flex-row flex-wrap items-stretch gap-4">
           <svelte:boundary>
-            <!-- pass YYYY-MM-DD format ISODate to the remote query function, same is used there as well -->
             {@const dailyReports = (await getDailyReportsForDate(d.toISODate())) ?? []}
             {@const empCount = employeeCount.data ?? 0}
 
