@@ -23,8 +23,8 @@ Authentication and authorization system for the Freyza Employee Admin Dashboard.
   phone: varchar(15)
   role: UserRole (ADMIN | EMPLOYEE)
   status: UserStatus (ACTIVE | REVOKED)
-  tier: EmployeeTier (FSO | TABM | ASM) - only for EMPLOYEEs
-  hqId: text (FK to location) - only for EMPLOYEEs
+  tier: EmployeeTier (FSO | TABM | ASM) // nullable (required for employees)
+  hqId: text (FK to location) // nullable (required for employees)
   joiningDate: date
   resignDate: date (optional)
   createdAt: timestamp
@@ -123,7 +123,7 @@ export const addEmployeeSchema = v.object({
   phone: v.pipe(v.string(), v.minLength(10), v.maxLength(15)),
   role: v.enumType(UserRole),
   status: v.enumType(UserStatus),
-  tier: v.optional(v.enumType(EmployeeTier)),
+  tier: v.enumType(EmployeeTier), // Non-optional for employees
   hqId: v.optional(v.string()),
   joiningDate: v.coerce(date(), v.string())
 })

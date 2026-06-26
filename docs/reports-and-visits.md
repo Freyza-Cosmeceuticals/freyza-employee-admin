@@ -14,7 +14,7 @@ Daily report submission system for employees. Each daily report contains one or 
   employeeId: text - required (FK to user)
   date: date - required (unique per employee)
   dayType: DayType - default WORK (WORK | HOLIDAY | LEAVE)
-  routeId: text - nullable (FK to route, required if WORK)
+  routeId: text - nullable (FK to route, required if dayType = WORK)
   ta: doublePrecision - nullable (travel allowance)
   da: doublePrecision - nullable (daily allowance)
   totalExpense: doublePrecision - nullable

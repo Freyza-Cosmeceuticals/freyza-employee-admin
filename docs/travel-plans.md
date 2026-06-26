@@ -33,16 +33,6 @@ Travel plan management system for assigning monthly travel schedules to employee
 }
 ```
 
-### Enums
-
-```typescript
-enum DayType {
-  WORK = "WORK"
-  HOLIDAY = "HOLIDAY"
-  LEAVE = "LEAVE"
-}
-```
-
 ## TypeScript Types
 
 ```typescript
@@ -54,7 +44,11 @@ type TravelPlanCreate = InferInsertModel<typeof travelPlan> & {
 }
 
 type TravelPlanEntryCreate = Omit<InferInsertModel<typeof travelPlanEntry>, "tpId">
+```
 
+## Extended Types
+
+```typescript
 type TravelPlanWithEmployee = TravelPlan & {
   employee: EmployeeWithHQ
   stats?: TravelPlanStats

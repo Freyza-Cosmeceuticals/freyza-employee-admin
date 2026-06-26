@@ -82,7 +82,7 @@ let { title, count = 0, class: itemClass }: Props = $props()
 </script>
 
 <!-- no need to use cn(), svelte flattens class array under the hood -->
-<div class={["base-classes", itemClass, condition && "some-conditional-class"]}>
+<div class=["base-classes", itemClass, condition && "some-conditional-class"]}>
   {title} - {count}
 </div>
 ```

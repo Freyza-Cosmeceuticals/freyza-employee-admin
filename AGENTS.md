@@ -1,7 +1,5 @@
 # AGENTS.md - Freyza Employee Admin
 
-## Project Overview
-
 ## Stack
 
 - Svelte 5 (with runes) + SvelteKit + TypeScript
@@ -20,11 +18,6 @@ bun run check
 
 bun run format
 bun run lint
-
-bun run db:generate  # Generate Drizzle schema
-bun run supabase:start    # Start Supabase local services
-bun run supabase:stop     # Stop Supabase services
-bun run supabase:migrate  # Apply migrations to local db
 ```
 
 ## Code Style Guidelines

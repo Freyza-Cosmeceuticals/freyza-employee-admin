@@ -17,8 +17,8 @@ Employee management system for the Freyza Employee Admin Dashboard. Manages empl
   phone: varchar(15) - unique
   role: UserRole - required (ADMIN | EMPLOYEE)
   status: UserStatus - required (ACTIVE | REVOKED)
-  tier: EmployeeTier - nullable (FSO | TABM | ASM)
-  hqId: text - nullable (FK to location)
+  tier: EmployeeTier - required (FSO | TABM | ASM)
+  hqId: text (FK to location) - nullable (only for EMPLOYEES)
   joiningDate: date - required
   resignDate: date - nullable
   createdAt: timestamp
@@ -44,25 +44,14 @@ enum EmployeeTier {
   TABM = "TABM"  // Training Area Business Manager
   ASM = "ASM"    // Area Sales Manager
 }
-
-export const EMPLOYEE_TIERS = [
-  { value: "FSO", label: "Field Sales Officer" },
-  { value: "TABM", label: "Training Area Business Manager" },
-  { value: "ASM", label: "Area Sales Manager" }
-]
 ```
 
 ## TypeScript Types
 
 ```typescript
-// Basic types
 type User = InferSelectModel<typeof user>
 type Employee = User
-
-// Extended types
-type EmployeeWithHQ = Employee & {
-  hq: Pick<Location, "id" | "name" | "operational"> | null
-}
+type EmployeeWithHQ = Employee & { hq: Pick<Location, "id" | "name" | "operational"> | null }
 
 type EmployeeCreate = InferInsertModel<typeof user>
 ```
@@ -121,7 +110,7 @@ export const addEmployeeSchema = v.object({
   phone: v.pipe(v.string(), v.minLength(10, "Phone must be at least 10 digits")),
   role: v.enumType(UserRole),
   status: v.enumType(UserStatus),
-  tier: v.optional(v.enumType(EmployeeTier)),
+  tier: v.enumType(EmployeeTier), // Non-optional for employees
   hqId: v.optional(v.string()),
   joiningDate: v.coerce(v.date(), v.string("Invalid date"))
 })
@@ -132,7 +121,7 @@ export const updateEmployeeSchema = v.object({
   email: v.optional(v.pipe(v.string(), v.email())),
   phone: v.optional(v.pipe(v.string(), v.minLength(10))),
   status: v.optional(v.enumType(UserStatus)),
-  tier: v.optional(v.enumType(EmployeeTier)),
+  tier: v.enumType(EmployeeTier), // Non-optional for employees
   hqId: v.optional(v.string()),
   resignDate: v.optional(v.coerce(v.date(), v.string()))
 })
