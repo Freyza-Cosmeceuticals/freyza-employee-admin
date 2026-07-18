@@ -29,7 +29,8 @@ let {
 <Item.Root {variant} class={["w-full", compact && "p-1", itemClass]}>
   <Item.Media variant="icon">
     <Avatar.Root class="size-10">
-      <Avatar.Image src="https://github.com/harshnarayanjha.png" />
+      <Avatar.Image
+        src="https://api.dicebear.com/10.x/lorelei/svg?seed={user.id.substring(0, 6)}" />
       <Avatar.Fallback>{user.name.substring(0, 1)}</Avatar.Fallback>
     </Avatar.Root>
   </Item.Media>

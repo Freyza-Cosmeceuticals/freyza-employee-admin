@@ -1,78 +1,50 @@
 <script lang="ts">
-import DailyReportCard from "$lib/components/dashboard/dailyreport/DailyReportCard.svelte"
 import PageHeader from "$lib/components/dashboard/PageHeader.svelte"
-import * as Card from "@ui/card"
+import * as Alert from "@ui/alert"
 import { Skeleton } from "@ui/skeleton"
 
-import { getDailyReportsForDate } from "$lib/api/dailyreport.remote"
+import { getAllDailyReports } from "$lib/api/dailyreport.remote"
 
-import { DateTime } from "luxon"
+import DataTable from "@/lib/components/dashboard/table/data-table.svelte"
+import { Button } from "@/lib/components/ui/button"
+import CircleAlertIcon from "@lucide/svelte/icons/circle-alert"
 
-import type { DailyReportWithEmployee } from "$lib/types"
-
-let { data } = $props()
-let { today, days, employeeCount } = $derived(data)
-
-function employeesRemaining(dailyReports: DailyReportWithEmployee[], empCount: number) {
-  return Math.max(0, empCount - dailyReports.length)
-}
+import { columns } from "./columns"
 </script>
 
 <svelte:head>
   <title>Daily Reports | Freyza Cosmeceuticals Employee System</title>
-  <meta name="description" content="Daily Reports for Freyza Cosmeceuticals Employee System" />
+  <meta
+    name="description"
+    content="Daily Reports listing for Freyza Cosmeceuticals Employee System" />
 </svelte:head>
 
-<div class="h-auto w-full space-y-8 px-4 py-8">
-  <PageHeader title="Daily Reports" description="see how the progress is going" />
+<div class="h-auto space-y-8 px-4 py-8">
+  <PageHeader title="Daily Reports" description="All daily reports" />
 
-  <div class="mx-auto max-w-5xl">
-    {#each days as d, i (d.toString())}
-      <Card.Root class="w-full gap-2 border-0 bg-transparent shadow-none ring-0">
-        <Card.Header>
-          <Card.Title class="text-lg font-semibold">
-            {d.toLocaleString(DateTime.DATE_MED)}
-            {#if i === 0}
-              <span class="font-normal italic"> (Today) </span>
-            {/if}
-          </Card.Title>
-        </Card.Header>
-        <Card.Content class="flex flex-row flex-wrap items-stretch gap-4">
-          <svelte:boundary>
-            {@const dailyReports = (await getDailyReportsForDate(d.toISODate())) ?? []}
-            {@const empCount = employeeCount.data ?? 0}
+  <div class="px-8 mx-auto">
+    <svelte:boundary>
+      {const dailyReports = await getAllDailyReports()}
+      <DataTable {columns} data={dailyReports} />
 
-            {#each dailyReports as dailyReport}
-              <DailyReportCard {dailyReport} />
-            {:else}
-              <p class="text-muted-foreground">No reports submitted for this date</p>
-            {/each}
+      {#snippet pending()}
+        <Skeleton class="h-12 w-full" />
+      {/snippet}
 
-            {#if dailyReports.length !== 0 && employeesRemaining(dailyReports, empCount) > 0}
-              <div
-                class="ms-8 aspect-square w-28 self-center rounded-full border border-dashed border-sidebar-accent-foreground/45 bg-sidebar-accent/50 p-4 text-center">
-                <span class="text-xl font-medium">
-                  {employeesRemaining(dailyReports, empCount)}
-                </span>
-                <p class="text-muted-foreground">report remains</p>
-              </div>
-            {/if}
+      {#snippet failed(error, reset)}
+        {console.error(error)}
 
-            {#snippet pending()}
-              {@const skeletonCount = Array.from({ length: i === 0 ? 4 : 5 }, (_, i) => i + 1)}
-
-              {#each skeletonCount as item, i (item)}
-                <Skeleton class="aspect-video w-32" />
-              {/each}
-            {/snippet}
-            {#snippet failed(error)}
-              <p class="text-center text-lg font-medium text-destructive">
-                An error occurred while fetching daily reports.
-              </p>
-            {/snippet}
-          </svelte:boundary>
-        </Card.Content>
-      </Card.Root>
-    {/each}
+        <Alert.Root variant="destructive">
+          <CircleAlertIcon class="size-4" />
+          <Alert.Title>Error</Alert.Title>
+          <Alert.Description>
+            Something went wrong while listing daily reports. Please try again.
+          </Alert.Description>
+          <Alert.Action>
+            <Button variant="ghost" onclick={reset}>Retry</Button>
+          </Alert.Action>
+        </Alert.Root>
+      {/snippet}
+    </svelte:boundary>
   </div>
 </div>

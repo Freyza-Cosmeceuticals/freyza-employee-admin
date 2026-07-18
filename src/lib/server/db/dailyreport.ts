@@ -7,13 +7,15 @@ import { db, handleDbError, requireAuthMaybeAdmin } from "./common"
 import type {
   DailyReport,
   DailyReportWithEmployee,
+  DailyReportWithEmployeeWithRoute,
   DailyReportWithEmployeeWithVisits,
-  DailyReportWithRoute,
   Visit
 } from "$lib/types"
 
 const sEmployee = alias(s.user, "employee")
 const sHq = alias(s.location, "hq")
+const sSrc = alias(s.location, "srcLoc")
+const sDest = alias(s.location, "destLoc")
 
 /**
  * Get all DailyReports from the db
@@ -31,6 +33,72 @@ export async function getAllDailyReports(
       .select()
       .from(s.dailyReport)
       .orderBy(desc(s.dailyReport.date))
+
+    return { data: dailyReports, error: null }
+  } catch (e) {
+    return handleDbError(e)
+  } finally {
+    console.timeEnd(TAG)
+  }
+}
+
+/**
+ * Get all DailyReports with employee info from the db
+ * Requires Admin
+ */
+export async function getAllDailyReportsWithEmployeeWithRoute(
+  locals: App.Locals
+): Promise<
+  { data: DailyReportWithEmployeeWithRoute[]; error: null } | { data: null; error: string }
+> {
+  const TAG = `DB: getAllDailyReportsWithEmployeeWithRoute()`
+  console.time(TAG)
+  const { user, session } = requireAuthMaybeAdmin(locals)
+
+  try {
+    const visitCount = db.$count(s.visit, eq(s.visit.reportId, s.dailyReport.id))
+
+    const rawDailyReports = await db
+      .select({
+        dailyReport: s.dailyReport,
+        employee: sEmployee,
+        hq: sHq,
+        route: s.route,
+        srcLoc: sSrc,
+        destLoc: sDest,
+        visitCount
+      })
+      .from(s.dailyReport)
+      .innerJoin(sEmployee, eq(s.dailyReport.employeeId, sEmployee.id))
+      .innerJoin(sHq, eq(sEmployee.hqId, sHq.id))
+      .leftJoin(s.route, eq(s.dailyReport.routeId, s.route.id))
+      .leftJoin(sSrc, eq(s.route.srcLocId, sSrc.id))
+      .leftJoin(sDest, eq(s.route.destLocId, sDest.id))
+      .orderBy(desc(s.dailyReport.date))
+
+    const dailyReports: DailyReportWithEmployeeWithRoute[] = rawDailyReports.map((dr) => ({
+      ...dr.dailyReport,
+      employee: {
+        ...dr.employee,
+        hq: dr.hq
+      },
+      route: dr.route
+        ? {
+            ...dr.route,
+            srcLoc: {
+              id: dr.srcLoc!.id,
+              name: dr.srcLoc!.name,
+              operational: dr.srcLoc!.operational
+            },
+            destLoc: {
+              id: dr.destLoc!.id,
+              name: dr.destLoc!.name,
+              operational: dr.destLoc!.operational
+            }
+          }
+        : null,
+      numVisits: dr.visitCount
+    }))
 
     return { data: dailyReports, error: null }
   } catch (e) {

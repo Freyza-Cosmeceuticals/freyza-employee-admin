@@ -2,6 +2,7 @@ import { getRequestEvent, query } from "$app/server"
 import { error } from "@sveltejs/kit"
 
 import {
+  getAllDailyReportsWithEmployeeWithRoute as getAllDailyReportsWithEmployeeWithRouteDb,
   getDailyReportsWithEmployeeForDates as getDailyReportsWithEmployeeForDatesDb,
   getDailyReportsWithEmployeeWithVisitsForDates as getDailyReportsWithEmployeeWithVisitsForDatesDb,
   getDailyReportWithEmployeeOptionalVisitsById as getDailyReportWithEmployeeOptionalVisitsByIdDb
@@ -11,6 +12,24 @@ import { getDailyReportByIdSchema, getDailyReportForDatesSchema } from "@/lib/fo
 
 import { requireAuthMaybeAdmin } from "./common"
 import type { DailyReportWithEmployeeWithVisits } from "$lib/types"
+
+/**
+ * Remote query function to get all daily reports with employee info
+ */
+export const getAllDailyReports = query(async () => {
+  const { locals } = getRequestEvent()
+  const { user, session, supabase } = requireAuthMaybeAdmin(locals)
+
+  const { data: dailyReports, error: dbError } =
+    await getAllDailyReportsWithEmployeeWithRouteDb(locals)
+
+  if (dbError !== null) {
+    console.error("Failed to fetch daily reports", dbError)
+    error(500, dbError)
+  }
+
+  return dailyReports
+})
 
 /**
  * Remote query function to get a daily report by Id

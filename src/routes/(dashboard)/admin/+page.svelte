@@ -43,7 +43,7 @@ let userProfile = $derived(await userProfilePromise)
   <!-- Admin Profile Section -->
   <AdminProfileCard {userProfile} />
 
-  <div class="my-16 grid grid-cols-1 place-content-center gap-4 px-16 md:grid-cols-2">
+  <div class="my-8 grid grid-cols-1 place-content-center gap-4 px-16 md:grid-cols-2">
     <!-- Upcoming Travel Plans -->
     <Card.Root class="mx-auto w-full max-w-xl">
       <Card.Header>
@@ -53,10 +53,12 @@ let userProfile = $derived(await userProfilePromise)
           <Button variant="link" href={resolve("/admin/travelplan")}>View All</Button>
         </Card.Action>
       </Card.Header>
+
       <Separator />
+
       <Card.Content class="h-full">
         <svelte:boundary>
-          {@const travelPlans = (await getTravelPlansForMonth(thisMonth.toISODate())) ?? []}
+          {const travelPlans = (await getTravelPlansForMonth(thisMonth.toISODate())) ?? []}
 
           <Item.Group>
             {#each travelPlans as plan, i (plan.id)}
@@ -85,9 +87,11 @@ let userProfile = $derived(await userProfilePromise)
             <Skeleton class="h-12 w-full" />
           {/snippet}
 
-          {#snippet failed(error)}
+          {#snippet failed(error, reset)}
+            {@debug error}
             <p>
-              Error loading Travel Plans: {error}
+              Error loading Travel Plans
+              <Button variant="outline" onclick={reset}>Retry</Button>
             </p>
           {/snippet}
         </svelte:boundary>
@@ -103,10 +107,12 @@ let userProfile = $derived(await userProfilePromise)
           <Button variant="link" href={resolve("/admin/dailyreport")}>View All</Button>
         </Card.Action>
       </Card.Header>
+
       <Separator />
+
       <Card.Content class="h-full">
         <svelte:boundary>
-          {@const dailyReports = (await getDailyReportsForDate(today.toISODate())) ?? []}
+          {const dailyReports = (await getDailyReportsForDate(today.toISODate())) ?? []}
 
           <Item.Group class="h-full">
             {#each dailyReports as report, i (report.id)}
@@ -125,7 +131,7 @@ let userProfile = $derived(await userProfilePromise)
                     <NotebookTabsIcon />
                   </Empty.Media>
                   <Empty.Title>0 Daily Reports</Empty.Title>
-                  <Empty.Description>No daily report has been created yet.</Empty.Description>
+                  <Empty.Description>No daily reports have been created yet.</Empty.Description>
                 </Empty.Header>
               </Empty.Root>
             {/each}
@@ -135,9 +141,11 @@ let userProfile = $derived(await userProfilePromise)
             <Skeleton class="h-12 w-full" />
           {/snippet}
 
-          {#snippet failed(error)}
+          {#snippet failed(error, reset)}
+            {@debug error}
             <p>
-              Error loading Daily Reports: {error}
+              Error loading Daily Reports
+              <Button variant="outline" onclick={reset}>Retry</Button>
             </p>
           {/snippet}
         </svelte:boundary>
@@ -157,13 +165,16 @@ let userProfile = $derived(await userProfilePromise)
             Employees
           </Card.Description>
         {:catch error}
+          {@debug error}
           0
         {/await}
         <Card.Action>
           <Button variant="link" href={resolve("/admin/employees")}>View All</Button>
         </Card.Action>
       </Card.Header>
+
       <Separator />
+
       <Card.Content>
         {#await employees}
           <Skeleton class="h-12 w-full" />
@@ -186,16 +197,17 @@ let userProfile = $derived(await userProfilePromise)
           <Button variant="link" href={resolve("/admin/travelplan")}>View All</Button>
         </Card.Action> -->
       </Card.Header>
+
       <Separator />
+
       <Card.Content>
         {#await tasks}
           <Skeleton class="h-12 w-full" />
         {:then data}
           <TasksList tasks={data} />
         {:catch error}
-          <p>
-            Error loading Tasks: {error}
-          </p>
+          {@debug error}
+          <p>Error loading Tasks</p>
         {/await}
       </Card.Content>
     </Card.Root>

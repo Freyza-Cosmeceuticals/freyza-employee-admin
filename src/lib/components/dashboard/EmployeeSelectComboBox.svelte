@@ -3,9 +3,6 @@ import * as Avatar from "$lib/components/ui/avatar"
 import { Button } from "$lib/components/ui/button/index.js"
 import * as Command from "$lib/components/ui/command/index.js"
 import * as Popover from "$lib/components/ui/popover/index.js"
-import { Badge } from "@ui/badge"
-
-import { cn } from "$lib/utils.js"
 
 import CheckIcon from "@lucide/svelte/icons/check"
 import ChevronsUpDownIcon from "@lucide/svelte/icons/chevrons-up-down"
@@ -65,7 +62,11 @@ function closeAndFocusTrigger() {
         aria-expanded={open}>
         {#if selectedValue}
           <Avatar.Root class="size-5">
-            <Avatar.Image src="https://github.com/harshnarayanjha.png" />
+            <Avatar.Image
+              src="https://api.dicebear.com/10.x/lorelei/svg?seed={selectedValue.id.substring(
+                0,
+                6
+              )}" />
             <Avatar.Fallback>{selectedValue.name.substring(0, 1)}</Avatar.Fallback>
           </Avatar.Root>
           <span class="me-auto line-clamp-1 truncate">

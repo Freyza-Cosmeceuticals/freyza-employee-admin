@@ -9,7 +9,7 @@ let { supabase, session, user, deploymentGitBranch } = $derived(data)
 
 <Sidebar.Provider>
   <AppSidebar />
-  <Sidebar.Inset>
+  <Sidebar.Inset class="min-w-0 w-full">
     <AppNavbar {supabase} {session} {user} {deploymentGitBranch} />
     <main>
       {@render children?.()}
