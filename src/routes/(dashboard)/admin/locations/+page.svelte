@@ -1,60 +1,52 @@
 <script lang="ts">
-import LocationItem from "$lib/components/dashboard/LocationItem.svelte"
+import AddLocationButton from "$lib/components/dashboard/AddLocationButton.svelte"
 import PageHeader from "$lib/components/dashboard/PageHeader.svelte"
-import { Button } from "@ui/button"
-import * as Dialog from "@ui/dialog"
-import * as Item from "@ui/item"
+import * as Alert from "@ui/alert"
 import { Skeleton } from "@ui/skeleton"
 
 import { fetchLocations } from "$lib/api/location.remote"
 
-import { toast } from "svelte-sonner"
+import DataTable from "@/lib/components/dashboard/table/data-table.svelte"
+import { Button } from "@/lib/components/ui/button"
+import CircleAlertIcon from "@lucide/svelte/icons/circle-alert"
+
+import { columns } from "./columns"
 </script>
 
 <svelte:head>
   <title>Locations | Freyza Cosmeceuticals Employee System</title>
+  <meta name="description" content="Locations page for Freyza Cosmeceuticals Employee System" />
 </svelte:head>
 
-<div class="h-auto w-full space-y-8 px-4 py-8">
-  <PageHeader title="Locations" description="Operational locations" />
+<div class="h-auto space-y-8 px-4 py-8">
+  {#snippet addLocationAction()}
+    <AddLocationButton />
+  {/snippet}
 
-  <div class="flex justify-end mb-4">
-    <Dialog.Root>
-      <Dialog.Trigger>
-        <Button>Create Location</Button>
-      </Dialog.Trigger>
-      <Dialog.Content>
-        <Dialog.Header>
-          <Dialog.Title>Create Location</Dialog.Title>
-        </Dialog.Header>
-        <p class="py-4">Not implemented yet.</p>
-        <Dialog.Footer>
-          <Dialog.Close>
-            <Button variant="outline" onclick={() => toast.info("Not implemented yet.")}
-              >Close</Button>
-          </Dialog.Close>
-        </Dialog.Footer>
-      </Dialog.Content>
-    </Dialog.Root>
-  </div>
+  <PageHeader title="Locations" description="Operational locations" action={addLocationAction} />
 
-  <div class="mx-auto max-w-5xl">
+  <div class="px-8 mx-auto">
     <svelte:boundary>
-      {@const locations = await fetchLocations()}
-      <Item.Group>
-        {#each locations as loc (loc.id)}
-          <LocationItem location={loc} />
-        {:else}
-          <p class="text-muted-foreground text-center py-8">No locations found.</p>
-        {/each}
-      </Item.Group>
+      {const locations = await fetchLocations()}
+      <DataTable {columns} data={locations} />
 
       {#snippet pending()}
-        <div class="grid gap-4">
-          {#each [1, 2, 3] as i}
-            <Skeleton class="h-16 w-full" />
-          {/each}
-        </div>
+        <Skeleton class="h-12 w-full" />
+      {/snippet}
+
+      {#snippet failed(error, reset)}
+        {console.error(error)}
+
+        <Alert.Root variant="destructive">
+          <CircleAlertIcon class="size-4" />
+          <Alert.Title>Error</Alert.Title>
+          <Alert.Description>
+            Something went wrong while listing locations. Please try again.
+          </Alert.Description>
+          <Alert.Action>
+            <Button variant="ghost" onclick={reset}>Retry</Button>
+          </Alert.Action>
+        </Alert.Root>
       {/snippet}
     </svelte:boundary>
   </div>

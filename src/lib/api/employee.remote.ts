@@ -1,13 +1,13 @@
-import { form, getRequestEvent } from "$app/server"
+import { form, getRequestEvent, query } from "$app/server"
 
-import { createEmployee } from "$lib/server/db/user"
+import { createEmployee, getAllEmployees as getAllEmployeesDb } from "$lib/server/db/user"
 import { supabaseAdmin } from "$lib/server/supabaseAdmin"
 import { UserRole, UserStatus } from "$lib/types"
 
 import { addEmployeeSchema } from "@/lib/formSchemas"
 
 import { requireAuthMaybeAdmin } from "./common"
-import type { EmployeeCreate } from "$lib/types"
+import type { EmployeeCreate, EmployeeWithHQ } from "$lib/types"
 
 export const addEmployee = form(addEmployeeSchema, async (employee) => {
   const { locals } = getRequestEvent()
@@ -71,4 +71,12 @@ export const addEmployee = form(addEmployeeSchema, async (employee) => {
   console.debug("Successfully added employee", employeeProfile)
 
   return { data: employeeProfile, success: true, message: "Employee added successfully" }
+})
+
+export const getAllEmployees = query(async (): Promise<EmployeeWithHQ[]> => {
+  const { locals } = getRequestEvent()
+  const { user, session, supabase } = requireAuthMaybeAdmin(locals, false)
+
+  const employees: EmployeeWithHQ[] = await getAllEmployeesDb(locals)
+  return employees
 })

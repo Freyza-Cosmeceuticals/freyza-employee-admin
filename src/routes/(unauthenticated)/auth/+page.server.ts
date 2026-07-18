@@ -45,12 +45,18 @@ export const actions: Actions = {
 
     const { email, password } = data
 
-    // check user role first, SHOULD be ACTIVE ADMIn
+    // check user role first, SHOULD be ACTIVE ADMIN
     const potentialUser = await getUserByEmailDb(email)
-    if (potentialUser.error || !potentialUser.data) {
+    if (potentialUser.error) {
       console.error("Error Fetching User By Email: ", potentialUser.error)
       console.timeEnd("LOGIN")
       return fail(500, { email, message: "Internal Server Error", error: true })
+    }
+
+    if (!potentialUser.data) {
+      console.error("Cannot find user by email: ", email)
+      console.timeEnd("LOGIN")
+      return fail(401, { email, message: "Invalid Credentials", error: true })
     }
 
     if (

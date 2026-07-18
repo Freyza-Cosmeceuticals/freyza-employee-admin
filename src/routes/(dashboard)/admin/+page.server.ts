@@ -20,7 +20,7 @@ export const load: PageServerLoad = async ({ depends, locals }) => {
       resolve([
         {
           id: 0,
-          task: "Create Travel Plan for XYZ",
+          task: "Create Travel Plan for XYZ - (DEMO)",
           urgency: "HIGH"
         }
       ])

@@ -58,7 +58,11 @@ $inspect(tpId).with(console.log)
           <Card.Action>
             <div class="flex flex-row items-center justify-end gap-3">
               <Avatar.Root class="size-8 shrink-0 self-start">
-                <Avatar.Image src="https://github.com/harshnarayanjha.png" />
+                <Avatar.Image
+                  src="https://api.dicebear.com/10.x/lorelei/svg?seed={travelPlan.employee.id.substring(
+                    0,
+                    6
+                  )}" />
                 <Avatar.Fallback>
                   {travelPlan.employee.name.slice(0, 1)}
                 </Avatar.Fallback>

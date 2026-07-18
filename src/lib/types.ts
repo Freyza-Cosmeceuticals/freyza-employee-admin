@@ -94,6 +94,7 @@ export type DailyReportWithRoute = DailyReport & {
         destLoc: Pick<Location, "id" | "name" | "operational">
       })
     | null
+  numVisits: number
 }
 
 export type DailyReportWithEmployeeWithRoute = DailyReportWithEmployee & DailyReportWithRoute

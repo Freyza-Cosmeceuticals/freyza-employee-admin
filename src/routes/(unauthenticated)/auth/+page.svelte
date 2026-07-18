@@ -13,6 +13,9 @@ let { form } = $props()
 </svelte:head>
 
 <div class="grid h-[80svh] w-full place-content-center gap-4">
+  <!-- has a ?/login form action -->
+  <LoginForm {form} />
+
   {#if form?.error}
     <Alert.Root variant="destructive">
       <CircleAlertIcon class="size-4" />
@@ -20,7 +23,4 @@ let { form } = $props()
       <Alert.AlertDescription>{form?.message}</Alert.AlertDescription>
     </Alert.Root>
   {/if}
-
-  <!-- has a ?/login form action -->
-  <LoginForm {form} />
 </div>

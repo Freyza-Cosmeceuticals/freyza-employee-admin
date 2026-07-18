@@ -20,10 +20,10 @@ onMount(() => {
   Settings.defaultLocale = "en-IN"
 
   const { data } = supabase.auth.onAuthStateChange((changeEvent, newSession) => {
-    console.log(`Auth State changed: ${changeEvent}`, newSession)
+    console.debug(`Auth State changed: ${changeEvent}`, newSession)
 
     if (newSession?.expires_at != session?.expires_at) {
-      console.log("Invalidating current auth session")
+      console.debug("Invalidating current auth session")
       invalidate(SUPABASE_AUTH_TAG)
     }
   })

@@ -14,37 +14,37 @@ export { dayTypeBadge, routeBadge, statsBadge }
 
 {#snippet dayTypeBadge(dt: DayType)}
   {#if dt == DayType.WORK}
-    <Badge variant="default" class="rounded-sm bg-freyza-badge-work">WORK</Badge>
+    <Badge variant="default" class="h-auto rounded-sm bg-freyza-badge-work">WORK</Badge>
   {:else if dt == DayType.LEAVE}
-    <Badge class="rounded-sm bg-freyza-badge-leave">LEAVE</Badge>
+    <Badge variant="default" class="h-auto rounded-sm bg-freyza-badge-leave">LEAVE</Badge>
   {:else if dt == DayType.HOLIDAY}
-    <Badge class="rounded-sm bg-freyza-badge-holiday">HOLIDAY</Badge>
+    <Badge class="h-auto rounded-sm bg-freyza-badge-holiday">HOLIDAY</Badge>
   {:else}
-    <Badge variant="outline" class="rounded-sm">UNKNOWN</Badge>
+    <Badge variant="outline" class="h-auto rounded-sm">???</Badge>
   {/if}
 {/snippet}
 
 {#snippet visitTypeBadge(vt: VisitType)}
   {#if vt == VisitType.DOCTOR}
-    <Badge variant="default" class="rounded-sm">DOCTOR</Badge>
+    <Badge variant="default" class="h-auto rounded-sm">DOCTOR</Badge>
   {:else if vt == VisitType.CHEMIST}
-    <Badge variant="default" class="rounded-sm">CHEMIST</Badge>
+    <Badge variant="default" class="h-auto rounded-sm">CHEMIST</Badge>
   {:else if vt == VisitType.STOCKIST}
-    <Badge variant="default" class="rounded-sm">STOCKIST</Badge>
+    <Badge variant="default" class="h-auto rounded-sm">STOCKIST</Badge>
   {:else}
-    <Badge variant="outline" class="rounded-sm">UNKNOWN</Badge>
+    <Badge variant="outline" class="h-auto rounded-sm">???</Badge>
   {/if}
 {/snippet}
 
 {#snippet routeBadge(route: RouteWithName | null, className: ClassValue = "")}
   {#if route}
-    <Badge class={["w-full rounded-sm bg-freyza-route", className]}>
-      {route.srcLoc.name.substring(0, 3).toUpperCase()}
-      <ArrowRight class="mx-1 size-3" />
-      {route.destLoc.name.substring(0, 3).toUpperCase()}
+    <Badge class="h-auto w-full rounded-sm bg-freyza-route {className}">
+      {route.srcLoc.name.substring(0, 4).toUpperCase()}
+      <ArrowRight class="mx-1 size-4" />
+      {route.destLoc.name.substring(0, 4).toUpperCase()}
     </Badge>
   {:else}
-    <Badge variant="destructive" class={["w-full rounded-sm", className]}>NO ROUTE</Badge>
+    <Badge variant="destructive" class="h-auto w-full rounded-sm {className}">NO ROUTE</Badge>
   {/if}
 {/snippet}
 

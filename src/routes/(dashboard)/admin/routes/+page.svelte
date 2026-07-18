@@ -1,63 +1,52 @@
 <script lang="ts">
+import AddRouteButton from "$lib/components/dashboard/AddRouteButton.svelte"
 import PageHeader from "$lib/components/dashboard/PageHeader.svelte"
-import RouteItem from "$lib/components/dashboard/RouteItem.svelte"
-import { Button } from "@ui/button"
-import * as Dialog from "@ui/dialog"
-import * as Item from "@ui/item"
+import * as Alert from "@ui/alert"
 import { Skeleton } from "@ui/skeleton"
 
 import { fetchRoutes } from "$lib/api/route.remote"
 
-import { toast } from "svelte-sonner"
+import DataTable from "@/lib/components/dashboard/table/data-table.svelte"
+import { Button } from "@/lib/components/ui/button"
+import CircleAlertIcon from "@lucide/svelte/icons/circle-alert"
+
+import { columns } from "./columns"
 </script>
 
 <svelte:head>
   <title>Routes | Freyza Cosmeceuticals Employee System</title>
+  <meta name="description" content="Routes page for Freyza Cosmeceuticals Employee System" />
 </svelte:head>
 
-<div class="h-auto w-full space-y-8 px-4 py-8">
-  <PageHeader title="Routes" description="Operational routes" />
+<div class="h-auto space-y-8 px-4 py-8">
+  {#snippet addRouteAction()}
+    <AddRouteButton />
+  {/snippet}
 
-  <div class="flex justify-end mb-4">
-    <Dialog.Root>
-      <Dialog.Trigger>
-        <Button>Create Route</Button>
-      </Dialog.Trigger>
-      <Dialog.Content>
-        <Dialog.Header>
-          <Dialog.Title>Create Route</Dialog.Title>
-        </Dialog.Header>
-        <p class="py-4">Not implemented yet.</p>
-        <Dialog.Footer>
-          <Dialog.Close>
-            <Button
-              variant="outline"
-              onclick={() => {
-                toast.info("Not implemented yet.")
-              }}>Close</Button>
-          </Dialog.Close>
-        </Dialog.Footer>
-      </Dialog.Content>
-    </Dialog.Root>
-  </div>
+  <PageHeader title="Routes" description="Operational routes" action={addRouteAction} />
 
-  <div class="mx-auto max-w-5xl">
+  <div class="px-8 mx-auto">
     <svelte:boundary>
-      {@const routes = await fetchRoutes()}
-      <Item.Group>
-        {#each routes as r (r.id)}
-          <RouteItem route={r} />
-        {:else}
-          <p class="text-muted-foreground text-center py-8">No routes found.</p>
-        {/each}
-      </Item.Group>
+      {const routes = await fetchRoutes()}
+      <DataTable {columns} data={routes} />
 
       {#snippet pending()}
-        <div class="grid gap-4">
-          {#each [1, 2, 3] as i}
-            <Skeleton class="h-16 w-full" />
-          {/each}
-        </div>
+        <Skeleton class="h-12 w-full" />
+      {/snippet}
+
+      {#snippet failed(error, reset)}
+        {console.error(error)}
+
+        <Alert.Root variant="destructive">
+          <CircleAlertIcon class="size-4" />
+          <Alert.Title>Error</Alert.Title>
+          <Alert.Description>
+            Something went wrong while listing routes. Please try again.
+          </Alert.Description>
+          <Alert.Action>
+            <Button variant="ghost" onclick={reset}>Retry</Button>
+          </Alert.Action>
+        </Alert.Root>
       {/snippet}
     </svelte:boundary>
   </div>

@@ -1,11 +1,9 @@
 <script lang="ts">
 import { resolve } from "$app/paths"
-import { page } from "$app/state"
 
-import { buttonVariants } from "@ui/button"
+import Badge from "@ui/badge/badge.svelte"
+import { Button } from "@ui/button/index.js"
 import * as Card from "@ui/card"
-import * as Collapsible from "@ui/collapsible"
-import { Separator } from "@ui/separator"
 
 import { getDailyReportByIdWithVisits } from "$lib/api/dailyreport.remote"
 import { fetchRoutes } from "$lib/api/route.remote.js"
@@ -14,31 +12,21 @@ import { DayType, VisitType } from "$lib/types"
 import EmployeeItem from "@/lib/components/dashboard/employee/EmployeeItem.svelte"
 import PageHeader from "@/lib/components/dashboard/PageHeader.svelte"
 import { dayTypeBadge, routeBadge, statsBadge } from "@/lib/components/dashboard/snippets.svelte"
-import VisitCard from "@/lib/components/dashboard/VisitCard.svelte"
-import Badge from "@/lib/components/ui/badge/badge.svelte"
-import { getVisitName, getVisitTypeLabel } from "@/lib/helpers.js"
+import DataTable from "@/lib/components/dashboard/table/data-table.svelte"
+import { Skeleton } from "@/lib/components/ui/skeleton/index.js"
 import ArrowLeft from "@lucide/svelte/icons/arrow-left"
-import ChevronsUpDownIcon from "@lucide/svelte/icons/chevrons-up-down"
 import { DateTime } from "luxon"
 
+import { columns } from "./columns"
 import type { RouteWithName } from "$lib/types"
 
-let { data } = $props()
+let { data, params } = $props()
 let { user } = $derived(data)
 
 let routes = $state<RouteWithName[] | null>(null)
 routes = await fetchRoutes()
 
-let reportRoute = $derived(routes?.find((it) => it.id == dailyReport?.routeId) ?? null)
-
-const reportId = $derived(page.params.reportId!)
-
-const dayTypes = [DayType.WORK, DayType.LEAVE, DayType.HOLIDAY]
-
-const dailyReport = $derived(await getDailyReportByIdWithVisits(reportId))
-const reportDate = $derived(dailyReport ? DateTime.fromJSDate(dailyReport.date) : null)
-
-$inspect(reportId).with(console.log)
+$inspect(params.reportId).with(console.debug)
 </script>
 
 <svelte:head>
@@ -46,92 +34,80 @@ $inspect(reportId).with(console.log)
   <meta name="description" content="Daily Report for Freyza Cosmeceuticals Employee System" />
 </svelte:head>
 
-<div class="h-auto w-full space-y-8 px-4 py-8">
-  {#if dailyReport}
-    {@const date = reportDate!}
+{#snippet subheader()}
+  <a
+    href={resolve("/admin/dailyreport")}
+    class="w-max text-muted-foreground transition-colors hover:text-foreground/80">
+    <span class="flex items-center gap-1">
+      <ArrowLeft class="inline size-4" />
+      All Reports
+    </span>
+  </a>
+{/snippet}
 
-    {#snippet subheader()}
-      <a
-        href={resolve("/admin/dailyreport")}
-        class="text-muted-foreground transition-colors hover:text-foreground/80">
-        <span class="flex items-center gap-1">
-          <ArrowLeft class="inline size-4" />
-          All Reports
-        </span>
-      </a>
+<div class="h-auto w-full px-4 py-8">
+  <svelte:boundary>
+    {const report = await getDailyReportByIdWithVisits(params.reportId)}
+    {const reportRoute = $derived(routes?.find((it) => it.id == report?.routeId) ?? null)}
+    {const reportDate = $derived(report ? DateTime.fromJSDate(report.date) : null)}
+
+    {#if report && reportDate}
+      <PageHeader title="Daily Report" {subheader} />
+
+      <div class="space-y-4">
+        <Card.Root class="w-full border-0 bg-transparent shadow-none ring-0">
+          <Card.Header>
+            <Card.Title class="text-xl font-bold">
+              {reportDate.toLocaleString(DateTime.DATE_MED)}
+            </Card.Title>
+            <Card.Description>
+              {@render dayTypeBadge(report.dayType)}
+              {#if report.dayType == DayType.WORK}
+                {@render routeBadge(reportRoute, "w-min")}
+              {/if}
+              <Badge variant="secondary">
+                {report.locked
+                  ? `LOCKED (${report.lockedAt ? DateTime.fromSQL(report.lockedAt).toLocaleString(DateTime.DATETIME_MED) : "-"})`
+                  : "UNLOCKED"}
+              </Badge>
+            </Card.Description>
+            <Card.Action>
+              <EmployeeItem employee={report.employee} class="p-1" />
+            </Card.Action>
+          </Card.Header>
+        </Card.Root>
+
+        <DataTable {columns} data={[...report.visits].reverse()} />
+
+        <div class="mt-8 flex gap-2">
+          {@render statsBadge(
+            VisitType.DOCTOR,
+            report.visits.filter((it) => it.visitType == VisitType.DOCTOR).length
+          )}
+          {@render statsBadge(
+            VisitType.STOCKIST,
+            report.visits.filter((it) => it.visitType == VisitType.STOCKIST).length
+          )}
+          {@render statsBadge(
+            VisitType.CHEMIST,
+            report.visits.filter((it) => it.visitType == VisitType.CHEMIST).length
+          )}
+        </div>
+      </div>
+    {:else}
+      <PageHeader title="Daily Report Not Found" description="404 Not Found" />
+    {/if}
+
+    {#snippet pending()}
+      <Skeleton class="h-36 w-full" />
     {/snippet}
 
-    <PageHeader title="Daily Report" {subheader} />
-    <div class="mx-auto max-w-5xl">
-      <Card.Root class="w-full">
-        <Card.Header>
-          <Card.Title class="text-xl font-bold">
-            {date.toLocaleString(DateTime.DATE_MED)}
-          </Card.Title>
-          <Card.Description>
-            {@render dayTypeBadge(dailyReport.dayType)}
-            {#if dailyReport.dayType == DayType.WORK}
-              {@render routeBadge(reportRoute, "w-min")}
-            {/if}
-            <Badge>
-              {dailyReport.locked ? "LOCKED" : "UNLOCKED"}
-            </Badge>
-            {#if dailyReport.locked == true}
-              <small>{dailyReport.lockedAt}</small>
-            {/if}
-          </Card.Description>
-          <Card.Action>
-            <EmployeeItem employee={dailyReport.employee} class="p-1" />
-          </Card.Action>
-        </Card.Header>
-        <Separator />
-
-        <Card.Content class="space-y-4">
-          <p>
-            <b>{dailyReport.visits.length} visits recorded.</b>
-          </p>
-
-          {#each dailyReport.visits.toReversed() as visit (visit.id)}
-            <Collapsible.Root class="space-y-2">
-              <Collapsible.Trigger
-                class={buttonVariants({ variant: "ghost", size: "lg", class: "" })}>
-                <div class="flex items-center justify-between space-x-4 px-4">
-                  <span class="text-lg">{getVisitName(visit)}</span>
-                  <Badge variant="secondary">{getVisitTypeLabel(visit.visitType)}</Badge>
-
-                  <ChevronsUpDownIcon />
-                  <span class="sr-only">Toggle</span>
-                </div>
-              </Collapsible.Trigger>
-              <Collapsible.Content class="space-y-2">
-                <VisitCard {visit} />
-              </Collapsible.Content>
-            </Collapsible.Root>
-          {:else}
-            <p>No Visits recorded.</p>
-          {/each}
-        </Card.Content>
-        <Separator />
-
-        <Card.Footer>
-          <div class="flex gap-2">
-            {@render statsBadge(
-              VisitType.DOCTOR,
-              dailyReport.visits.filter((it) => it.visitType == VisitType.DOCTOR).length
-            )}
-            {@render statsBadge(
-              VisitType.STOCKIST,
-              dailyReport.visits.filter((it) => it.visitType == VisitType.STOCKIST).length
-            )}
-            {@render statsBadge(
-              VisitType.CHEMIST,
-              dailyReport.visits.filter((it) => it.visitType == VisitType.CHEMIST).length
-            )}
-          </div>
-        </Card.Footer>
-      </Card.Root>
-    </div>
-  {:else}
-    <PageHeader title="Daily Report Not Found" description="404 Not Found" />
-  {/if}
+    {#snippet failed(error, reset)}
+      {@debug error}
+      <div>
+        <p>Failed to load report details</p>
+        <Button onclick={reset}>Retry</Button>
+      </div>
+    {/snippet}
+  </svelte:boundary>
 </div>

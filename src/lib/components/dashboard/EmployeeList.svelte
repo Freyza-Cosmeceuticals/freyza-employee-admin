@@ -18,14 +18,6 @@ interface Props {
 let { variant = "default", employees }: Props = $props()
 </script>
 
-{#snippet employeeStatus(status: UserStatus)}
-  {#if status === UserStatus.ACTIVE}
-    <Badge variant="secondary">Active</Badge>
-  {:else if status === UserStatus.REVOKED}
-    <Badge variant="destructive">Revoked</Badge>
-  {/if}
-{/snippet}
-
 <!-- Wrapped in Card.Content -->
 <Item.Group>
   {#each employees as emp, i (emp.id)}
