@@ -16,7 +16,7 @@ import {
   uniqueIndex,
   varchar
 } from "drizzle-orm/pg-core"
-import { authenticatedRole, authUid } from "drizzle-orm/supabase"
+import { authenticatedRole } from "drizzle-orm/supabase"
 
 import { DayType, EmployeeTier, ReportStatus, UserRole, UserStatus, VisitType } from "../constants"
 
@@ -34,14 +34,14 @@ export const dayType = pgEnum("DayType", enumToPgEnum(DayType))
 export const reportStatus = pgEnum("ReportStatus", enumToPgEnum(ReportStatus))
 export const visitType = pgEnum("VisitType", enumToPgEnum(VisitType))
 
-const authJwtAppRole = sql`(SELECT auth.jwt() -> 'app_metadata' ->> 'app_role'::text)`
+const authUid = sql`(select auth.uid())`
+const authJwtAppRole = sql`(select auth.jwt() -> 'app_metadata' ->> 'app_role'::text)`
 
 const timestamps = {
   createdAt: timestamp({ precision: 3, mode: "string", withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp({ precision: 3, mode: "string", withTimezone: true })
-    .defaultNow()
-    .$onUpdate(() => sql`(CURRENT_TIMESTAMP)`)
-    .notNull()
+  updatedAt: timestamp({ precision: 3, mode: "string", withTimezone: true }).$onUpdate(
+    () => sql`(CURRENT_TIMESTAMP)`
+  )
 }
 
 export const user = pgTable(
@@ -257,6 +257,7 @@ export const visit = pgTable(
     index("idx_visit_reportid").on(table.reportId),
     index("idx_visit_visitType").on(table.visitType),
     index("idx_visit_reportId_employeeId").on(table.reportId, table.employeeId),
+    index("idx_visit_employeeId").on(table.employeeId),
     foreignKey({
       columns: [table.reportId],
       foreignColumns: [dailyReport.id],
@@ -309,6 +310,18 @@ export const visit = pgTable(
             AND dr."locked" = false
         )`,
       withCheck: sql`EXISTS (
+          SELECT 1
+          FROM public."dailyReport" dr
+          WHERE dr.id = visit."reportId"
+            AND dr."employeeId" = ${authUid}::text
+            AND dr."locked" = false
+        )`
+    }),
+    pgPolicy("Employees can delete their own visits if report not locked", {
+      as: "permissive",
+      for: "delete",
+      to: authenticatedRole,
+      using: sql`EXISTS (
           SELECT 1
           FROM public."dailyReport" dr
           WHERE dr.id = visit."reportId"
@@ -552,8 +565,8 @@ export const dailyReport = pgTable(
       as: "permissive",
       for: "update",
       to: authenticatedRole,
-      using: sql`(${authUid}::text = "employeeId")`,
-      withCheck: sql`(${authUid}::text = "employeeId")`
+      using: sql`(${authUid}::text = "employeeId") AND (locked = false)`,
+      withCheck: sql`(${authUid}::text = "employeeId") AND (locked = false)`
     }),
     pgPolicy("Admins can update all daily reports", {
       as: "permissive",
