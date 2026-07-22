@@ -31,7 +31,7 @@ let { reportId, id }: { reportId: string; id: string } = $props()
     <DropdownMenu.Separator />
     <DropdownMenu.Item class="cursor-pointer">
       {#snippet child({ props })}
-        <a {...props} href={resolve(`/admin/dailyreport/${id}/visit/${id}`)}>
+        <a {...props} href={resolve(`/admin/dailyreport/${reportId}/visit/${id}`)}>
           <ViewIcon class="size-4" />
           View Visit
         </a>

@@ -9,7 +9,7 @@ import ArrowRight from "@lucide/svelte/icons/arrow-right"
 import type { RouteWithName } from "$lib/types"
 import type { ClassValue } from "svelte/elements"
 
-export { dayTypeBadge, routeBadge, statsBadge }
+export { dayTypeBadge, routeBadge, statsBadge, visitTypeBadge }
 </script>
 
 {#snippet dayTypeBadge(dt: DayType)}

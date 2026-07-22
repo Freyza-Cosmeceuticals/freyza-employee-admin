@@ -362,3 +362,27 @@ export async function getDailyReportWithEmployeeForEmployeeAndDate(
     console.timeEnd(TAG)
   }
 }
+
+/**
+ * Get Visit by Id
+ * @param locals
+ * @param visitId
+ * @returns Visit or error
+ */
+export async function getVisitById(
+  locals: App.Locals,
+  visitId: string
+): Promise<{ data: Visit | null; error: null } | { data: null; error: string }> {
+  let TAG = `DB: getVisitById(${visitId})`
+  console.time(TAG)
+  const { user, session } = requireAuthMaybeAdmin(locals)
+
+  try {
+    const [visit] = await db.select().from(s.visit).where(eq(s.visit.id, visitId)).limit(1)
+    return { data: visit, error: null }
+  } catch (e) {
+    return handleDbError(e)
+  } finally {
+    console.timeEnd(TAG)
+  }
+}

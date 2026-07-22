@@ -85,3 +85,5 @@ export const getTravelPlanByIdSchema = v.pipe(v.string(), v.uuid("Invalid Travel
 
 export const getDailyReportForDatesSchema = v.pipe(v.string(), v.toDate("Invalid Date"))
 export const getDailyReportByIdSchema = v.pipe(v.string(), v.uuid("Invalid Daily Report ID"))
+
+export const getVisitSchema = v.pipe(v.string(), v.uuid("Invalid Visit ID"))

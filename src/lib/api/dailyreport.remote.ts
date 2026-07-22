@@ -5,10 +5,15 @@ import {
   getAllDailyReportsWithEmployeeWithRoute as getAllDailyReportsWithEmployeeWithRouteDb,
   getDailyReportsWithEmployeeForDates as getDailyReportsWithEmployeeForDatesDb,
   getDailyReportsWithEmployeeWithVisitsForDates as getDailyReportsWithEmployeeWithVisitsForDatesDb,
-  getDailyReportWithEmployeeOptionalVisitsById as getDailyReportWithEmployeeOptionalVisitsByIdDb
+  getDailyReportWithEmployeeOptionalVisitsById as getDailyReportWithEmployeeOptionalVisitsByIdDb,
+  getVisitById as getVisitByIdDb
 } from "$lib/server/db/dailyreport"
 
-import { getDailyReportByIdSchema, getDailyReportForDatesSchema } from "@/lib/formSchemas"
+import {
+  getDailyReportByIdSchema,
+  getDailyReportForDatesSchema,
+  getVisitSchema
+} from "@/lib/formSchemas"
 
 import { requireAuthMaybeAdmin } from "./common"
 import type { DailyReportWithEmployeeWithVisits } from "$lib/types"
@@ -42,7 +47,7 @@ export const getDailyReportById = query(getDailyReportByIdSchema, async (tpId) =
   const { user, session, supabase } = requireAuthMaybeAdmin(locals, false)
 
   const { data: dailyReport, error: dbError } =
-    await getDailyReportWithEmployeeOptionalVisitsByIdDb(locals, tpId)
+    await getDailyReportWithEmployeeOptionalVisitsByIdDb(locals, tpId, false)
 
   if (dbError !== null) {
     console.error("Failed to fetch daily report", dbError)
@@ -139,3 +144,25 @@ export const getDailyReportsWithVisitsForDate = query.batch(
     }
   }
 )
+
+/**
+ * Remote query function to get a visit by Id
+ * Requires Admin
+ */
+export const getVisit = query(getVisitSchema, async (visitId) => {
+  let TAG = `Remote: getVisit(${visitId})`
+  console.time(TAG)
+
+  const { locals } = getRequestEvent()
+  const { user, session, supabase } = requireAuthMaybeAdmin(locals)
+
+  const { data: visit, error: dbError } = await getVisitByIdDb(locals, visitId)
+
+  if (dbError !== null) {
+    console.error("Failed to fetch visit", dbError)
+    error(500, dbError)
+  }
+
+  console.timeEnd(TAG)
+  return visit
+})

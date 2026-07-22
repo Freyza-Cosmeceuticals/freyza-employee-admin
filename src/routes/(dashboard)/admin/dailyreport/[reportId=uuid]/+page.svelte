@@ -13,7 +13,14 @@ import EmployeeItem from "@/lib/components/dashboard/employee/EmployeeItem.svelt
 import PageHeader from "@/lib/components/dashboard/PageHeader.svelte"
 import { dayTypeBadge, routeBadge, statsBadge } from "@/lib/components/dashboard/snippets.svelte"
 import DataTable from "@/lib/components/dashboard/table/data-table.svelte"
+import Map from "@/lib/components/ui/map/Map.svelte"
+import MapControls from "@/lib/components/ui/map/MapControls.svelte"
+import MapMarker from "@/lib/components/ui/map/MapMarker.svelte"
+import MarkerContent from "@/lib/components/ui/map/MarkerContent.svelte"
+import MarkerLabel from "@/lib/components/ui/map/MarkerLabel.svelte"
+import MarkerPopup from "@/lib/components/ui/map/MarkerPopup.svelte"
 import { Skeleton } from "@/lib/components/ui/skeleton/index.js"
+import { findVisitsCenter, getVisitName } from "@/lib/helpers.js"
 import ArrowLeft from "@lucide/svelte/icons/arrow-left"
 import { DateTime } from "luxon"
 
@@ -26,7 +33,7 @@ let { user } = $derived(data)
 let routes = $state<RouteWithName[] | null>(null)
 routes = await fetchRoutes()
 
-$inspect(params.reportId).with(console.debug)
+$inspect(params).with(console.debug)
 </script>
 
 <svelte:head>
@@ -45,7 +52,7 @@ $inspect(params.reportId).with(console.debug)
   </a>
 {/snippet}
 
-<div class="h-auto w-full px-4 py-8">
+<div class="h-auto w-full px-4 py-2">
   <svelte:boundary>
     {const report = await getDailyReportByIdWithVisits(params.reportId)}
     {const reportRoute = $derived(routes?.find((it) => it.id == report?.routeId) ?? null)}
@@ -75,6 +82,36 @@ $inspect(params.reportId).with(console.debug)
               <EmployeeItem employee={report.employee} class="p-1" />
             </Card.Action>
           </Card.Header>
+
+          <Card.Content class="h-105 p-0">
+            {const center = findVisitsCenter(report.visits)}
+            <!-- Map.center expect longitude, latitude -->
+            <Map
+              center={[center.longitude, center.latitude]}
+              zoom={14}
+              theme="light"
+              styles={{
+                light: "https://tiles.openfreemap.org/styles/bright",
+                dark: "https://tiles.openfreemap.org/styles/bright"
+              }}>
+              <MapControls />
+
+              {#each report.visits as pt (pt.id)}
+                <MapMarker latitude={pt.latitude} longitude={pt.longitude}>
+                  <MarkerContent>
+                    <div
+                      class="size-4 cursor-pointer rounded-full border-3 border-white bg-cyan-500 shadow-lg transition-transform hover:scale-110">
+                    </div>
+                    <MarkerLabel position="bottom">
+                      {getVisitName(pt)}
+                    </MarkerLabel>
+                  </MarkerContent>
+
+                  <MarkerPopup class="w-62 p-4">Visit details here</MarkerPopup>
+                </MapMarker>
+              {/each}
+            </Map>
+          </Card.Content>
         </Card.Root>
 
         <DataTable {columns} data={[...report.visits].reverse()} />
