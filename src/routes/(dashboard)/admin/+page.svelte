@@ -16,18 +16,13 @@ import { Skeleton } from "@ui/skeleton"
 import { getDailyReportsForDate } from "$lib/api/dailyreport.remote.js"
 import { getTravelPlansForMonth } from "$lib/api/travelplan.remote.js"
 
+import { getAllEmployees, getAllEmployeesCount } from "@/lib/api/employee.remote"
+import { N_EMPLOYEES_HOME } from "@/lib/constants"
 import CalendarIcon from "@lucide/svelte/icons/calendars"
 import NotebookTabsIcon from "@lucide/svelte/icons/notebook-tabs"
 
 let { data } = $props()
-let {
-  userProfile: userProfilePromise,
-  employees,
-  today,
-  thisMonth,
-  upcomingMonth,
-  tasks
-} = $derived(data)
+let { userProfile: userProfilePromise, today, thisMonth, upcomingMonth, tasks } = $derived(data)
 
 let userProfile = $derived(await userProfilePromise)
 </script>
@@ -58,7 +53,9 @@ let userProfile = $derived(await userProfilePromise)
 
       <Card.Content class="h-full">
         <svelte:boundary>
-          {const travelPlans = (await getTravelPlansForMonth(thisMonth.toISODate())) ?? []}
+          {const travelPlans = $derived(
+            (await getTravelPlansForMonth(thisMonth.toISODate())) ?? []
+          )}
 
           <Item.Group>
             {#each travelPlans as plan, i (plan.id)}
@@ -112,7 +109,7 @@ let userProfile = $derived(await userProfilePromise)
 
       <Card.Content class="h-full">
         <svelte:boundary>
-          {const dailyReports = (await getDailyReportsForDate(today.toISODate())) ?? []}
+          {const dailyReports = $derived((await getDailyReportsForDate(today.toISODate())) ?? [])}
 
           <Item.Group class="h-full">
             {#each dailyReports as report, i (report.id)}
@@ -156,18 +153,23 @@ let userProfile = $derived(await userProfilePromise)
     <Card.Root class="mx-auto w-full max-w-xl">
       <Card.Header>
         <Card.Title>My Employees</Card.Title>
-        {#await employees}
-          <Skeleton class="inline-block h-2.5 w-8" />
-        {:then data}
+        <svelte:boundary>
+          {const count = $derived(await getAllEmployeesCount())}
+
           <Card.Description>
             Your top
-            {data.length}
+            {count}
             Employees
           </Card.Description>
-        {:catch error}
-          {@debug error}
-          0
-        {/await}
+          {#snippet pending()}
+            <Skeleton class="inline-block h-2.5 w-8" />
+          {/snippet}
+
+          {#snippet failed(error)}
+            {@debug error}
+            0
+          {/snippet}
+        </svelte:boundary>
         <Card.Action>
           <Button variant="link" href={resolve("/admin/employees")}>View All</Button>
         </Card.Action>
@@ -176,15 +178,20 @@ let userProfile = $derived(await userProfilePromise)
       <Separator />
 
       <Card.Content>
-        {#await employees}
-          <Skeleton class="h-12 w-full" />
-        {:then data}
-          <EmployeeList employees={data} />
-        {:catch error}
-          <p>
-            Error loading employees: {error}
-          </p>
-        {/await}
+        <svelte:boundary>
+          {const employees = $derived(await getAllEmployees(N_EMPLOYEES_HOME))}
+          <EmployeeList {employees} />
+
+          {#snippet pending()}
+            <Skeleton class="h-12 w-full" />
+          {/snippet}
+          {#snippet failed(error, reset)}
+            <p>
+              Error loading employees: {error}
+            </p>
+            <Button onclick={reset} variant="secondary">Retry</Button>
+          {/snippet}
+        </svelte:boundary>
       </Card.Content>
     </Card.Root>
 

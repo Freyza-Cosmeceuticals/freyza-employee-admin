@@ -1,4 +1,5 @@
 <script lang="ts">
+import { refreshAll } from "$app/navigation"
 import { type RemoteFormIssue } from "@sveltejs/kit"
 
 import { Button } from "@ui/button"
@@ -71,7 +72,11 @@ let hqLabel = $derived.by(() => {
     <form
       {...addEmployee.enhance(async (form) => {
         const toastId = toast.loading("Adding employee...")
-        console.debug("Submitting data", $state.snapshot(form.fields.value()))
+        console.debug("Submitting data", {
+          ...form.fields.value(),
+          tier: tierSelected,
+          hqId: hqSelected
+        })
 
         try {
           if (await form.submit()) {
@@ -150,7 +155,7 @@ let hqLabel = $derived.by(() => {
                 placeholder="Enter Phone"
                 required
                 disabled={addEmployee.pending > 0}
-                {...addEmployee.fields.phone.as("text")} />
+                {...addEmployee.fields.phone.as("tel")} />
             </Field.Field>
 
             <Field.Field orientation="responsive">
@@ -162,27 +167,22 @@ let hqLabel = $derived.by(() => {
                 </Field.Error>
               </Field.Content>
               <Select.Root
+                {...addEmployee.fields.tier.as("select")}
                 type="single"
                 disabled={addEmployee.pending > 0}
                 bind:value={tierSelected}
                 required>
-                <Select.Trigger name={addEmployee.fields.tier.as("select").name}>
+                <Select.Trigger class="w-45">
                   {tierLabel}
                 </Select.Trigger>
-                <Select.Content>
+                <Select.Content class="max-h-75">
                   {#each EMPLOYEE_TIERS as tier (tier.value)}
-                    <Select.Item {...tier} />
+                    <Select.Item label={tier.label} value={tier.value}>
+                      {tier.label}
+                    </Select.Item>
                   {/each}
                 </Select.Content>
               </Select.Root>
-
-              <!-- actual form element to be sent along, hidden on purpose -->
-              <!-- TODO: upgrade this to use the form fields directly, not native select -->
-              <select {...addEmployee.fields.tier.as("select")} value={tierSelected} hidden>
-                {#each EMPLOYEE_TIERS as tier (tier.value)}
-                  <option value={tier.value}>{tier.label}</option>
-                {/each}
-              </select>
             </Field.Field>
 
             <Field.Field orientation="responsive">
@@ -194,27 +194,22 @@ let hqLabel = $derived.by(() => {
                 </Field.Error>
               </Field.Content>
               <Select.Root
+                {...addEmployee.fields.hqId.as("select")}
                 type="single"
                 disabled={addEmployee.pending > 0}
                 bind:value={hqSelected}
                 required>
-                <Select.Trigger>
+                <Select.Trigger class="w-45">
                   {hqLabel}
                 </Select.Trigger>
-                <Select.Content>
+                <Select.Content class="max-h-75">
                   {#each locations as loc (loc.id)}
-                    <Select.Item value={loc.id} label={loc.name} />
+                    <Select.Item value={loc.id} label={loc.name}>
+                      {loc.name}
+                    </Select.Item>
                   {/each}
                 </Select.Content>
               </Select.Root>
-
-              <!-- actual form element to be sent along, hidden on purpose -->
-              <!-- TODO: upgrade this to use the form fields directly, not native select -->
-              <select {...addEmployee.fields.hqId.as("select")} value={hqSelected} hidden>
-                {#each locations as loc (loc.id)}
-                  <option value={loc.id}>{loc.name}</option>
-                {/each}
-              </select>
             </Field.Field>
 
             <Field.Field orientation="responsive">

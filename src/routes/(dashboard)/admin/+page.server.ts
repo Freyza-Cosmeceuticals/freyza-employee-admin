@@ -1,5 +1,5 @@
-import { N_EMPLOYEES_HOME, SUPABASE_AUTH_TAG, TIMEZONE } from "$lib/constants"
-import { getAllEmployees, getUser } from "$lib/server/db/user"
+import { SUPABASE_AUTH_TAG, TIMEZONE } from "$lib/constants"
+import { getUser } from "$lib/server/db/user"
 
 import { DateTime } from "luxon"
 
@@ -9,7 +9,6 @@ export const load: PageServerLoad = async ({ depends, locals }) => {
   depends(SUPABASE_AUTH_TAG)
 
   const userProfile = getUser(locals)
-  const employees = getAllEmployees(locals, N_EMPLOYEES_HOME)
 
   const today = DateTime.now().setZone(TIMEZONE) as DateTime<true>
   const thisMonth = today.startOf("month")
@@ -28,5 +27,5 @@ export const load: PageServerLoad = async ({ depends, locals }) => {
   })
 
   // stream promises for faster response
-  return { userProfile, employees, today, thisMonth, upcomingMonth, tasks }
+  return { userProfile, today, thisMonth, upcomingMonth, tasks }
 }

@@ -33,7 +33,7 @@ export { dayTypeCell, statusCell, actionCell }
 {#snippet actionCell({ reportId }: { reportId: string })}
   <a
     href={resolve(`/admin/dailyreport/${reportId}`)}
-    class={buttonVariants({ variant: "outline", size: "sm" })}>
+    class={buttonVariants({ variant: "secondary", size: "sm" })}>
     <EyeIcon /> View
   </a>
 {/snippet}

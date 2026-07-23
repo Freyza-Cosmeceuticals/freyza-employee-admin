@@ -1,8 +1,8 @@
 <script lang="ts">
 import { resolve } from "$app/paths"
 
-import { Button } from "$lib/components/ui/button/index.js"
-import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js"
+import { Button, buttonVariants } from "@ui/button"
+import * as DropdownMenu from "@ui/dropdown-menu"
 
 import CopyIcon from "@lucide/svelte/icons/copy"
 import EllipsisIcon from "@lucide/svelte/icons/ellipsis"
@@ -11,6 +11,11 @@ import ViewIcon from "@lucide/svelte/icons/eye"
 let { reportId, id }: { reportId: string; id: string } = $props()
 </script>
 
+<a
+  href={resolve(`/admin/dailyreport/${reportId}/visit/${id}`)}
+  class={buttonVariants({ variant: "secondary", size: "sm" })}>
+  <ViewIcon /> View
+</a>
 <DropdownMenu.Root>
   <DropdownMenu.Trigger>
     {#snippet child({ props })}
@@ -29,13 +34,5 @@ let { reportId, id }: { reportId: string; id: string } = $props()
       </DropdownMenu.Item>
     </DropdownMenu.Group>
     <DropdownMenu.Separator />
-    <DropdownMenu.Item class="cursor-pointer">
-      {#snippet child({ props })}
-        <a {...props} href={resolve(`/admin/dailyreport/${reportId}/visit/${id}`)}>
-          <ViewIcon class="size-4" />
-          View Visit
-        </a>
-      {/snippet}
-    </DropdownMenu.Item>
   </DropdownMenu.Content>
 </DropdownMenu.Root>
