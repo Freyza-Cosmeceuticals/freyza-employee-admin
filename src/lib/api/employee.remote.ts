@@ -1,10 +1,17 @@
 import { form, getRequestEvent, query } from "$app/server"
+import { error } from "@sveltejs/kit"
 
-import { createEmployee, getAllEmployees as getAllEmployeesDb } from "$lib/server/db/user"
+import { N_EMPLOYEES_HOME } from "$lib/constants"
+import {
+  createEmployee as createEmployeeDb,
+  getAllEmployees as getAllEmployeesDb,
+  getEmployeeCount as getEmployeeCountDb
+} from "$lib/server/db/user"
 import { supabaseAdmin } from "$lib/server/supabaseAdmin"
 import { UserRole, UserStatus } from "$lib/types"
 
 import { addEmployeeSchema } from "@/lib/formSchemas"
+import * as v from "valibot"
 
 import { requireAuthMaybeAdmin } from "./common"
 import type { EmployeeCreate, EmployeeWithHQ } from "$lib/types"
@@ -46,7 +53,7 @@ export const addEmployee = form(addEmployeeSchema, async (employee) => {
     resignDate: null
   }
 
-  const { data: employeeProfile, error } = await createEmployee(locals, employeeData)
+  const { data: employeeProfile, error } = await createEmployeeDb(locals, employeeData)
 
   if (!employeeProfile) {
     console.error("Failed to create employee profile", error)
@@ -64,19 +71,37 @@ export const addEmployee = form(addEmployeeSchema, async (employee) => {
         error
       )
     }
-
     return { success: false, data: null, message: error }
   }
 
   console.debug("Successfully added employee", employeeProfile)
+  getAllEmployees().refresh()
+  getAllEmployees(N_EMPLOYEES_HOME).refresh()
+  getAllEmployeesCount().refresh()
 
   return { data: employeeProfile, success: true, message: "Employee added successfully" }
 })
 
-export const getAllEmployees = query(async (): Promise<EmployeeWithHQ[]> => {
+export const getAllEmployees = query(
+  v.optional(v.number()),
+  async (limit): Promise<EmployeeWithHQ[]> => {
+    const { locals } = getRequestEvent()
+    const { user, session, supabase } = requireAuthMaybeAdmin(locals, false)
+
+    const employees: EmployeeWithHQ[] = await getAllEmployeesDb(locals, limit)
+    return employees
+  }
+)
+
+export const getAllEmployeesCount = query(async (): Promise<number> => {
   const { locals } = getRequestEvent()
   const { user, session, supabase } = requireAuthMaybeAdmin(locals, false)
 
-  const employees: EmployeeWithHQ[] = await getAllEmployeesDb(locals)
-  return employees
+  const { data: count, error: dbError } = await getEmployeeCountDb(locals)
+  if (dbError !== null) {
+    console.error("Failed to get employee count", dbError)
+    error(500, "Failed to get employee count")
+  }
+
+  return count
 })

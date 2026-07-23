@@ -20,9 +20,10 @@ import MarkerContent from "@/lib/components/ui/map/MarkerContent.svelte"
 import MarkerLabel from "@/lib/components/ui/map/MarkerLabel.svelte"
 import MarkerPopup from "@/lib/components/ui/map/MarkerPopup.svelte"
 import { Skeleton } from "@/lib/components/ui/skeleton/index.js"
-import { findVisitsCenter, getVisitName } from "@/lib/helpers.js"
+import { findVisitsCamera, getVisitName } from "@/lib/helpers.js"
 import ArrowLeft from "@lucide/svelte/icons/arrow-left"
 import { DateTime } from "luxon"
+import { mode } from "mode-watcher"
 
 import { columns } from "./columns"
 import type { RouteWithName } from "$lib/types"
@@ -84,30 +85,60 @@ $inspect(params).with(console.debug)
           </Card.Header>
 
           <Card.Content class="h-105 p-0">
-            {const center = findVisitsCenter(report.visits)}
+            {const camera = findVisitsCamera(report.visits)}
             <!-- Map.center expect longitude, latitude -->
             <Map
-              center={[center.longitude, center.latitude]}
-              zoom={14}
-              theme="light"
+              center={camera.center}
+              zoom={camera.zoom}
+              theme={mode.current}
               styles={{
-                light: "https://tiles.openfreemap.org/styles/bright",
+                light: "https://tiles.openfreemap.org/styles/liberty",
                 dark: "https://tiles.openfreemap.org/styles/bright"
               }}>
               <MapControls />
 
-              {#each report.visits as pt (pt.id)}
-                <MapMarker latitude={pt.latitude} longitude={pt.longitude}>
+              {#each report.visits as vt (vt.id)}
+                <MapMarker latitude={vt.latitude} longitude={vt.longitude}>
                   <MarkerContent>
                     <div
-                      class="size-4 cursor-pointer rounded-full border-3 border-white bg-cyan-500 shadow-lg transition-transform hover:scale-110">
+                      class="size-4 cursor-pointer rounded-full border-3 border-white bg-red-500 shadow-lg transition-transform hover:scale-110">
                     </div>
-                    <MarkerLabel position="bottom">
-                      {getVisitName(pt)}
+                    <MarkerLabel position="bottom" class="text-black">
+                      {getVisitName(vt)}
                     </MarkerLabel>
                   </MarkerContent>
 
-                  <MarkerPopup class="w-62 p-4">Visit details here</MarkerPopup>
+                  <MarkerPopup class="w-62 p-4">
+                    <div class="space-y-2">
+                      <div class="text-base font-semibold">
+                        {getVisitName(vt)}
+                      </div>
+
+                      <div class="text-sm text-muted-foreground">
+                        {vt.visitType}
+                      </div>
+
+                      <div class="space-y-1 border-t pt-2 text-sm">
+                        <div>
+                          <span class="font-medium">Location:</span>
+                          {vt.latitude.toFixed(5)}, {vt.longitude.toFixed(5)}
+                        </div>
+                      </div>
+
+                      {#if vt.orderTaken}
+                        <div class="rounded bg-green-100 px-2 py-1 text-xs text-green-700">
+                          Order taken
+                        </div>
+                      {/if}
+
+                      {#if vt.samplesGiven?.length}
+                        <div class="text-sm">
+                          <span class="font-medium">Samples:</span>
+                          {vt.samplesGiven.length}
+                        </div>
+                      {/if}
+                    </div>
+                  </MarkerPopup>
                 </MapMarker>
               {/each}
             </Map>

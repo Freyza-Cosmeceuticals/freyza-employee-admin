@@ -18,6 +18,7 @@ import { Skeleton } from "@/lib/components/ui/skeleton/index.js"
 import { getVisitName } from "@/lib/helpers.js"
 import ArrowLeft from "@lucide/svelte/icons/arrow-left"
 import { DateTime } from "luxon"
+import { mode } from "mode-watcher"
 
 import type { RouteWithName } from "$lib/types"
 
@@ -60,10 +61,10 @@ $inspect(params).with(console.debug)
         <Map
           center={[visit.longitude, visit.latitude]}
           zoom={14}
-          theme="light"
+          theme={mode.current}
           styles={{
-            light: "https://tiles.openfreemap.org/styles/bright",
-            dark: "https://tiles.openfreemap.org/styles/bright"
+            light: "https://tiles.openfreemap.org/styles/liberty",
+            dark: "https://tiles.openfreemap.org/styles/dark"
           }}>
           <MapControls />
 

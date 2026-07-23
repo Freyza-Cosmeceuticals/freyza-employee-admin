@@ -38,18 +38,62 @@ export function getVisitTypeLabel(visitType: VisitType): string {
 }
 
 /**
- * Returns the center of all visits, based on the average latitude and longitude of them
- * TOOD: Check if the map auto centers all markers, this might not be needed at all
- * @param visits
- * @returns The center of the visits, as an object with `latitude` and `longitude` properties.
+ * Calculates map center and zoom for visits.
+ * @param visits The visits to calculate the camera for.
+ * @returns The center (longitude, latitude) and zoom level of the map. Specific to MapGL
  */
-export function findVisitsCenter(visits: Visit[]): {
-  latitude: number
-  longitude: number
+export function findVisitsCamera(visits: Visit[]): {
+  center: [number, number]
+  zoom: number
 } {
-  if (visits.length === 0) return { latitude: 0, longitude: 0 }
-  const latitude = visits.reduce((acc, visit) => acc + visit.latitude, 0) / visits.length
-  const longitude = visits.reduce((acc, visit) => acc + visit.longitude, 0) / visits.length
+  // Default: India
+  if (visits.length === 0) {
+    return {
+      center: [82.8, 22.5],
+      zoom: 5
+    }
+  }
 
-  return { latitude, longitude }
+  let minLat = Infinity
+  let maxLat = -Infinity
+  let minLong = Infinity
+  let maxLong = -Infinity
+
+  for (const visit of visits) {
+    minLat = Math.min(minLat, visit.latitude)
+    maxLat = Math.max(maxLat, visit.latitude)
+    minLong = Math.min(minLong, visit.longitude)
+    maxLong = Math.max(maxLong, visit.longitude)
+  }
+
+  const paddingFactor = 0.2
+
+  const latPadding = (maxLat - minLat) * paddingFactor
+  const longPadding = (maxLong - minLong) * paddingFactor
+
+  minLat -= latPadding
+  maxLat += latPadding
+  minLong -= longPadding
+  maxLong += longPadding
+
+  const center: [number, number] = [(minLong + maxLong) / 2, (minLat + maxLat) / 2]
+
+  const maxDiff = Math.max(maxLat - minLat, maxLong - minLong)
+
+  let zoom = 12
+
+  if (maxDiff > 20) zoom = 5
+  else if (maxDiff > 10) zoom = 6
+  else if (maxDiff > 5) zoom = 7
+  else if (maxDiff > 2) zoom = 8
+  else if (maxDiff > 1) zoom = 9
+  else if (maxDiff > 0.5) zoom = 10
+  else if (maxDiff > 0.2) zoom = 11
+  else if (maxDiff > 0.05) zoom = 12
+  else zoom = 13
+
+  return {
+    center,
+    zoom
+  }
 }

@@ -1,8 +1,9 @@
 (A) better report and visits display +dailyreport
 (B) creating and editing locations and routes +loc/route
 2026-06-24 Sentry logging and tracing (needed really?)
-(B) setup for maps view in visits +dailyreport
+x 2026-07-22 2026-07-22 setup for maps view in visits +dailyreport
 2026-06-24 update employee details +employee
 (C) App-centric api routes +api
 2026-06-26 add snapshots to forms on pages
 (B) money calculation abstractions
+x 2026-07-18 2026-07-17 add reports auto locking using pg_cron +dailyreport
