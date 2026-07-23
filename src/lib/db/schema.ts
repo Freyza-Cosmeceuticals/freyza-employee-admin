@@ -566,7 +566,7 @@ export const dailyReport = pgTable(
       for: "update",
       to: authenticatedRole,
       using: sql`(${authUid}::text = "employeeId") AND (locked = false)`,
-      withCheck: sql`(${authUid}::text = "employeeId") AND (locked = false)`
+      withCheck: sql`(${authUid}::text = "employeeId")`
     }),
     pgPolicy("Admins can update all daily reports", {
       as: "permissive",

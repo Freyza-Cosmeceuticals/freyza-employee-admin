@@ -71,6 +71,13 @@
       "when": 1784288553201,
       "tag": "0009_shocking_wildside",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1784817654895,
+      "tag": "0010_slim_proudstar",
+      "breakpoints": true
     }
   ]
 }
