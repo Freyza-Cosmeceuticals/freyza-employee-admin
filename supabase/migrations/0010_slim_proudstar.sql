@@ -1,0 +1,1 @@
+ALTER POLICY "Users can update their own daily reports if not locked" ON "dailyReport" TO authenticated USING (((select auth.uid())::text = "employeeId") AND (locked = false)) WITH CHECK (((select auth.uid())::text = "employeeId"));
