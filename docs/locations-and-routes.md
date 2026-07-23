@@ -15,7 +15,7 @@ Geographic data management system for locations (headquarters) and routes betwee
   name: varchar(25) - unique, required
   operational: boolean - default true
   createdAt: timestamp
-  updatedAt: timestamp
+  updatedAt: timestamp - nullable
 }
 ```
 
@@ -29,7 +29,7 @@ Geographic data management system for locations (headquarters) and routes betwee
   destLocId: text - required (FK to location)
   distanceKm: integer - required (fixed distance)
   createdAt: timestamp
-  updatedAt: timestamp
+  updatedAt: timestamp - nullable
 }
 ```
 

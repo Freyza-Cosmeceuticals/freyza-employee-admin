@@ -105,14 +105,14 @@ const formatDateDisplay = (date: DateValue): string =>
     weekdayFormat="short"
     {disabled}>
     {#snippet day({ day, outsideMonth })}
-      {@const dayIsWeekend = isWeekend(day, "en-IN")}
-      {@const holidayInfo = hd.isHoliday(day.toDate(TIMEZONE))}
+      {const dayIsWeekend = isWeekend(day, "en-IN")}
+      {const holidayInfo = hd.isHoliday(day.toDate(TIMEZONE))}
       <!-- TODO: make this better -->
-      {@const i = days.findIndex((d) => d.day === day.day && !outsideMonth)}
-      {@const thisDayType = planEntries[i].dayType.value() ?? DayType.WORK}
-      {@const thisRouteId = planEntries[i].routeId.value() ?? null}
-      {@const thisRoute = routes.find((r) => r.id === thisRouteId) ?? null}
-      {@const hasErrors = (planEntries[i].allIssues()?.length ?? 0) > 0}
+      {const i = days.findIndex((d) => d.day === day.day && !outsideMonth)}
+      {const thisDayType = $derived(planEntries[i].dayType.value() ?? DayType.WORK)}
+      {const thisRouteId = $derived(planEntries[i].routeId.value() ?? null)}
+      {const thisRoute = $derived(routes.find((r) => r.id === thisRouteId) ?? null)}
+      {const hasErrors = $derived(planEntries[i].allIssues()?.length ?? 0 > 0)}
 
       {#if !outsideMonth}
         <input {...planEntries[i].date.as("hidden", days[i].toISODate())} />

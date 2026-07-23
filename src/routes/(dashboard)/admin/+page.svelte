@@ -208,14 +208,22 @@ let userProfile = $derived(await userProfilePromise)
       <Separator />
 
       <Card.Content>
-        {#await tasks}
-          <Skeleton class="h-12 w-full" />
-        {:then data}
+        <svelte:boundary>
+          {const data = $derived(await tasks)}
           <TasksList tasks={data} />
-        {:catch error}
-          {@debug error}
-          <p>Error loading Tasks</p>
-        {/await}
+
+          {#snippet pending()}
+            <Skeleton class="h-12 w-full" />
+          {/snippet}
+
+          {#snippet failed(error, reset)}
+            {@debug error}
+            <p>
+              Error loading tasks: {error}
+              <Button onclick={reset} variant="secondary">Retry</Button>
+            </p>
+          {/snippet}
+        </svelte:boundary>
       </Card.Content>
     </Card.Root>
   </div>

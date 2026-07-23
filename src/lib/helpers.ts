@@ -66,7 +66,7 @@ export function findVisitsCamera(visits: Visit[]): {
     maxLong = Math.max(maxLong, visit.longitude)
   }
 
-  const paddingFactor = 0.2
+  const paddingFactor = 0.5
 
   const latPadding = (maxLat - minLat) * paddingFactor
   const longPadding = (maxLong - minLong) * paddingFactor

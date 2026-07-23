@@ -93,7 +93,7 @@ $inspect(params).with(console.debug)
               theme={mode.current}
               styles={{
                 light: "https://tiles.openfreemap.org/styles/liberty",
-                dark: "https://tiles.openfreemap.org/styles/bright"
+                dark: "https://tiles.openfreemap.org/styles/liberty"
               }}>
               <MapControls />
 

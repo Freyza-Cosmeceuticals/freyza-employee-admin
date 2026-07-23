@@ -21,7 +21,7 @@ Daily report submission system for employees. Each daily report contains one or 
   locked: boolean - default false (if true, no more edits)
   lockedAt: timestamp - nullable
   createdAt: timestamp
-  updatedAt: timestamp
+  updatedAt: timestamp - nullable
 }
 ```
 
@@ -62,7 +62,7 @@ Daily report submission system for employees. Each daily report contains one or 
   additionalNotes: text - nullable
 
   createdAt: timestamp
-  updatedAt: timestamp
+  updatedAt: timestamp - nullable
 }
 ```
 

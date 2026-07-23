@@ -69,12 +69,14 @@ const formatDateDisplay = (date: DateValue): string =>
     weekdayFormat="short"
     disabled>
     {#snippet day({ day, outsideMonth })}
-      {@const dayIsWeekend = isWeekend(day, "en-IN")}
-      {@const holidayInfo = hd.isHoliday(day.toDate(TIMEZONE))}
+      {const dayIsWeekend = isWeekend(day, "en-IN")}
+      {const holidayInfo = hd.isHoliday(day.toDate(TIMEZONE))}
       <!-- TODO: make this better -->
-      {@const i = planEntries.findIndex((d) => d.date.getDate() === day.day && !outsideMonth)}
-      {@const thisDayType = planEntries[i]?.dayType || DayType.WORK}
-      {@const thisRoute = planEntries[i]?.route}
+      {const i = $derived(
+        planEntries.findIndex((d) => d.date.getDate() === day.day && !outsideMonth)
+      )}
+      {const thisDayType = $derived(planEntries[i]?.dayType || DayType.WORK)}
+      {const thisRoute = $derived(planEntries[i]?.route)}
 
       <Popover
         bind:open={
