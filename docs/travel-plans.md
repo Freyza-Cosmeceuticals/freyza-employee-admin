@@ -15,7 +15,7 @@ Travel plan management system for assigning monthly travel schedules to employee
   month: date - required (first day of month/year)
   createdById: text - required (FK to user, admin)
   createdAt: timestamp
-  updatedAt: timestamp
+  updatedAt: timestamp - nullable
 }
 ```
 
@@ -29,7 +29,7 @@ Travel plan management system for assigning monthly travel schedules to employee
   dayType: DayType - default WORK (WORK | HOLIDAY | LEAVE)
   routeId: text - nullable (FK to route, required if WORK)
   createdAt: timestamp
-  updatedAt: timestamp
+  updatedAt: timestamp - nullable
 }
 ```
 

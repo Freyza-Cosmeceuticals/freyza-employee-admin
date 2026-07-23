@@ -7,18 +7,14 @@ import { Skeleton } from "@ui/skeleton"
 
 import { getTravelPlansForMonth } from "$lib/api/travelplan.remote.js"
 
+import { getAllEmployeesCount } from "@/lib/api/employee.remote.js"
+
 import type { TravelPlanWithEmployee } from "$lib/types"
 
 let { data } = $props()
-let { today, nextMonth, months, employeeCount } = $derived(data)
+let { today, nextMonth, months } = $derived(data)
 
-function isAnyEmployeeLeft(
-  travelPlans: TravelPlanWithEmployee[] | undefined,
-  empCount: number | null
-) {
-  // we aren't sure, so say yes
-  if (empCount === null) return true
-
+function isAnyEmployeeLeft(travelPlans: TravelPlanWithEmployee[] | undefined, empCount: number) {
   return (travelPlans ?? []).length < empCount
 }
 </script>
@@ -46,9 +42,9 @@ function isAnyEmployeeLeft(
         <Card.Content class="flex flex-row flex-wrap items-stretch gap-4">
           <svelte:boundary>
             <!-- pass YYYY-MM-DD format ISODate to the remote query function, same is used there as well -->
-            {@const travelPlans = await getTravelPlansForMonth(m.toISODate())}
-            {@const empCount = await employeeCount}
-            {#if i === 0 && isAnyEmployeeLeft(travelPlans, empCount.data)}
+            {const travelPlans = $derived(await getTravelPlansForMonth(m.toISODate()))}
+            {const empCount = $derived(await getAllEmployeesCount())}
+            {#if i === 0 && isAnyEmployeeLeft(travelPlans, empCount)}
               <AddTravelPlanCard month={nextMonth} />
             {/if}
 
@@ -61,7 +57,7 @@ function isAnyEmployeeLeft(
             {/each}
 
             {#snippet pending()}
-              {@const skeletonCount = Array.from({ length: i === 0 ? 4 : 5 }, (_, i) => i + 1)}
+              {const skeletonCount = Array.from({ length: i === 0 ? 4 : 5 }, (_, i) => i + 1)}
               {#if i === 0}
                 <AddTravelPlanCard month={nextMonth} />
               {/if}

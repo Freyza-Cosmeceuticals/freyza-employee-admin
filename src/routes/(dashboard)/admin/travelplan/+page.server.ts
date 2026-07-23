@@ -1,5 +1,4 @@
 import { NUM_PAST_MONTHS_TRAVEL_PLAN, TIMEZONE } from "$lib/constants"
-import { getEmployeeCount } from "$lib/server/db/user"
 
 import { DateTime } from "luxon"
 
@@ -17,7 +16,5 @@ export const load: PageServerLoad = async ({ depends, locals }) => {
     months.push(today.minus({ months: i }).startOf("month"))
   }
 
-  const employeeCount = getEmployeeCount(locals)
-
-  return { today, nextMonth, months, employeeCount }
+  return { today, nextMonth, months }
 }

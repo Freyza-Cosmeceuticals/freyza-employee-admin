@@ -22,7 +22,7 @@ const tpId = $derived(page.params.tpId!)
 const dayTypes = [DayType.WORK, DayType.LEAVE, DayType.HOLIDAY]
 
 const travelPlan = $derived(await getTravelPlanByIdWithEntries(tpId))
-const tpMonth = $derived(travelPlan ? DateTime.fromJSDate(travelPlan.month) : null)
+const month = $derived(travelPlan ? DateTime.fromJSDate(travelPlan.month) : null)
 
 $inspect(tpId).with(console.log)
 </script>
@@ -33,9 +33,7 @@ $inspect(tpId).with(console.log)
 </svelte:head>
 
 <div class="h-auto w-full space-y-8 px-4 py-8">
-  {#if travelPlan}
-    {@const month = tpMonth!}
-
+  {#if travelPlan && month}
     {#snippet subheader()}
       <a
         href={resolve("/admin/travelplan")}

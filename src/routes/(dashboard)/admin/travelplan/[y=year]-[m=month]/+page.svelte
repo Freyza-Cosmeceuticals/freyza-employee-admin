@@ -12,11 +12,12 @@ import { Spinner } from "@ui/spinner"
 import { getTravelPlansWithEntriesForMonth } from "$lib/api/travelplan.remote"
 import { DayType } from "$lib/types"
 
+import { getAllEmployees } from "@/lib/api/employee.remote.js"
 import EmployeeItem from "@/lib/components/dashboard/employee/EmployeeItem.svelte"
 import ArrowLeft from "@lucide/svelte/icons/arrow-left"
 
 let { data } = $props()
-let { user, tpMonth, employees } = $derived(data)
+let { user, tpMonth } = $derived(data)
 
 const dayTypes = [DayType.WORK, DayType.LEAVE, DayType.HOLIDAY]
 
@@ -72,7 +73,7 @@ function changeEmployee(newId: string) {
     <ScrollArea.Root class="scrollbar-hide flex-1 overflow-y-scroll">
       <div class="p-4">
         <svelte:boundary>
-          {@const empList = await employees}
+          {const empList = $derived(await getAllEmployees())}
           <div class="space-y-2">
             {#each empList as emp (emp.id)}
               <button

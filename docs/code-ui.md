@@ -108,14 +108,15 @@ let { title, count = 0, class: itemClass }: Props = $props()
 
 ```svelte
 <svelte:boundary>
-  {#await someAsyncOperation()}
-    {@const data = await}
-    <!-- success -->
-  {:snippet pending()}
+  {const data = $derived(await remoteFunction())}
+
+  {#snippet pending()}
     <Spinner />
-  {:snippet failed(error)}
+  {/snippet}
+
+  {#snippet failed(error, reset)}
     <p class="text-destructive">{error.message}</p>
-  {/await}
+  {/snippet}
 </svelte:boundary>
 ```
 

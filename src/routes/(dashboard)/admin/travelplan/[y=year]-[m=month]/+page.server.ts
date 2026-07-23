@@ -1,7 +1,6 @@
 import { error } from "@sveltejs/kit"
 
 import { TIMEZONE } from "$lib/constants"
-import { getAllEmployees } from "$lib/server/db/user"
 
 import { DateTime } from "luxon"
 
@@ -16,6 +15,5 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
     error(400, "Invalid date")
   }
 
-  const employees = getAllEmployees(locals)
-  return { employees, tpMonth }
+  return { tpMonth }
 }
