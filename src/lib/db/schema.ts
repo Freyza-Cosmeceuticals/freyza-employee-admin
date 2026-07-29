@@ -1,6 +1,8 @@
 import { sql } from "drizzle-orm"
 import {
   boolean,
+  check,
+  customType,
   date,
   decimal,
   doublePrecision,
@@ -12,11 +14,11 @@ import {
   pgPolicy,
   pgTable,
   text,
-  timestamp,
   uniqueIndex,
   varchar
 } from "drizzle-orm/pg-core"
 import { authenticatedRole } from "drizzle-orm/supabase"
+import { DateTime } from "luxon"
 
 import { DayType, EmployeeTier, ReportStatus, UserRole, UserStatus, VisitType } from "../constants"
 
@@ -37,9 +39,34 @@ export const visitType = pgEnum("VisitType", enumToPgEnum(VisitType))
 const authUid = sql`(select auth.uid())`
 const authJwtAppRole = sql`(select auth.jwt() -> 'app_metadata' ->> 'app_role'::text)`
 
+export const luxonTimestamp = customType<{
+  data: DateTime
+  driverData: string
+  config: {
+    withTimezone?: boolean
+    precision?: number
+  }
+}>({
+  dataType(config) {
+    const precision = config?.precision !== undefined ? `(${config.precision})` : ""
+    return `timestamp${precision}${config?.withTimezone ? " with time zone" : ""}`
+  },
+
+  fromDriver: (value: string) => {
+    return value.includes("T") ? DateTime.fromISO(value) : DateTime.fromSQL(value)
+  },
+  toDriver(value: DateTime) {
+    const sql = value.toSQL({ includeOffset: true })
+    if (sql === null) throw new Error(`Invalid DateTime value: ${value}`)
+    return sql
+  }
+})
+
 const timestamps = {
-  createdAt: timestamp({ precision: 3, mode: "string", withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp({ precision: 3, mode: "string", withTimezone: true }).$onUpdate(
+  createdAt: luxonTimestamp({ precision: 3, mode: "string", withTimezone: true })
+    .notNull()
+    .default(sql`now()`),
+  updatedAt: luxonTimestamp({ precision: 3, mode: "string", withTimezone: true }).$onUpdate(
     () => sql`(CURRENT_TIMESTAMP)`
   )
 }
@@ -79,17 +106,15 @@ export const user = pgTable(
       .onUpdate("cascade")
       .onDelete("restrict"),
 
-    pgPolicy("Employees can view their own user data", {
+    pgPolicy("Employees can view their own user data OR Admins can view all user data", {
       as: "permissive",
       for: "select",
       to: authenticatedRole,
-      using: sql`${authUid}::text = ${table.id}`
-    }),
-    pgPolicy("Admins can view all user data", {
-      as: "permissive",
-      for: "select",
-      to: authenticatedRole,
-      using: sql`${authJwtAppRole} = 'ADMIN'`
+      using: sql`
+        ${authJwtAppRole} = 'ADMIN'
+        OR
+        ${authUid}::text = ${table.id}
+        `
     }),
     pgPolicy("Admins can insert users", {
       as: "permissive",
@@ -274,17 +299,15 @@ export const visit = pgTable(
       .onUpdate("cascade")
       .onDelete("restrict"),
 
-    pgPolicy("Employees can select their own visits", {
+    pgPolicy("Employees can select their own visits OR Admins can select all visits", {
       as: "permissive",
       for: "select",
       to: authenticatedRole,
-      using: sql`(${authUid}::text = "employeeId")`
-    }),
-    pgPolicy("Admins can select all visits", {
-      as: "permissive",
-      for: "select",
-      to: authenticatedRole,
-      using: sql`${authJwtAppRole} = 'ADMIN'`
+      using: sql`
+        ${authJwtAppRole} = 'ADMIN'
+        OR
+        ${authUid}::text = "employeeId"
+        `
     }),
     pgPolicy("Employees can insert their own visits", {
       as: "permissive",
@@ -298,25 +321,34 @@ export const visit = pgTable(
             AND dr."locked" = false
         )`
     }),
-    pgPolicy("Employees can update their own visits if report not locked", {
-      as: "permissive",
-      for: "update",
-      to: authenticatedRole,
-      using: sql`EXISTS (
-          SELECT 1
-          FROM public."dailyReport" dr
-          WHERE dr.id = visit."reportId"
-            AND dr."employeeId" = ${authUid}::text
-            AND dr."locked" = false
-        )`,
-      withCheck: sql`EXISTS (
-          SELECT 1
-          FROM public."dailyReport" dr
-          WHERE dr.id = visit."reportId"
-            AND dr."employeeId" = ${authUid}::text
-            AND dr."locked" = false
-        )`
-    }),
+    pgPolicy(
+      "Employees can update their own visits if report not locked OR Admins can update all visits",
+      {
+        as: "permissive",
+        for: "update",
+        to: authenticatedRole,
+        using: sql`
+            ${authJwtAppRole} = 'ADMIN'
+            OR
+            EXISTS (
+                SELECT 1
+                FROM public."dailyReport" dr
+                WHERE dr.id = visit."reportId"
+                    AND dr."employeeId" = ${authUid}::text
+                    AND dr."locked" = false
+            )`,
+        withCheck: sql`
+            ${authJwtAppRole} = 'ADMIN'
+            OR
+            EXISTS (
+                SELECT 1
+                FROM public."dailyReport" dr
+                WHERE dr.id = visit."reportId"
+                    AND dr."employeeId" = ${authUid}::text
+                    AND dr."locked" = false
+            )`
+      }
+    ),
     pgPolicy("Employees can delete their own visits if report not locked", {
       as: "permissive",
       for: "delete",
@@ -328,13 +360,6 @@ export const visit = pgTable(
             AND dr."employeeId" = ${authUid}::text
             AND dr."locked" = false
         )`
-    }),
-    pgPolicy("Admins can update all visits", {
-      as: "permissive",
-      for: "update",
-      to: authenticatedRole,
-      using: sql`${authJwtAppRole} = 'ADMIN'`,
-      withCheck: sql`${authJwtAppRole} = 'ADMIN'`
     })
   ]
 )
@@ -376,17 +401,15 @@ export const travelPlan = pgTable(
       .onUpdate("cascade")
       .onDelete("restrict"),
 
-    pgPolicy("Users can view their own travel plans", {
+    pgPolicy("Users can view their own travel plans OR Admins can view all travel plans", {
       as: "permissive",
       for: "select",
       to: authenticatedRole,
-      using: sql`(${authUid}::text = "employeeId")`
-    }),
-    pgPolicy("Admins can view all travel plans", {
-      as: "permissive",
-      for: "select",
-      to: authenticatedRole,
-      using: sql`${authJwtAppRole} = 'ADMIN'`
+      using: sql`
+        ${authJwtAppRole} = 'ADMIN'
+        OR
+        ${authUid}::text = "employeeId"
+        `
     }),
     pgPolicy("Only admins can create travel plans for employees", {
       as: "permissive",
@@ -394,19 +417,20 @@ export const travelPlan = pgTable(
       to: authenticatedRole,
       withCheck: sql`${authJwtAppRole} = 'ADMIN'`
     }),
-    pgPolicy("Users can update their own travel plans", {
+    pgPolicy("Users can update their own travel plans OR Admins can update all travel plans", {
       as: "permissive",
       for: "update",
       to: authenticatedRole,
-      using: sql`(${authUid}::text = "employeeId")`,
-      withCheck: sql`${authUid}::text = "employeeId"`
-    }),
-    pgPolicy("Admins can update all travel plans", {
-      as: "permissive",
-      for: "update",
-      to: authenticatedRole,
-      using: sql`${authJwtAppRole} = 'ADMIN'`,
-      withCheck: sql`${authJwtAppRole} = 'ADMIN'`
+      using: sql`
+        ${authJwtAppRole} = 'ADMIN'
+        OR
+        ${authUid}::text = "employeeId"
+        `,
+      withCheck: sql`
+        ${authJwtAppRole} = 'ADMIN'
+        OR
+        ${authUid}::text = "employeeId"
+        `
     })
   ]
 )
@@ -449,53 +473,55 @@ export const travelPlanEntry = pgTable(
       .onUpdate("cascade")
       .onDelete("cascade"),
 
-    pgPolicy("Employees can select their own travel plan entries", {
-      as: "permissive",
-      for: "select",
-      to: authenticatedRole,
-      using: sql`EXISTS (
-          SELECT 1
-          FROM public."travelPlan" tp
-          WHERE tp.id = "travelPlanEntry"."tpId"
-            AND tp."employeeId" = ${authUid}::text
-        )`
-    }),
-    pgPolicy("Admins can select all travel plan entries", {
-      as: "permissive",
-      for: "select",
-      to: authenticatedRole,
-      using: sql`${authJwtAppRole} = 'ADMIN'`
-    }),
+    pgPolicy(
+      "Employees can select their own travel plan entries OR Admins can select all travel plan entries",
+      {
+        as: "permissive",
+        for: "select",
+        to: authenticatedRole,
+        using: sql`
+            ${authJwtAppRole} = 'ADMIN'
+            OR
+            EXISTS (
+                SELECT 1
+                FROM public."travelPlan" tp
+                WHERE tp.id = "travelPlanEntry"."tpId"
+                    AND tp."employeeId" = ${authUid}::text
+            )`
+      }
+    ),
     pgPolicy("Only admins can insert travel plan entries", {
       as: "permissive",
       for: "insert",
       to: authenticatedRole,
       withCheck: sql`${authJwtAppRole} = 'ADMIN'`
     }),
-    pgPolicy("Employees can update their own travel plan entries", {
-      as: "permissive",
-      for: "update",
-      to: authenticatedRole,
-      using: sql`EXISTS (
-          SELECT 1
-          FROM public."travelPlan" tp
-          WHERE tp.id = "travelPlanEntry"."tpId"
-            AND tp."employeeId" = ${authUid}::text
-        )`,
-      withCheck: sql`EXISTS (
-          SELECT 1
-          FROM public."travelPlan" tp
-          WHERE tp.id = "travelPlanEntry"."tpId"
-            AND tp."employeeId" = ${authUid}::text
-        )`
-    }),
-    pgPolicy("Admins can update all travel plan entries", {
-      as: "permissive",
-      for: "update",
-      to: authenticatedRole,
-      using: sql`${authJwtAppRole} = 'ADMIN'`,
-      withCheck: sql`${authJwtAppRole} = 'ADMIN'`
-    })
+    pgPolicy(
+      "Employees can update their own travel plan entries OR Admins can update all travel plan entries",
+      {
+        as: "permissive",
+        for: "update",
+        to: authenticatedRole,
+        using: sql`
+            ${authJwtAppRole} = 'ADMIN'
+            OR
+            EXISTS (
+                SELECT 1
+                FROM public."travelPlan" tp
+                WHERE tp.id = "travelPlanEntry"."tpId"
+                    AND tp."employeeId" = ${authUid}::text
+            )`,
+        withCheck: sql`
+            ${authJwtAppRole} = 'ADMIN'
+            OR
+            EXISTS (
+                SELECT 1
+                FROM public."travelPlan" tp
+                WHERE tp.id = "travelPlanEntry"."tpId"
+                    AND tp."employeeId" = ${authUid}::text
+            )`
+      }
+    )
   ]
 )
 
@@ -514,12 +540,15 @@ export const dailyReport = pgTable(
     dayType: dayType().default(DayType.WORK).notNull(),
     routeId: text(),
 
+    // travelling with another employee or No One.
+    travellingWithId: text(),
+
     ta: doublePrecision(),
     da: doublePrecision(),
     totalExpense: doublePrecision(),
 
     locked: boolean().default(false).notNull(),
-    lockedAt: timestamp({ precision: 3, mode: "string", withTimezone: true }),
+    lockedAt: luxonTimestamp({ precision: 3, mode: "string", withTimezone: true }),
 
     ...timestamps
   },
@@ -542,18 +571,27 @@ export const dailyReport = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
+    foreignKey({
+      columns: [table.travellingWithId],
+      foreignColumns: [user.id],
+      name: "dailyReport_travellingWithId_fkey"
+    })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+    check(
+      "dailyReport_travellingWithId_not_self",
+      sql`
+        ${table.travellingWithId} IS NULL
+        OR
+        ${table.travellingWithId} <> ${table.employeeId}
+      `
+    ),
 
-    pgPolicy("Users can view their own daily reports", {
+    pgPolicy("Users can view their own daily reports OR Admins can view any daily reports", {
       as: "permissive",
       for: "select",
       to: authenticatedRole,
-      using: sql`(${authUid}::text = "employeeId")`
-    }),
-    pgPolicy("Admins can view any daily reports", {
-      as: "permissive",
-      for: "select",
-      to: authenticatedRole,
-      using: sql`${authJwtAppRole} = 'ADMIN'`
+      using: sql`(${authJwtAppRole} = 'ADMIN') OR (${authUid}::text = "employeeId")`
     }),
     pgPolicy("Users can insert their own daily reports", {
       as: "permissive",
@@ -561,19 +599,23 @@ export const dailyReport = pgTable(
       to: authenticatedRole,
       withCheck: sql`(${authUid}::text = "employeeId")`
     }),
-    pgPolicy("Users can update their own daily reports if not locked", {
-      as: "permissive",
-      for: "update",
-      to: authenticatedRole,
-      using: sql`(${authUid}::text = "employeeId") AND (locked = false)`,
-      withCheck: sql`(${authUid}::text = "employeeId")`
-    }),
-    pgPolicy("Admins can update all daily reports", {
-      as: "permissive",
-      for: "update",
-      to: authenticatedRole,
-      using: sql`(${authJwtAppRole} = 'ADMIN')`,
-      withCheck: sql`${authJwtAppRole} = 'ADMIN'`
-    })
+    pgPolicy(
+      "Users can update their own daily reports if not locked OR Admins can update all daily reports",
+      {
+        as: "permissive",
+        for: "update",
+        to: authenticatedRole,
+        using: sql`
+          ${authJwtAppRole} = 'ADMIN'
+          OR
+          (${authUid}::text = "employeeId") AND (locked = false)
+          `,
+        withCheck: sql`
+          ${authJwtAppRole} = 'ADMIN'
+          OR
+          ${authUid}::text = "employeeId"
+          `
+      }
+    )
   ]
 )

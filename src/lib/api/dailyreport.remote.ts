@@ -2,10 +2,7 @@ import { getRequestEvent, query } from "$app/server"
 import { error } from "@sveltejs/kit"
 
 import {
-  getAllDailyReportsWithEmployeeWithRoute as getAllDailyReportsWithEmployeeWithRouteDb,
-  getDailyReportsWithEmployeeForDates as getDailyReportsWithEmployeeForDatesDb,
-  getDailyReportsWithEmployeeWithVisitsForDates as getDailyReportsWithEmployeeWithVisitsForDatesDb,
-  getDailyReportWithEmployeeOptionalVisitsById as getDailyReportWithEmployeeOptionalVisitsByIdDb,
+  fetchDailyReports as fetchDailyReportsDb,
   getVisitById as getVisitByIdDb
 } from "$lib/server/db/dailyreport"
 
@@ -14,9 +11,9 @@ import {
   getDailyReportForDatesSchema,
   getVisitSchema
 } from "@/lib/formSchemas"
+import { DateTime } from "luxon"
 
 import { requireAuthMaybeAdmin } from "./common"
-import type { DailyReportWithEmployeeWithVisits } from "$lib/types"
 
 /**
  * Remote query function to get all daily reports with employee info
@@ -25,8 +22,12 @@ export const getAllDailyReports = query(async () => {
   const { locals } = getRequestEvent()
   const { user, session, supabase } = requireAuthMaybeAdmin(locals)
 
-  const { data: dailyReports, error: dbError } =
-    await getAllDailyReportsWithEmployeeWithRouteDb(locals)
+  const { data: dailyReports, error: dbError } = await fetchDailyReportsDb(locals, {
+    includeEmployee: true,
+    includeRoute: true,
+    includeNumVisits: true,
+    includeTravellingWith: true
+  })
 
   if (dbError !== null) {
     console.error("Failed to fetch daily reports", dbError)
@@ -39,15 +40,17 @@ export const getAllDailyReports = query(async () => {
 /**
  * Remote query function to get a daily report by Id
  */
-export const getDailyReportById = query(getDailyReportByIdSchema, async (tpId) => {
-  let TAG = `Remote: getDailyReportById(${tpId})`
+export const getDailyReportById = query(getDailyReportByIdSchema, async (reportId) => {
+  let TAG = `Remote: getDailyReportById(${reportId})`
   console.time(TAG)
 
   const { locals } = getRequestEvent()
   const { user, session, supabase } = requireAuthMaybeAdmin(locals, false)
 
-  const { data: dailyReport, error: dbError } =
-    await getDailyReportWithEmployeeOptionalVisitsByIdDb(locals, tpId, false)
+  const { data: reports, error: dbError } = await fetchDailyReportsDb(locals, {
+    reportId,
+    includeEmployee: true
+  })
 
   if (dbError !== null) {
     console.error("Failed to fetch daily report", dbError)
@@ -55,7 +58,7 @@ export const getDailyReportById = query(getDailyReportByIdSchema, async (tpId) =
   }
 
   console.timeEnd(TAG)
-  return dailyReport
+  return reports && reports.length > 0 ? reports[0] : null
 })
 
 /**
@@ -68,8 +71,12 @@ export const getDailyReportByIdWithVisits = query(getDailyReportByIdSchema, asyn
   const { locals } = getRequestEvent()
   const { user, session, supabase } = requireAuthMaybeAdmin(locals, false)
 
-  const { data: dailyReport, error: dbError } =
-    await getDailyReportWithEmployeeOptionalVisitsByIdDb(locals, reportId, true)
+  const { data: reports, error: dbError } = await fetchDailyReportsDb(locals, {
+    reportId: reportId,
+    includeEmployee: true,
+    includeVisits: true,
+    includeTravellingWith: true
+  })
 
   if (dbError !== null) {
     console.error("Failed to fetch daily report", dbError)
@@ -77,7 +84,7 @@ export const getDailyReportByIdWithVisits = query(getDailyReportByIdSchema, asyn
   }
 
   console.timeEnd(TAG)
-  return dailyReport as DailyReportWithEmployeeWithVisits | null
+  return reports && reports.length > 0 ? reports[0] : null
 })
 
 /**
@@ -85,7 +92,7 @@ export const getDailyReportByIdWithVisits = query(getDailyReportByIdSchema, asyn
  * Requires Admin
  */
 export const getDailyReportsForDate = query.batch(getDailyReportForDatesSchema, async (dates) => {
-  let TAG = `Remote: getDailyReportsForDate(${dates.map((month) => month.toISOString().split("T", 1)[0]).join(", ")})`
+  let TAG = `Remote: getDailyReportsForDate(${dates.map((month) => DateTime.fromJSDate(month).toISODate()).join(", ")})`
   console.time(TAG)
 
   const { locals } = getRequestEvent()
@@ -95,21 +102,26 @@ export const getDailyReportsForDate = query.batch(getDailyReportForDatesSchema, 
     error(400, "No dates provided")
   }
 
-  const { data: dailyReports, error: dbError } = await getDailyReportsWithEmployeeForDatesDb(
-    locals,
-    dates
-  )
+  const { data: reports, error: dbError } = await fetchDailyReportsDb(locals, {
+    includeEmployee: true,
+    dates: dates
+  })
 
   if (dbError !== null) {
     console.error("Failed to fetch daily reports", dbError)
     error(500, dbError)
   }
 
-  console.timeEnd(TAG)
-  return (date) => {
-    // TODO: Convert this to luxon DateTime so that I can use .toISODate()
-    return dailyReports.get(date.toISOString().split("T", 1)[0])
+  const dailyReportsGrouped = new Map<string, typeof reports>()
+  for (const report of reports) {
+    const key = report.date.toISOString().split("T")[0]
+
+    if (!dailyReportsGrouped.has(key)) dailyReportsGrouped.set(key, [])
+    dailyReportsGrouped.get(key)!.push(report)
   }
+
+  console.timeEnd(TAG)
+  return (date) => dailyReportsGrouped.get(date.toISOString().split("T")[0]) || []
 })
 
 /**
@@ -129,18 +141,29 @@ export const getDailyReportsWithVisitsForDate = query.batch(
       error(400, "No dates provided")
     }
 
-    const { data: dailyReports, error: dbError } =
-      await getDailyReportsWithEmployeeWithVisitsForDatesDb(locals, dates)
+    const { data: reports, error: dbError } = await fetchDailyReportsDb(locals, {
+      dates: dates,
+      includeEmployee: true,
+      includeVisits: true
+    })
 
     if (dbError !== null) {
       console.error("Failed to fetch daily reports", dbError)
       error(500, dbError)
     }
 
+    const dailyReportsGrouped = new Map<string, typeof reports>()
+    for (const report of reports) {
+      const key = report.date.toISOString().split("T", 1)[0]
+
+      if (!dailyReportsGrouped.has(key)) dailyReportsGrouped.set(key, [])
+      dailyReportsGrouped.get(key)!.push(report)
+    }
+
     console.timeEnd(TAG)
     return (date) => {
       // TODO: Convert this to luxon DateTime so that I can use .toISODate({precision: "month"})
-      return dailyReports.get(date.toISOString().split("T", 1)[0])
+      return dailyReportsGrouped.get(date.toISOString().split("T", 1)[0])
     }
   }
 )

@@ -10,10 +10,10 @@ import { DayType } from "$lib/types"
 
 import { dayTypeBadge, routeBadge } from "../snippets.svelte"
 import UserCard from "../UserCard.svelte"
-import type { DailyReportWithEmployee, RouteWithName } from "$lib/types"
+import type { DailyReportFull, EmployeeWithHQ, RouteWithName } from "$lib/types"
 
 interface Props {
-  dailyReport: DailyReportWithEmployee
+  dailyReport: DailyReportFull
 }
 
 const { dailyReport }: Props = $props()
@@ -32,7 +32,7 @@ let dailyReportUrl = $derived.by(() => {
   <Card.Content class="flex flex-col gap-4 p-1">
     <!-- User Card -->
     <UserCard
-      user={dailyReport.employee}
+      user={dailyReport.employee as EmployeeWithHQ}
       actionUrl={dailyReportUrl}
       actionLabel="View Report"
       compact />

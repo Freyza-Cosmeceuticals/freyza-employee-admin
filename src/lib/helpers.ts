@@ -1,5 +1,14 @@
 import { VisitType } from "./constants"
-import type { Visit } from "./types"
+import type { RouteWithName, Visit } from "./types"
+
+/**
+ * Returns the formatted name of the route, based on the source and destination locations.
+ * @param route
+ * @returns The formatted name of the route.
+ */
+export function formatRouteName(route: RouteWithName): string {
+  return `${route.srcLoc.name} → ${route.destLoc.name}`
+}
 
 /**
  * Returns the name of the visit, based on the visit type and the relevant name field.

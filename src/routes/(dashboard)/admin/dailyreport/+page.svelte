@@ -22,7 +22,7 @@ import { columns } from "./columns"
 <div class="h-auto space-y-8 px-4 py-8">
   <PageHeader title="Daily Reports" description="All daily reports" />
 
-  <div class="px-8 mx-auto">
+  <div class="mx-auto px-8">
     <svelte:boundary>
       {const dailyReports = await getAllDailyReports()}
       <DataTable {columns} data={dailyReports} />
