@@ -50,7 +50,7 @@ $inspect(params).with(console.debug)
 <div class="h-auto w-full px-4 py-8">
   <svelte:boundary>
     {const visit = await getVisit(params.visitId)}
-    {const visitTimestamp = $derived(visit ? DateTime.fromSQL(visit.createdAt) : null)}
+    {const visitTimestamp = $derived(visit ? visit.createdAt : null)}
     {const report = await getDailyReportById(params.reportId)}
 
     {#if visit && visitTimestamp}

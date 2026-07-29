@@ -18,12 +18,12 @@ export {
   VisitType
 } from "$lib/constants"
 
+export type User = InferSelectModel<typeof user>
+export type Employee = User
+
 // base classes
 export type Location = InferSelectModel<typeof location>
 export type Route = InferSelectModel<typeof route>
-
-export type User = InferSelectModel<typeof user>
-export type Employee = User
 
 export type TravelPlan = InferSelectModel<typeof travelPlan>
 export type TravelPlanEntry = InferSelectModel<typeof travelPlanEntry>
@@ -83,22 +83,30 @@ export type TravelPlanWithEmployeeWithEntries = TravelPlan & {
 }
 
 // dr, non-create
-export type DailyReportWithEmployee = DailyReport & {
-  employee: EmployeeWithHQ
+// export type DailyReportWithEmployee = DailyReport & {
+//   employee: EmployeeWithHQ
+// }
+
+// export type DailyReportWithRoute = DailyReport & {
+//   route:
+//     | (Route & {
+//         srcLoc: Pick<Location, "id" | "name" | "operational">
+//         destLoc: Pick<Location, "id" | "name" | "operational">
+//       })
+//     | null
+//   numVisits: number
+// }
+
+// export type DailyReportWithEmployeeWithRoute = DailyReportWithEmployee & DailyReportWithRoute
+
+export type DailyReportFull = DailyReport & {
+  route: RouteWithName | null
+  employee: EmployeeWithHQ | null
+  travellingWith: EmployeeWithHQ | null
+  visits: Visit[] | null
+  numVisits: number | null
 }
 
-export type DailyReportWithRoute = DailyReport & {
-  route:
-    | (Route & {
-        srcLoc: Pick<Location, "id" | "name" | "operational">
-        destLoc: Pick<Location, "id" | "name" | "operational">
-      })
-    | null
-  numVisits: number
-}
-
-export type DailyReportWithEmployeeWithRoute = DailyReportWithEmployee & DailyReportWithRoute
-
-export type DailyReportWithEmployeeWithVisits = DailyReportWithEmployee & {
-  visits: Visit[]
-}
+// export type DailyReportWithEmployeeWithVisits = DailyReportWithEmployee & {
+//   visits: Visit[]
+// }

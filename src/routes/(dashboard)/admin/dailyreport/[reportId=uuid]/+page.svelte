@@ -26,7 +26,7 @@ import { DateTime } from "luxon"
 import { mode } from "mode-watcher"
 
 import { columns } from "./columns"
-import type { RouteWithName } from "$lib/types"
+import type { EmployeeWithHQ, RouteWithName } from "$lib/types"
 
 let { data, params } = $props()
 let { user } = $derived(data)
@@ -60,6 +60,7 @@ $inspect(params).with(console.debug)
     {const reportDate = $derived(report ? DateTime.fromJSDate(report.date) : null)}
 
     {#if report && reportDate}
+      {const reportVisits = report.visits ?? []}
       <PageHeader title="Daily Report" {subheader} />
 
       <div class="space-y-4">
@@ -75,17 +76,23 @@ $inspect(params).with(console.debug)
               {/if}
               <Badge variant="secondary">
                 {report.locked
-                  ? `LOCKED (${report.lockedAt ? DateTime.fromSQL(report.lockedAt).toLocaleString(DateTime.DATETIME_MED) : "-"})`
+                  ? `LOCKED (${report.lockedAt ? report.lockedAt.toLocaleString(DateTime.DATETIME_MED) : "-"})`
                   : "UNLOCKED"}
               </Badge>
             </Card.Description>
-            <Card.Action>
-              <EmployeeItem employee={report.employee} class="p-1" />
+            <Card.Action class="w-full">
+              <div class="flex flex-row items-center gap-4">
+                <EmployeeItem employee={report.employee as EmployeeWithHQ} compact={true} />
+                {#if report.travellingWith}
+                  <Badge variant="secondary" class="h-auto text-center">Travelling<br />With</Badge>
+                  <EmployeeItem employee={report.travellingWith as EmployeeWithHQ} compact={true} />
+                {/if}
+              </div>
             </Card.Action>
           </Card.Header>
 
           <Card.Content class="h-105 p-0">
-            {const camera = findVisitsCamera(report.visits)}
+            {const camera = findVisitsCamera(reportVisits)}
             <!-- Map.center expect longitude, latitude -->
             <Map
               center={camera.center}
@@ -145,20 +152,20 @@ $inspect(params).with(console.debug)
           </Card.Content>
         </Card.Root>
 
-        <DataTable {columns} data={[...report.visits].reverse()} />
+        <DataTable {columns} data={[...reportVisits].reverse()} />
 
         <div class="mt-8 flex gap-2">
           {@render statsBadge(
             VisitType.DOCTOR,
-            report.visits.filter((it) => it.visitType == VisitType.DOCTOR).length
+            reportVisits.filter((it) => it.visitType == VisitType.DOCTOR).length
           )}
           {@render statsBadge(
             VisitType.STOCKIST,
-            report.visits.filter((it) => it.visitType == VisitType.STOCKIST).length
+            reportVisits.filter((it) => it.visitType == VisitType.STOCKIST).length
           )}
           {@render statsBadge(
             VisitType.CHEMIST,
-            report.visits.filter((it) => it.visitType == VisitType.CHEMIST).length
+            reportVisits.filter((it) => it.visitType == VisitType.CHEMIST).length
           )}
         </div>
       </div>

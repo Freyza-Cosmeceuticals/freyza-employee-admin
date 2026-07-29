@@ -31,9 +31,9 @@ const visitName = $derived(getVisitName(visit))
         </div>
         <p class="text-sm text-muted-foreground">
           {visit.latitude.toFixed(4)}, {visit.longitude.toFixed(4)} - {visit.distanceMetersFromPOI}m
-          away - Created {DateTime.fromSQL(visit.createdAt).toLocaleString(DateTime.TIME_SIMPLE)}
+          away - Created {visit.createdAt.toLocaleString(DateTime.TIME_SIMPLE)}
           {#if visit.updatedAt && visit.updatedAt !== visit.createdAt}
-            - Updated {DateTime.fromSQL(visit.updatedAt).toLocaleString(DateTime.TIME_SIMPLE)}
+            - Updated {visit.updatedAt.toLocaleString(DateTime.TIME_SIMPLE)}
           {/if}
         </p>
       </div>

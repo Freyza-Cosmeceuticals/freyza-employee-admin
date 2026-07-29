@@ -218,7 +218,37 @@ const BIHAR_SHARIF: LocationCreate = {
 
 const DEHRI_ON_SONE: LocationCreate = {
   id: "ce52d574-bd6f-46f1-b077-79b279f73fdf",
-  name: "Dehri on Sone",
+  name: "Sasaram / Dehri on Sone",
+  operational: true
+}
+
+const SHERGHATI: LocationCreate = {
+  id: "2a3bf8d3-82b1-4017-9897-11395327e202",
+  name: "Sherghati",
+  operational: true
+}
+
+const AURANGABAD: LocationCreate = {
+  id: "1019167d-b996-482d-9bbc-a2a073bc2ca3",
+  name: "Aurangabad",
+  operational: true
+}
+
+const NAWADA: LocationCreate = {
+  id: "b191758e-a365-41ae-aca5-e54ea32e991c",
+  name: "Nawada",
+  operational: true
+}
+
+const TEKARI: LocationCreate = {
+  id: "942777e0-f6c9-4980-b07d-d4070e49d6ae",
+  name: "Tekari",
+  operational: true
+}
+
+const AIIMS: LocationCreate = {
+  id: "7d0821de-9217-4488-b1e6-537094aa570c",
+  name: "AIIMS",
   operational: true
 }
 
@@ -256,7 +286,12 @@ const locations: LocationCreate[] = [
   ARA,
   GAYA,
   BIHAR_SHARIF,
-  DEHRI_ON_SONE
+  DEHRI_ON_SONE,
+  SHERGHATI,
+  AURANGABAD,
+  NAWADA,
+  TEKARI,
+  AIIMS
 ] as const
 
 try {
@@ -505,6 +540,42 @@ const routes: RouteCreate[] = [
     srcLocId: PATNA.id,
     destLocId: DEHRI_ON_SONE.id,
     distanceKm: 320
+  },
+  {
+    id: "c594f5e2-1fe0-4860-b72d-d4242945e988",
+    srcLocId: GAYA.id,
+    destLocId: SHERGHATI.id,
+    distanceKm: 100
+  },
+  {
+    id: "6e83f71e-fea0-4dd5-a2fa-a927baee859f",
+    srcLocId: GAYA.id,
+    destLocId: DEHRI_ON_SONE.id,
+    distanceKm: 250
+  },
+  {
+    id: "3e71fc5a-4c1d-4396-8bd8-369293346808",
+    srcLocId: GAYA.id,
+    destLocId: AURANGABAD.id,
+    distanceKm: 195
+  },
+  {
+    id: "a6a43fc9-59c0-45c4-a7fe-f87d37b08e51",
+    srcLocId: GAYA.id,
+    destLocId: NAWADA.id,
+    distanceKm: 130
+  },
+  {
+    id: "1e96f9f4-e061-46b4-939f-f27d439dc438",
+    srcLocId: GAYA.id,
+    destLocId: TEKARI.id,
+    distanceKm: 65
+  },
+  {
+    id: "acdef187-f6ed-4463-bee2-0dbc49114aec",
+    srcLocId: PATNA.id,
+    destLocId: AIIMS.id,
+    distanceKm: 0
   }
 ] as const
 

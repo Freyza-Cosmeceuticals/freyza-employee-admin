@@ -1,5 +1,7 @@
 import { renderComponent, renderSnippet } from "@ui/data-table"
 
+import { DateTime } from "luxon"
+
 import DataTableActions from "./data-table-actions.svelte"
 import { visitNameCell, visitTypeCell } from "./snippets.svelte"
 import type { Visit } from "@/lib/types"
@@ -84,6 +86,21 @@ export const columns: ColumnDef<Visit>[] = [
             parseFloat(row.original.outstandingAmount)
           )
         : "—"
+    }
+  },
+  {
+    accessorKey: "createdAt",
+    header: "Created At",
+    cell: ({ row }) => {
+      return row.original.createdAt.toLocaleString(DateTime.TIME_SIMPLE)
+    }
+  },
+  {
+    accessorKey: "updatedAt",
+    header: "Last Updated At",
+    cell: ({ row }) => {
+      if (!row.original.updatedAt) return "—"
+      return row.original.updatedAt.toLocaleString(DateTime.TIME_SIMPLE)
     }
   },
   {

@@ -1,4 +1,4 @@
-(A) better report and visits display +dailyreport
+(C) better report and visits display +dailyreport
 (B) creating and editing locations and routes +loc/route
 2026-06-24 Sentry logging and tracing (needed really?)
 x 2026-07-22 2026-07-22 setup for maps view in visits +dailyreport
@@ -7,3 +7,7 @@ x 2026-07-22 2026-07-22 setup for maps view in visits +dailyreport
 2026-06-26 add snapshots to forms on pages
 (B) money calculation abstractions
 x 2026-07-18 2026-07-17 add reports auto locking using pg_cron +dailyreport
+(A) 2026-07-24 travelling with No one or other employee +dailyreport
+(B) 2026-07-24 IMprove data table for reports and visits, show contextual info and timestamps
+(A) 2026-07-27 Doctor, Stockist and Chemist tables, with just names and other details for now
+x 2026-07-29 2026-07-28 Add seeds for rest of the routes

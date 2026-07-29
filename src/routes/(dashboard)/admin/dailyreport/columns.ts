@@ -3,14 +3,16 @@ import { resolve } from "$app/paths"
 import { renderSnippet } from "@ui/data-table"
 
 import { buttonVariants } from "@/lib/components/ui/button"
+import { formatRouteName } from "@/lib/helpers"
+import { DayType } from "@/lib/types"
 import { DateTime } from "luxon"
 import { createRawSnippet } from "svelte"
 
 import { actionCell, dayTypeCell, statusCell } from "./snippets.svelte"
-import type { DailyReportWithEmployeeWithRoute, EmployeeWithHQ } from "@/lib/types"
+import type { DailyReportFull, EmployeeWithHQ, RouteWithName } from "@/lib/types"
 import type { ColumnDef } from "@tanstack/table-core"
 
-export const columns: ColumnDef<DailyReportWithEmployeeWithRoute>[] = [
+export const columns: ColumnDef<DailyReportFull>[] = [
   // {
   //   accessorKey: "id",
   //   header: "ID"
@@ -36,7 +38,7 @@ export const columns: ColumnDef<DailyReportWithEmployeeWithRoute>[] = [
         }
       })
 
-      return renderSnippet(snippet, { employee: row.original.employee })
+      return renderSnippet(snippet, { employee: row.original.employee as EmployeeWithHQ })
     }
   },
   {
@@ -49,16 +51,22 @@ export const columns: ColumnDef<DailyReportWithEmployeeWithRoute>[] = [
   {
     header: "Route",
     cell: ({ row }) => {
-      return row.original.route
-        ? `${row.original.route.srcLoc.name} → ${row.original.route.destLoc.name}`
-        : "N/A"
+      return row.original.route ? formatRouteName(row.original.route as RouteWithName) : "N/A"
+    }
+  },
+  {
+    header: "Travelling With",
+    cell: ({ row }) => {
+      if (row.original.dayType != DayType.WORK) return "N/A"
+
+      return row.original.travellingWith ? row.original.travellingWith.name : "—"
     }
   },
   {
     accessorKey: "numVisits",
     header: "Visits Made",
     cell: ({ row }) => {
-      if (row.original.route) return `${row.original.numVisits}`
+      if (row.original.route) return `${row.original.numVisits ?? "—"}`
       return "N/A"
     }
   },
@@ -102,7 +110,7 @@ export const columns: ColumnDef<DailyReportWithEmployeeWithRoute>[] = [
     cell: ({ row }) => {
       if (!row.original.locked || !row.original.lockedAt) return "N/A"
 
-      const lockedAt = DateTime.fromSQL(row.original.lockedAt)
+      const lockedAt = row.original.lockedAt
       const date = DateTime.fromJSDate(row.original.date)
       if (lockedAt.day === date.day) return lockedAt.toLocaleString(DateTime.TIME_SIMPLE)
 
@@ -113,7 +121,7 @@ export const columns: ColumnDef<DailyReportWithEmployeeWithRoute>[] = [
     accessorKey: "createdAt",
     header: "Created At",
     cell: ({ row }) => {
-      return DateTime.fromSQL(row.original.createdAt).toLocaleString(DateTime.TIME_SIMPLE)
+      return row.original.createdAt.toLocaleString(DateTime.TIME_SIMPLE)
     }
   },
   {

@@ -50,6 +50,10 @@ export const dailyReportRelations = relations(dailyReport, ({ one, many }) => ({
   route: one(route, {
     fields: [dailyReport.routeId],
     references: [route.id]
+  }),
+  travellingWith: one(user, {
+    fields: [dailyReport.travellingWithId],
+    references: [user.id]
   })
 }))
 
