@@ -10,16 +10,16 @@ import * as Sidebar from "@ui/sidebar"
 
 import { fade } from "svelte/transition"
 
-import type { Session, SupabaseClient, User } from "@supabase/supabase-js"
+import type { JwtPayload, Session, SupabaseClient, User } from "@supabase/supabase-js"
 
 interface Props {
   session: Session | null
-  user: User | null
+  claims: JwtPayload | null
   supabase: SupabaseClient
   deploymentGitBranch?: string
 }
 
-const { session, user, supabase, deploymentGitBranch }: Props = $props()
+const { session, claims, supabase, deploymentGitBranch }: Props = $props()
 </script>
 
 <!-- Dashboard Navbar -->
@@ -43,8 +43,8 @@ const { session, user, supabase, deploymentGitBranch }: Props = $props()
         </Badge>
       {/if}
 
-      {#if session !== null && user !== null}
-        <AccountDropdown {session} {user} {supabase} />
+      {#if session !== null && claims !== null}
+        <AccountDropdown {session} {claims} {supabase} />
       {/if}
       <ColorModeToggle />
     </div>

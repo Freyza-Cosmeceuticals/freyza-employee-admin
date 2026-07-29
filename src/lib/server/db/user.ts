@@ -4,23 +4,22 @@ import { UserRole, UserStatus } from "$lib/types"
 import { and, desc, eq, notInArray } from "drizzle-orm"
 import { alias } from "drizzle-orm/pg-core"
 
-import { db, handleDbError, requireAuthMaybeAdmin } from "./common"
+import { db, handleDbError } from "./common"
 import type { Employee, EmployeeCreate, EmployeeWithHQ, User } from "$lib/types"
 
 const sHq = alias(s.location, "hq")
 
 /**
- * Gets the user profile associated with the current user
+ * Gets the user profile by id
  */
-export async function getUser(locals: App.Locals): Promise<Employee | null> {
-  const TAG = "DB: getUser()"
+export async function getUserById(locals: App.Locals, id: string): Promise<Employee | null> {
+  const TAG = `DB: getUserById(${id})`
   console.time(TAG)
-  const { user, session } = requireAuthMaybeAdmin(locals, false)
 
   try {
     const userProfile: User | null =
       (await db.query.user.findFirst({
-        where: (u, { eq }) => eq(u.id, user.id)
+        where: (u, { eq }) => eq(u.id, id)
       })) ?? null
 
     return userProfile
@@ -63,7 +62,6 @@ export async function createEmployee(
 ): Promise<{ data: Employee; error: null } | { data: null; error: string }> {
   const TAG = "DB: createEmployee()"
   console.time(TAG)
-  const { user, session } = requireAuthMaybeAdmin(locals)
 
   try {
     const [employeeProfile] = await db
@@ -103,7 +101,6 @@ export async function getAllEmployees(
 ): Promise<EmployeeWithHQ[]> {
   const TAG = `DB: getAllEmployees(limitN ${limitN}, excludeIds ${excludeIds})`
   console.time(TAG)
-  const { user, session } = requireAuthMaybeAdmin(locals)
 
   try {
     const query = db
@@ -148,7 +145,6 @@ export async function getEmployeeCount(
 ): Promise<{ data: number; error: null } | { data: null; error: string }> {
   const TAG = "DB: getEmployeeCount()"
   console.time(TAG)
-  const { user, session } = requireAuthMaybeAdmin(locals)
 
   try {
     const count = await db.$count(
@@ -157,6 +153,53 @@ export async function getEmployeeCount(
     )
 
     return { data: count, error: null }
+  } catch (e) {
+    return handleDbError(e)
+  } finally {
+    console.timeEnd(TAG)
+  }
+}
+
+/**
+ * Retrieves an employee by their id
+ * @param locals
+ * @param id id of the employee to retrieve
+ * @returns the employee if found, otherwise null
+ */
+export async function getEmployeeById(
+  locals: App.Locals,
+  id: string
+): Promise<{ data: EmployeeWithHQ; error: null } | { data: null; error: string }> {
+  const TAG = `DB: getEmployeeById("${id}")`
+  console.time(TAG)
+
+  try {
+    const [rawEmployee] = await db
+      .select({
+        user: s.user,
+        hq: {
+          id: sHq.id,
+          name: sHq.name,
+          operational: sHq.operational
+        }
+      })
+      .from(s.user)
+      .innerJoin(sHq, eq(s.user.hqId, sHq.id))
+      .where(
+        and(
+          eq(s.user.id, id),
+          eq(s.user.role, UserRole.EMPLOYEE),
+          eq(s.user.status, UserStatus.ACTIVE)
+        )
+      )
+      .limit(1)
+
+    const employee = {
+      ...rawEmployee.user,
+      hq: rawEmployee.hq
+    }
+
+    return { data: employee, error: null }
   } catch (e) {
     return handleDbError(e)
   } finally {

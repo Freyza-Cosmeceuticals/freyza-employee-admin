@@ -17,7 +17,7 @@ import EmployeeItem from "@/lib/components/dashboard/employee/EmployeeItem.svelt
 import ArrowLeft from "@lucide/svelte/icons/arrow-left"
 
 let { data } = $props()
-let { user, tpMonth } = $derived(data)
+let { claims, tpMonth } = $derived(data)
 
 const dayTypes = [DayType.WORK, DayType.LEAVE, DayType.HOLIDAY]
 

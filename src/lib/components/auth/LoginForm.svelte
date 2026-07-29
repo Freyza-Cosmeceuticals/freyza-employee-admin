@@ -1,5 +1,6 @@
 <script lang="ts">
 import { enhance } from "$app/forms"
+import { page } from "$app/state"
 
 import { Button } from "@ui/button"
 import * as Card from "@ui/card"
@@ -113,6 +114,11 @@ let loading = $state(false)
             required />
         </div>
       </div>
+
+      <input
+        type="hidden"
+        name="redirectTo"
+        value={page.url.searchParams.get("redirectTo") ?? ""} />
       <Button type="submit" class="mt-8 w-full" disabled={loading}>
         {#if loading}
           <Loader class="size-5 animate-spin" />

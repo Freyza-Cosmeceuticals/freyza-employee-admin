@@ -3,7 +3,7 @@ import * as s from "$lib/db/schema"
 import { and, desc, eq } from "drizzle-orm"
 import { alias } from "drizzle-orm/pg-core"
 
-import { db, requireAuthMaybeAdmin } from "./common"
+import { db, handleDbError } from "./common"
 import type { RouteWithName } from "$lib/types"
 
 const sSrc = alias(s.location, "srcLoc")
@@ -16,7 +16,6 @@ const sDest = alias(s.location, "destLoc")
 export async function getAllRoutes(locals: App.Locals): Promise<RouteWithName[]> {
   const TAG = "DB: getAllRoutes()"
   console.time(TAG)
-  const { user, session } = requireAuthMaybeAdmin(locals, false)
 
   try {
     // find routes with operational locations with names
@@ -43,6 +42,41 @@ export async function getAllRoutes(locals: App.Locals): Promise<RouteWithName[]>
   } catch (e) {
     console.error(e)
     return []
+  } finally {
+    console.timeEnd(TAG)
+  }
+}
+
+export async function getRouteById(
+  locals: App.Locals,
+  id: string
+): Promise<{ data: RouteWithName; error: null } | { data: null; error: string }> {
+  const TAG = `DB: getRouteById(${id})`
+  console.time(TAG)
+
+  try {
+    const [route] = await db
+      .select({
+        id: s.route.id,
+        distanceKm: s.route.distanceKm,
+        srcLoc: {
+          id: sSrc.id,
+          name: sSrc.name
+        },
+        destLoc: {
+          id: sDest.id,
+          name: sDest.name
+        }
+      })
+      .from(s.route)
+      .innerJoin(sSrc, eq(s.route.srcLocId, sSrc.id))
+      .innerJoin(sDest, eq(s.route.destLocId, sDest.id))
+      .where(and(eq(s.route.id, id), eq(sSrc.operational, true), eq(sDest.operational, true)))
+      .limit(1)
+
+    return { data: route, error: null }
+  } catch (e) {
+    return handleDbError(e)
   } finally {
     console.timeEnd(TAG)
   }

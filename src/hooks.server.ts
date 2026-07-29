@@ -51,39 +51,41 @@ const supabase: Handle = async ({ event, resolve }) => {
     }
   })
 
-  if ("suppressGetSessionWarning" in event.locals.supabase.auth) {
-    // @ts-expect-error - suppressGetSessionWarning is not part of the official API
-    event.locals.supabase.auth.suppressGetSessionWarning = true
-  } else {
-    console.warn(
-      "SupabaseAuthClient#suppressGetSessionWarning was removed. See https://github.com/supabase/supabase-js/issues/1709."
-    )
-  }
-
-  /**
-   * Unlike `supabase.auth.getSession()`, which returns the session _without_
-   * validating the JWT, this function also calls `getUser()` to validate the
-   * JWT before returning the session.
-   * TODO: Look into using .getClaims() instead of .getUser(), which is now faster and safer
-   */
-  event.locals.safeGetSession = async () => {
+  event.locals.getAuth = async () => {
     const {
       data: { session }
     } = await event.locals.supabase.auth.getSession()
+
     if (!session) {
-      return { session: null, user: null }
+      return {
+        session: null,
+        claims: null
+      }
     }
 
-    const {
-      data: { user },
-      error
-    } = await event.locals.supabase.auth.getUser()
-    if (error) {
-      // JWT validation has failed
-      return { session: null, user: null }
+    const { data: claimsData, error } = await event.locals.supabase.auth.getClaims()
+
+    if (error || !claimsData?.claims) {
+      return {
+        session: null,
+        claims: null
+      }
     }
 
-    return { session, user }
+    return {
+      session,
+      claims: claimsData.claims
+    }
+  }
+
+  event.locals.requireAuth = async () => {
+    const { data: claimsData, error } = await event.locals.supabase.auth.getClaims()
+
+    if (error || !claimsData?.claims) {
+      redirect(303, "/auth")
+    }
+
+    return claimsData.claims
   }
 
   console.timeEnd(
@@ -103,18 +105,21 @@ const supabase: Handle = async ({ event, resolve }) => {
 
 const authGuard: Handle = async ({ event, resolve }) => {
   console.time(
-    `${colors.dim}[${event.locals.requestId.substr(0, 5)}]${colors.reset} ${AUTH_GUARD_TAG}`
+    `${colors.dim}[${event.locals.requestId.substring(0, 5)}]${colors.reset} ${AUTH_GUARD_TAG}`
   )
 
-  const { session, user } = await event.locals.safeGetSession()
-  event.locals.session = session
-  event.locals.user = user
+  // skip auth for api routes
+  if (event.url.pathname.startsWith("/api")) {
+    return resolve(event)
+  }
 
-  if (!event.locals.session && event.url.pathname.startsWith("/admin")) {
+  const { claims } = await event.locals.getAuth()
+
+  if (!claims && event.url.pathname.startsWith("/admin")) {
     redirect(303, "/auth?redirectTo=" + event.url.pathname)
   }
 
-  if (event.locals.session && event.url.pathname.startsWith("/auth")) {
+  if (claims && event.url.pathname.startsWith("/auth")) {
     redirect(303, "/admin")
   }
 

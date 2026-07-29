@@ -12,6 +12,15 @@ import { actionCell, dayTypeCell, statusCell } from "./snippets.svelte"
 import type { DailyReportFull, EmployeeWithHQ, RouteWithName } from "@/lib/types"
 import type { ColumnDef } from "@tanstack/table-core"
 
+const employeeLinkSnippet = createRawSnippet<[{ employee: EmployeeWithHQ }]>((getEmployee) => {
+  const emp = getEmployee()
+  return {
+    render: () =>
+      // TOOD: Once employee detail route is done
+      `<a class="${buttonVariants({ variant: "link", className: "text-foreground" })}" href="${resolve(`/admin/employees`)}">${emp.employee.name}</a>`
+  }
+})
+
 export const columns: ColumnDef<DailyReportFull>[] = [
   // {
   //   accessorKey: "id",
@@ -29,16 +38,9 @@ export const columns: ColumnDef<DailyReportFull>[] = [
     header: "Employee",
     id: "employee",
     cell: ({ row }) => {
-      const snippet = createRawSnippet<[{ employee: EmployeeWithHQ }]>((getEmployee) => {
-        const emp = getEmployee()
-        return {
-          render: () =>
-            // TOOD: Once employee detail route is done
-            `<a class="${buttonVariants({ variant: "link", className: "text-foreground" })}" href="${resolve(`/admin/employees`)}">${emp.employee.name}</a>`
-        }
+      return renderSnippet(employeeLinkSnippet, {
+        employee: row.original.employee as EmployeeWithHQ
       })
-
-      return renderSnippet(snippet, { employee: row.original.employee as EmployeeWithHQ })
     }
   },
   {
@@ -59,7 +61,11 @@ export const columns: ColumnDef<DailyReportFull>[] = [
     cell: ({ row }) => {
       if (row.original.dayType != DayType.WORK) return "N/A"
 
-      return row.original.travellingWith ? row.original.travellingWith.name : "—"
+      return row.original.travellingWith
+        ? renderSnippet(employeeLinkSnippet, {
+            employee: row.original.travellingWith as EmployeeWithHQ
+          })
+        : "—"
     }
   },
   {
@@ -119,7 +125,7 @@ export const columns: ColumnDef<DailyReportFull>[] = [
   },
   {
     accessorKey: "createdAt",
-    header: "Created At",
+    header: "Created",
     cell: ({ row }) => {
       return row.original.createdAt.toLocaleString(DateTime.TIME_SIMPLE)
     }

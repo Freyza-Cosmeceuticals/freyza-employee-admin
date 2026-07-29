@@ -30,7 +30,8 @@ export const actions: Actions = {
       password: v.pipe(v.string(), v.minLength(8, "Password must be at least 8 characters long"))
     })
 
-    const loginData = Object.fromEntries(await request.formData())
+    const formData = await request.formData()
+    const loginData = Object.fromEntries(formData)
     const { output: data, issues: parseError, success } = v.safeParse(schema, loginData)
 
     if (!success) {
@@ -97,10 +98,11 @@ export const actions: Actions = {
       error(403, "Employees or Revoked Admins cannot login to Admin Dashboard")
     }
 
-    if (url.searchParams.has("redirectTo")) {
-      console.log("Redirecting to ", url.searchParams.get("redirectTo"))
+    const redirectTo = formData.get("redirectTo")?.toString()
+
+    if (redirectTo && redirectTo.startsWith("/")) {
       console.timeEnd("LOGIN")
-      redirect(303, url.searchParams.get("redirectTo") ?? "/admin")
+      redirect(303, redirectTo)
     }
 
     console.timeEnd("LOGIN")

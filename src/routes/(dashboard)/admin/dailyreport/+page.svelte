@@ -24,7 +24,7 @@ import { columns } from "./columns"
 
   <div class="mx-auto px-8">
     <svelte:boundary>
-      {const dailyReports = await getAllDailyReports()}
+      {const dailyReports = $derived(await getAllDailyReports())}
       <DataTable {columns} data={dailyReports} />
 
       {#snippet pending()}

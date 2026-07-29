@@ -4,7 +4,7 @@ import { DayType } from "$lib/types"
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm"
 import { alias } from "drizzle-orm/pg-core"
 
-import { db, handleDbError, requireAuthMaybeAdmin } from "./common"
+import { db, handleDbError } from "./common"
 import type {
   TravelPlan,
   TravelPlanCreate,
@@ -30,7 +30,6 @@ export async function getTravelPlanStats(
 ): Promise<{ data: TravelPlanStats; error: null } | { data: null; error: string }> {
   let TAG = `DB: getTravelPlanStats(${travelPlanId})`
   console.time(TAG)
-  const { user, session } = requireAuthMaybeAdmin(locals)
 
   try {
     const stats = await db
@@ -65,7 +64,6 @@ export async function getAllTravelPlans(
 ): Promise<{ data: TravelPlan[]; error: null } | { data: null; error: string }> {
   const TAG = `DB: getAllTravelPlans()`
   console.time(TAG)
-  const { user, session } = requireAuthMaybeAdmin(locals)
 
   try {
     const travelPlans: TravelPlan[] = await db
@@ -97,7 +95,6 @@ export async function getTravelPlanWithEmployeeOptionalEntriesById(
 > {
   const TAG = `DB: getTravelPlanById(${tpId}, includeEntries: ${includeEntries})`
   console.time(TAG)
-  const { user, session } = requireAuthMaybeAdmin(locals, false)
 
   try {
     const [rawTravelPlan] = await db
@@ -186,7 +183,6 @@ export async function getTravelPlansForMonth(
 ): Promise<{ data: TravelPlan[]; error: null } | { data: null; error: string }> {
   const TAG = `DB: getTravelPlansForMonth(${month.toISOString().split("T", 2)[0]})`
   console.time(TAG)
-  const { user, session } = requireAuthMaybeAdmin(locals)
 
   try {
     const travelPlans: TravelPlan[] = await db
@@ -216,7 +212,6 @@ export async function getTravelPlansWithEmployeeForMonths(
 > {
   let TAG = `DB: getTravelPlansWithEmployeeForMonths(${months.length} MONTHS, includeStats: ${includeStats})`
   console.time(TAG)
-  const { user, session } = requireAuthMaybeAdmin(locals)
 
   try {
     const rawTravelPlans = await db
@@ -282,7 +277,6 @@ export async function getTravelPlansWithEmployeeWithEntriesForMonths(
 > {
   let TAG = `DB: getTravelPlansWithEmployeeForMonths(${months.length} MONTHS)`
   console.time(TAG)
-  const { user, session } = requireAuthMaybeAdmin(locals)
 
   try {
     // 1) Fetch all travel plans with employee info in one query
@@ -377,7 +371,6 @@ export async function getTravelPlanWithEmployeeForEmployeeAndMonth(
 ): Promise<{ data: TravelPlanWithEmployee | null; error: null } | { data: null; error: string }> {
   let TAG = `DB: getTravelPlanWithEmployeeForEmployeeAndMonth(${employeeId}, month: ${month.toISOString().split("T", 2)[0]}, includeStats: ${includeStats})`
   console.time(TAG)
-  const { user, session } = requireAuthMaybeAdmin(locals)
 
   try {
     const [rawTravelPlan] = await db
@@ -422,13 +415,6 @@ export async function createTravelPlan(
 ): Promise<{ data: TravelPlan; error: null } | { data: null; error: string }> {
   let TAG = `DB: createTravelPlan(${travelPlan.employeeId}, ${travelPlan.month.toISOString().split("T", 2)[0]})`
   console.time(TAG)
-  const { user, session } = requireAuthMaybeAdmin(locals)
-
-  console.assert(user.id === travelPlan.createdById, "User ID does not match")
-
-  if (user.id !== travelPlan.createdById) {
-    return { data: null, error: "Cross user requests not allowed" }
-  }
 
   try {
     const travelPlanObject = await db.transaction(async (tx) => {

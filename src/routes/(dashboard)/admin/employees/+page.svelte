@@ -28,9 +28,9 @@ import { columns } from "./columns"
     description="All the people working for you"
     action={addEmployeeAction} />
 
-  <div class="px-8 mx-auto">
+  <div class="mx-auto px-8">
     <svelte:boundary>
-      {const employees = await getAllEmployees()}
+      {const employees = $derived(await getAllEmployees())}
       <!-- <EmployeeList variant="outline" {employees} /> -->
       <DataTable {columns} data={employees} />
 

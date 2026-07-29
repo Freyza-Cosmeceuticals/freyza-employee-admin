@@ -11,7 +11,7 @@ import type { RouteWithName } from "$lib/types"
  */
 export const fetchRoutes = query(async () => {
   const { locals } = getRequestEvent()
-  const { user, session, supabase } = requireAuthMaybeAdmin(locals, false)
+  const { claims, supabase } = await requireAuthMaybeAdmin(locals, false)
 
   const routes: RouteWithName[] = await getAllRoutes(locals)
   return routes

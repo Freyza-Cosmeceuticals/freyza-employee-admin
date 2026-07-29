@@ -7,15 +7,15 @@ import * as DropdownMenu from "@ui/dropdown-menu"
 
 import UserIcon from "@lucide/svelte/icons/user-round"
 
-import type { Session, SupabaseClient, User } from "@supabase/supabase-js"
+import type { JwtPayload, Session, SupabaseClient, User } from "@supabase/supabase-js"
 
 interface Props {
   session: Session
-  user: User
+  claims: JwtPayload
   supabase: SupabaseClient
 }
 
-let { session, user, supabase }: Props = $props()
+let { session, claims, supabase }: Props = $props()
 
 const logout = async () => {
   const { error } = await supabase.auth.signOut()
@@ -37,7 +37,7 @@ const logout = async () => {
     <DropdownMenu.Group>
       <DropdownMenu.Label>Account</DropdownMenu.Label>
       <DropdownMenu.Separator />
-      <DropdownMenu.Item>{user.email}</DropdownMenu.Item>
+      <DropdownMenu.Item>{claims.email}</DropdownMenu.Item>
       <DropdownMenu.Item>Profile</DropdownMenu.Item>
       <DropdownMenu.Separator />
       <DropdownMenu.Item>

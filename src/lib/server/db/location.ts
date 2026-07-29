@@ -1,4 +1,4 @@
-import { db, requireAuthMaybeAdmin } from "./common"
+import { db } from "./common"
 import type { LocationWithName } from "$lib/types"
 
 /**
@@ -8,7 +8,6 @@ import type { LocationWithName } from "$lib/types"
 export async function getAllLocations(locals: App.Locals): Promise<LocationWithName[]> {
   const TAG = "DB: getAllLocations()"
   console.time(TAG)
-  const { user, session } = requireAuthMaybeAdmin(locals, false)
 
   try {
     const locations: LocationWithName[] = await db.query.location.findMany({

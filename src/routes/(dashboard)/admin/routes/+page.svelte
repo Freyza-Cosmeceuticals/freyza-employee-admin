@@ -25,9 +25,9 @@ import { columns } from "./columns"
 
   <PageHeader title="Routes" description="Operational routes" action={addRouteAction} />
 
-  <div class="px-8 mx-auto">
+  <div class="mx-auto px-8">
     <svelte:boundary>
-      {const routes = await fetchRoutes()}
+      {const routes = $derived(await fetchRoutes())}
       <DataTable {columns} data={routes} />
 
       {#snippet pending()}

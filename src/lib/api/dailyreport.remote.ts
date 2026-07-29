@@ -20,7 +20,7 @@ import { requireAuthMaybeAdmin } from "./common"
  */
 export const getAllDailyReports = query(async () => {
   const { locals } = getRequestEvent()
-  const { user, session, supabase } = requireAuthMaybeAdmin(locals)
+  const { claims, supabase } = await requireAuthMaybeAdmin(locals)
 
   const { data: dailyReports, error: dbError } = await fetchDailyReportsDb(locals, {
     includeEmployee: true,
@@ -45,7 +45,7 @@ export const getDailyReportById = query(getDailyReportByIdSchema, async (reportI
   console.time(TAG)
 
   const { locals } = getRequestEvent()
-  const { user, session, supabase } = requireAuthMaybeAdmin(locals, false)
+  const { claims, supabase } = await requireAuthMaybeAdmin(locals, false)
 
   const { data: reports, error: dbError } = await fetchDailyReportsDb(locals, {
     reportId,
@@ -69,7 +69,7 @@ export const getDailyReportByIdWithVisits = query(getDailyReportByIdSchema, asyn
   console.time(TAG)
 
   const { locals } = getRequestEvent()
-  const { user, session, supabase } = requireAuthMaybeAdmin(locals, false)
+  const { claims, supabase } = await requireAuthMaybeAdmin(locals, false)
 
   const { data: reports, error: dbError } = await fetchDailyReportsDb(locals, {
     reportId: reportId,
@@ -96,7 +96,7 @@ export const getDailyReportsForDate = query.batch(getDailyReportForDatesSchema, 
   console.time(TAG)
 
   const { locals } = getRequestEvent()
-  const { user, session, supabase } = requireAuthMaybeAdmin(locals)
+  const { claims, supabase } = await requireAuthMaybeAdmin(locals)
 
   if (dates.length === 0) {
     error(400, "No dates provided")
@@ -135,7 +135,7 @@ export const getDailyReportsWithVisitsForDate = query.batch(
     console.time(TAG)
 
     const { locals } = getRequestEvent()
-    const { user, session, supabase } = requireAuthMaybeAdmin(locals)
+    const { claims, supabase } = await requireAuthMaybeAdmin(locals)
 
     if (dates.length === 0) {
       error(400, "No dates provided")
@@ -177,7 +177,7 @@ export const getVisit = query(getVisitSchema, async (visitId) => {
   console.time(TAG)
 
   const { locals } = getRequestEvent()
-  const { user, session, supabase } = requireAuthMaybeAdmin(locals)
+  const { claims, supabase } = await requireAuthMaybeAdmin(locals)
 
   const { data: visit, error: dbError } = await getVisitByIdDb(locals, visitId)
 

@@ -1,5 +1,5 @@
 {
-  "id": "16b23082-9638-4186-96b9-d7b4e7f0a03b",
+  "id": "cf8c9cd2-26bb-4d01-b831-b70cd5eac48c",
   "prevId": "c0f48994-4715-4df7-a040-e3ff8b3e147c",
   "version": "7",
   "dialect": "postgresql",
@@ -958,14 +958,14 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {
-        "Employees can view their own user data OR Admins can view all user data": {
-          "name": "Employees can view their own user data OR Admins can view all user data",
+        "Authenticated users can view employee data": {
+          "name": "Authenticated users can view employee data",
           "as": "PERMISSIVE",
           "for": "SELECT",
           "to": [
             "authenticated"
           ],
-          "using": "\n        (select auth.jwt() -> 'app_metadata' ->> 'app_role'::text) = 'ADMIN'\n        OR\n        (select auth.uid())::text = \"user\".\"id\"\n        "
+          "using": "true"
         },
         "Admins can insert users": {
           "name": "Admins can insert users",
