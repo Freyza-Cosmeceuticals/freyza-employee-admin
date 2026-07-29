@@ -5,16 +5,18 @@ import { UserRole, UserStatus } from "$lib/types"
 /**
  * Guard Function to check for Auth, optionally non-Admin, otherwise throw 403 Forbidden
  */
-export function requireAuthMaybeAdmin(locals: App.Locals, admin: boolean = true) {
-  const { user, supabase, session } = locals
+export async function requireAuthMaybeAdmin(locals: App.Locals, admin: boolean = true) {
+  const { supabase } = locals
 
-  if (!user || !session) {
+  const claims = await locals.requireAuth()
+
+  if (!claims) {
     console.error("Unauthorized call to employee remote function")
     error(401, "Unauthorized")
   }
 
   // must be active
-  if (user.app_metadata.app_status !== UserStatus.ACTIVE) {
+  if (claims.app_metadata?.app_status !== UserStatus.ACTIVE) {
     console.error("Current user is not active anymore")
     error(404, "Not found")
   }
@@ -22,13 +24,13 @@ export function requireAuthMaybeAdmin(locals: App.Locals, admin: boolean = true)
   // Check for admin
   if (admin) {
     if (
-      user.app_metadata.app_role !== UserRole.ADMIN &&
-      user.app_metadata.app_status !== UserStatus.ACTIVE
+      claims.app_metadata?.app_role !== UserRole.ADMIN &&
+      claims.app_metadata?.app_status !== UserStatus.ACTIVE
     ) {
       console.error("Unauthorized call to employee remote function")
       error(403, "Forbidden")
     }
   }
 
-  return { user, session, supabase }
+  return { claims, supabase }
 }

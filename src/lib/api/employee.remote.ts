@@ -18,7 +18,7 @@ import type { EmployeeCreate, EmployeeWithHQ } from "$lib/types"
 
 export const addEmployee = form(addEmployeeSchema, async (employee) => {
   const { locals } = getRequestEvent()
-  const { user, session, supabase } = requireAuthMaybeAdmin(locals)
+  const { claims, supabase } = await requireAuthMaybeAdmin(locals)
 
   console.debug("Adding Employee with data", employee)
 
@@ -86,7 +86,7 @@ export const getAllEmployees = query(
   v.optional(v.number()),
   async (limit): Promise<EmployeeWithHQ[]> => {
     const { locals } = getRequestEvent()
-    const { user, session, supabase } = requireAuthMaybeAdmin(locals, false)
+    const { claims, supabase } = await requireAuthMaybeAdmin(locals, false)
 
     const employees: EmployeeWithHQ[] = await getAllEmployeesDb(locals, limit)
     return employees
@@ -95,7 +95,7 @@ export const getAllEmployees = query(
 
 export const getAllEmployeesCount = query(async (): Promise<number> => {
   const { locals } = getRequestEvent()
-  const { user, session, supabase } = requireAuthMaybeAdmin(locals, false)
+  const { claims, supabase } = await requireAuthMaybeAdmin(locals, false)
 
   const { data: count, error: dbError } = await getEmployeeCountDb(locals)
   if (dbError !== null) {

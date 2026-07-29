@@ -73,11 +73,7 @@ CREATE POLICY "Employees can update their own travel plan entries OR Admins can 
                 WHERE tp.id = "travelPlanEntry"."tpId"
                     AND tp."employeeId" = (select auth.uid())::text
             ));--> statement-breakpoint
-CREATE POLICY "Employees can view their own user data OR Admins can view all user data" ON "user" AS PERMISSIVE FOR SELECT TO "authenticated" USING (
-        (select auth.jwt() -> 'app_metadata' ->> 'app_role'::text) = 'ADMIN'
-        OR
-        (select auth.uid())::text = "user"."id"
-        );--> statement-breakpoint
+CREATE POLICY "Authenticated users can view employee data" ON "user" AS PERMISSIVE FOR SELECT TO "authenticated" USING (true);--> statement-breakpoint
 CREATE POLICY "Employees can select their own visits OR Admins can select all visits" ON "visit" AS PERMISSIVE FOR SELECT TO "authenticated" USING (
         (select auth.jwt() -> 'app_metadata' ->> 'app_role'::text) = 'ADMIN'
         OR

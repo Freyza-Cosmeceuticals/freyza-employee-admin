@@ -11,7 +11,7 @@ import type { LocationWithName } from "$lib/types"
  */
 export const fetchLocations = query(async () => {
   const { locals } = getRequestEvent()
-  const { user, session, supabase } = requireAuthMaybeAdmin(locals, false)
+  const { claims, supabase } = await requireAuthMaybeAdmin(locals, false)
 
   const locations: LocationWithName[] = await getAllLocations(locals)
   return locations

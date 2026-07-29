@@ -1,5 +1,5 @@
 import { SUPABASE_AUTH_TAG, TIMEZONE } from "$lib/constants"
-import { getUser } from "$lib/server/db/user"
+import { getUserById } from "$lib/server/db/user"
 
 import { DateTime } from "luxon"
 
@@ -8,7 +8,9 @@ import type { PageServerLoad } from "./$types"
 export const load: PageServerLoad = async ({ depends, locals }) => {
   depends(SUPABASE_AUTH_TAG)
 
-  const userProfile = getUser(locals)
+  const claims = await locals.requireAuth()
+
+  const userProfile = getUserById(locals, claims.sub)
 
   const today = DateTime.now().setZone(TIMEZONE) as DateTime<true>
   const thisMonth = today.startOf("month")

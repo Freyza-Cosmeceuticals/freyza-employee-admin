@@ -25,9 +25,9 @@ import { columns } from "./columns"
 
   <PageHeader title="Locations" description="Operational locations" action={addLocationAction} />
 
-  <div class="px-8 mx-auto">
+  <div class="mx-auto px-8">
     <svelte:boundary>
-      {const locations = await fetchLocations()}
+      {const locations = $derived(await fetchLocations())}
       <DataTable {columns} data={locations} />
 
       {#snippet pending()}

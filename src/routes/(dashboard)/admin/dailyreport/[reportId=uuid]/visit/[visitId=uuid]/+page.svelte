@@ -23,7 +23,7 @@ import { mode } from "mode-watcher"
 import type { RouteWithName } from "$lib/types"
 
 let { data, params } = $props()
-let { user } = $derived(data)
+let { claims } = $derived(data)
 
 let routes = $state<RouteWithName[] | null>(null)
 routes = await fetchRoutes()
@@ -49,9 +49,9 @@ $inspect(params).with(console.debug)
 
 <div class="h-auto w-full px-4 py-8">
   <svelte:boundary>
-    {const visit = await getVisit(params.visitId)}
+    {const visit = $derived(await getVisit(params.visitId))}
     {const visitTimestamp = $derived(visit ? visit.createdAt : null)}
-    {const report = await getDailyReportById(params.reportId)}
+    {const report = $derived(await getDailyReportById(params.reportId))}
 
     {#if visit && visitTimestamp}
       <PageHeader title="Visit to {getVisitName(visit)}" {subheader} />

@@ -15,7 +15,7 @@ import ArrowLeft from "@lucide/svelte/icons/arrow-left"
 import { DateTime } from "luxon"
 
 let { data } = $props()
-let { user } = $derived(data)
+let { claims } = $derived(data)
 
 const tpId = $derived(page.params.tpId!)
 

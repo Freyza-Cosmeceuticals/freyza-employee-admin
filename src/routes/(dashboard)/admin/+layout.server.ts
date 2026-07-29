@@ -13,9 +13,9 @@ import { SUPABASE_AUTH_TAG } from "$lib/constants"
 export const load = async ({ locals, setHeaders, depends }) => {
   depends(SUPABASE_AUTH_TAG)
 
-  const user = locals.user
-  const session = locals.session
-  if (!user || !session) {
+  const { session, claims } = await locals.getAuth()
+
+  if (!session || !claims) {
     throw redirect(303, "/auth")
   }
 
@@ -23,5 +23,5 @@ export const load = async ({ locals, setHeaders, depends }) => {
     "cache-control": "no-store"
   })
 
-  return { user, session, deploymentGitBranch: VERCEL_GIT_COMMIT_REF }
+  return { claims, session, deploymentGitBranch: VERCEL_GIT_COMMIT_REF }
 }

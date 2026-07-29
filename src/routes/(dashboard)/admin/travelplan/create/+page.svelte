@@ -22,7 +22,7 @@ import { toast } from "svelte-sonner"
 import type { RemoteFormIssue } from "@sveltejs/kit"
 
 let { data } = $props()
-let { user, employees, routes, today, nextMonth } = $derived(data)
+let { claims, employees, routes, today, nextMonth } = $derived(data)
 
 const days = $derived(
   Interval.fromDateTimes(nextMonth.startOf("month"), nextMonth.endOf("month"))
@@ -141,7 +141,7 @@ let employeeSelectError = $state<string | null>(null)
               {nextMonth.monthLong}
               {nextMonth.year}
               <input {...addTravelPlan.fields.month.as("hidden", days[0].toISODate())} />
-              <input {...addTravelPlan.fields.createdById.as("hidden", user.id)} />
+              <input {...addTravelPlan.fields.createdById.as("hidden", claims.sub)} />
             </Card.Title>
             <Card.Action>
               <div class="flex flex-col items-end justify-center gap-2">

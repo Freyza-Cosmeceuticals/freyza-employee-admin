@@ -82,23 +82,6 @@ export type TravelPlanWithEmployeeWithEntries = TravelPlan & {
   planEntries: TravelPlanEntryWithRoute[]
 }
 
-// dr, non-create
-// export type DailyReportWithEmployee = DailyReport & {
-//   employee: EmployeeWithHQ
-// }
-
-// export type DailyReportWithRoute = DailyReport & {
-//   route:
-//     | (Route & {
-//         srcLoc: Pick<Location, "id" | "name" | "operational">
-//         destLoc: Pick<Location, "id" | "name" | "operational">
-//       })
-//     | null
-//   numVisits: number
-// }
-
-// export type DailyReportWithEmployeeWithRoute = DailyReportWithEmployee & DailyReportWithRoute
-
 export type DailyReportFull = DailyReport & {
   route: RouteWithName | null
   employee: EmployeeWithHQ | null
@@ -107,6 +90,4 @@ export type DailyReportFull = DailyReport & {
   numVisits: number | null
 }
 
-// export type DailyReportWithEmployeeWithVisits = DailyReportWithEmployee & {
-//   visits: Visit[]
-// }
+export type DailyReportCreate = InferInsertModel<typeof dailyReport>

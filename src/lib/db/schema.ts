@@ -106,15 +106,11 @@ export const user = pgTable(
       .onUpdate("cascade")
       .onDelete("restrict"),
 
-    pgPolicy("Employees can view their own user data OR Admins can view all user data", {
+    pgPolicy("Authenticated users can view employee data", {
       as: "permissive",
       for: "select",
       to: authenticatedRole,
-      using: sql`
-        ${authJwtAppRole} = 'ADMIN'
-        OR
-        ${authUid}::text = ${table.id}
-        `
+      using: sql`true`
     }),
     pgPolicy("Admins can insert users", {
       as: "permissive",

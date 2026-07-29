@@ -29,7 +29,7 @@ import { columns } from "./columns"
 import type { EmployeeWithHQ, RouteWithName } from "$lib/types"
 
 let { data, params } = $props()
-let { user } = $derived(data)
+let { claims } = $derived(data)
 
 let routes = $state<RouteWithName[] | null>(null)
 routes = await fetchRoutes()
@@ -55,7 +55,7 @@ $inspect(params).with(console.debug)
 
 <div class="h-auto w-full px-4 py-2">
   <svelte:boundary>
-    {const report = await getDailyReportByIdWithVisits(params.reportId)}
+    {const report = $derived(await getDailyReportByIdWithVisits(params.reportId))}
     {const reportRoute = $derived(routes?.find((it) => it.id == report?.routeId) ?? null)}
     {const reportDate = $derived(report ? DateTime.fromJSDate(report.date) : null)}
 

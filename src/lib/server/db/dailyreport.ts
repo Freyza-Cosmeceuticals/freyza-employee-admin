@@ -2,8 +2,15 @@ import * as s from "$lib/db/schema"
 
 import { and, count, desc, eq, inArray } from "drizzle-orm"
 
-import { db, handleDbError, requireAuthMaybeAdmin } from "./common"
-import type { DailyReportFull, EmployeeWithHQ, RouteWithName, Visit } from "$lib/types"
+import { db, handleDbError } from "./common"
+import type {
+  DailyReport,
+  DailyReportCreate,
+  DailyReportFull,
+  EmployeeWithHQ,
+  RouteWithName,
+  Visit
+} from "$lib/types"
 
 export type GetDailyReportsOptions = {
   // Filters
@@ -31,7 +38,6 @@ export async function fetchDailyReports(
 ): Promise<{ data: DailyReportFull[]; error: null } | { data: null; error: string }> {
   const TAG = `DB: getDailyReports(opts: ${JSON.stringify(opts)})`
   console.time(TAG)
-  const { user, session } = requireAuthMaybeAdmin(locals, true)
 
   try {
     const conditions = []
@@ -93,6 +99,24 @@ export async function fetchDailyReports(
   }
 }
 
+export async function createDailyReport(
+  locals: App.Locals,
+  reportData: DailyReportCreate
+): Promise<{ data: DailyReport; error: null } | { data: null; error: string }> {
+  const TAG = "DB: createDailyReport()"
+  console.time(TAG)
+
+  try {
+    const [report] = await db.insert(s.dailyReport).values(reportData).returning()
+
+    return { data: report, error: null }
+  } catch (e) {
+    return handleDbError(e)
+  } finally {
+    console.timeEnd(TAG)
+  }
+}
+
 /**
  * Get Visit by Id
  * @param locals
@@ -105,7 +129,6 @@ export async function getVisitById(
 ): Promise<{ data: Visit | null; error: null } | { data: null; error: string }> {
   let TAG = `DB: getVisitById(${visitId})`
   console.time(TAG)
-  const { user, session } = requireAuthMaybeAdmin(locals)
 
   try {
     const [visit] = await db.select().from(s.visit).where(eq(s.visit.id, visitId)).limit(1)

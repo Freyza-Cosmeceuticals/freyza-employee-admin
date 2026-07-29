@@ -7,16 +7,16 @@ import { buttonVariants } from "@ui/button"
 
 import AccountDropdown from "./AccountDropdown.svelte"
 import ColorModeToggle from "./ColorModeToggle.svelte"
-import type { Session, SupabaseClient, User } from "@supabase/supabase-js"
+import type { JwtPayload, Session, SupabaseClient } from "@supabase/supabase-js"
 
 interface Props {
   session: Session | null
-  user: User | null
+  claims: JwtPayload | null
   supabase: SupabaseClient
   deploymentGitBranch?: string
 }
 
-const { session, user, supabase, deploymentGitBranch }: Props = $props()
+const { session, claims, supabase, deploymentGitBranch }: Props = $props()
 </script>
 
 <!-- Frontpage Navbar -->
@@ -42,8 +42,8 @@ const { session, user, supabase, deploymentGitBranch }: Props = $props()
       {/if}
       <!-- Make sure to not show Login button on login page -->
       {#if page.url.pathname !== "/auth"}
-        {#if session !== null && user !== null}
-          <AccountDropdown {session} {user} {supabase} />
+        {#if session !== null && claims !== null}
+          <AccountDropdown {session} {claims} {supabase} />
         {:else}
           <a
             href="/auth"

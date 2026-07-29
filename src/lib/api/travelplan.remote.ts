@@ -31,7 +31,7 @@ export const addTravelPlan = form(addTravelPlanSchema, async (travelPlan, issue)
   console.time(TAG)
 
   const { locals } = getRequestEvent()
-  const { user, session, supabase } = requireAuthMaybeAdmin(locals)
+  const { claims, supabase } = await requireAuthMaybeAdmin(locals)
 
   // sanity check for all work days have routeId
   const invalidIdx = travelPlan.planEntries.findIndex(
@@ -42,7 +42,7 @@ export const addTravelPlan = form(addTravelPlanSchema, async (travelPlan, issue)
   }
 
   // just check the creator userId
-  if (user.id !== travelPlan.createdById) {
+  if (claims.sub !== travelPlan.createdById) {
     return { success: false, data: null, message: "Cross user requests not allowed" }
   }
 
@@ -91,7 +91,7 @@ export const getTravelPlanById = query(getTravelPlanByIdSchema, async (tpId) => 
   console.time(TAG)
 
   const { locals } = getRequestEvent()
-  const { user, session, supabase } = requireAuthMaybeAdmin(locals, false)
+  const { claims, supabase } = await requireAuthMaybeAdmin(locals, false)
 
   const { data: travelPlan, error: dbError } = await getTravelPlanWithEmployeeOptionalEntriesByIdDb(
     locals,
@@ -115,7 +115,7 @@ export const getTravelPlanByIdWithEntries = query(getTravelPlanByIdSchema, async
   console.time(TAG)
 
   const { locals } = getRequestEvent()
-  const { user, session, supabase } = requireAuthMaybeAdmin(locals, false)
+  const { claims, supabase } = await requireAuthMaybeAdmin(locals, false)
 
   const { data: travelPlan, error: dbError } = await getTravelPlanWithEmployeeOptionalEntriesByIdDb(
     locals,
@@ -141,7 +141,7 @@ export const getTravelPlansForMonth = query.batch(getTravelPlanForMonthsSchema, 
   console.time(TAG)
 
   const { locals } = getRequestEvent()
-  const { user, session, supabase } = requireAuthMaybeAdmin(locals)
+  const { claims, supabase } = await requireAuthMaybeAdmin(locals)
 
   if (months.length === 0) {
     error(400, "No months provided")
@@ -176,7 +176,7 @@ export const getTravelPlansWithEntriesForMonth = query.batch(
     console.time(TAG)
 
     const { locals } = getRequestEvent()
-    const { user, session, supabase } = requireAuthMaybeAdmin(locals)
+    const { claims, supabase } = await requireAuthMaybeAdmin(locals)
 
     if (months.length === 0) {
       error(400, "No months provided")

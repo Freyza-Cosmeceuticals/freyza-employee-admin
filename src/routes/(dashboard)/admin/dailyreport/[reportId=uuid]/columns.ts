@@ -90,14 +90,14 @@ export const columns: ColumnDef<Visit>[] = [
   },
   {
     accessorKey: "createdAt",
-    header: "Created At",
+    header: "Created",
     cell: ({ row }) => {
       return row.original.createdAt.toLocaleString(DateTime.TIME_SIMPLE)
     }
   },
   {
     accessorKey: "updatedAt",
-    header: "Last Updated At",
+    header: "Last Updated",
     cell: ({ row }) => {
       if (!row.original.updatedAt) return "—"
       return row.original.updatedAt.toLocaleString(DateTime.TIME_SIMPLE)
