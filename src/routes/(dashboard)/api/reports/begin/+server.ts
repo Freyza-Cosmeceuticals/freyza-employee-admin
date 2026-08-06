@@ -1,6 +1,7 @@
 import { error, json } from "@sveltejs/kit"
 
 import { DayType } from "@/lib/constants"
+import { handleApiError } from "@/lib/server/api"
 import { createDailyReport } from "@/lib/server/db/dailyreport"
 import { getRouteById } from "@/lib/server/db/route"
 import { getEmployeeById } from "@/lib/server/db/user"
@@ -111,9 +112,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       { status: 201 }
     )
   } catch (err: any) {
-    console.error("Begin Report API Error:", err)
-    if (err.status) throw err
-    throw error(500, err.message || "Internal Server Error")
+    throw handleApiError(err)
   } finally {
     console.timeEnd(TAG)
   }

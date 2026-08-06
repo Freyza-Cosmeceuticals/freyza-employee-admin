@@ -1,6 +1,18 @@
 import { relations } from "drizzle-orm/relations"
 
-import { dailyReport, location, route, travelPlan, travelPlanEntry, user, visit } from "./schema"
+import {
+  chemist,
+  dailyReport,
+  doctor,
+  location,
+  poi,
+  route,
+  stockist,
+  travelPlan,
+  travelPlanEntry,
+  user,
+  visit
+} from "./schema"
 
 export const userRelations = relations(user, ({ one, many }) => ({
   hq: one(location, {
@@ -23,7 +35,8 @@ export const locationRelations = relations(location, ({ many }) => ({
   routesAsDest: many(route, {
     relationName: "route_destLocId_location_id"
   }),
-  hqEmployees: many(user)
+  hqEmployees: many(user),
+  poi: many(poi)
 }))
 
 export const routeRelations = relations(route, ({ one, many }) => ({
@@ -57,13 +70,6 @@ export const dailyReportRelations = relations(dailyReport, ({ one, many }) => ({
   })
 }))
 
-export const visitRelations = relations(visit, ({ one }) => ({
-  dailyReport: one(dailyReport, {
-    fields: [visit.reportId],
-    references: [dailyReport.id]
-  })
-}))
-
 export const travelPlanRelations = relations(travelPlan, ({ one, many }) => ({
   createdByAdmin: one(user, {
     fields: [travelPlan.createdById],
@@ -86,5 +92,57 @@ export const travelPlanEntryRelations = relations(travelPlanEntry, ({ one }) => 
   travelPlan: one(travelPlan, {
     fields: [travelPlanEntry.tpId],
     references: [travelPlan.id]
+  })
+}))
+
+export const visitRelations = relations(visit, ({ one }) => ({
+  dailyReport: one(dailyReport, {
+    fields: [visit.reportId],
+    references: [dailyReport.id]
+  }),
+  poi: one(poi, {
+    fields: [visit.poiId],
+    references: [poi.id]
+  })
+}))
+
+export const poiRelations = relations(poi, ({ one, many }) => ({
+  location: one(location, {
+    fields: [poi.locationId],
+    references: [location.id]
+  }),
+  doctors: one(doctor, {
+    fields: [poi.id],
+    references: [doctor.id]
+  }),
+  chemists: one(chemist, {
+    fields: [poi.id],
+    references: [chemist.id]
+  }),
+  stockists: one(stockist, {
+    fields: [poi.id],
+    references: [stockist.id]
+  }),
+  visits: many(visit)
+}))
+
+export const doctorRelations = relations(doctor, ({ one }) => ({
+  poi: one(poi, {
+    fields: [doctor.id],
+    references: [poi.id]
+  })
+}))
+
+export const chemistRelations = relations(chemist, ({ one }) => ({
+  poi: one(poi, {
+    fields: [chemist.id],
+    references: [poi.id]
+  })
+}))
+
+export const stockistRelations = relations(stockist, ({ one }) => ({
+  poi: one(poi, {
+    fields: [stockist.id],
+    references: [poi.id]
   })
 }))
