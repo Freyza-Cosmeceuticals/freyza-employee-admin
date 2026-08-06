@@ -4,10 +4,10 @@ import { DateTime } from "luxon"
 
 import DataTableActions from "./data-table-actions.svelte"
 import { visitNameCell, visitTypeCell } from "./snippets.svelte"
-import type { Visit } from "@/lib/types"
+import type { Visit, VisitFull } from "@/lib/types"
 import type { ColumnDef } from "@tanstack/table-core"
 
-export const columns: ColumnDef<Visit>[] = [
+export const columns: ColumnDef<VisitFull>[] = [
   {
     accessorKey: "visitType",
     header: "Type",

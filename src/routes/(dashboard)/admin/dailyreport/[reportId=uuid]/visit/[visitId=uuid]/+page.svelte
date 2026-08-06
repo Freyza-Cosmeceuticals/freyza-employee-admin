@@ -17,7 +17,6 @@ import MarkerTooltip from "@/lib/components/ui/map/MarkerTooltip.svelte"
 import { Skeleton } from "@/lib/components/ui/skeleton/index.js"
 import { getVisitName } from "@/lib/helpers.js"
 import ArrowLeft from "@lucide/svelte/icons/arrow-left"
-import { DateTime } from "luxon"
 import { mode } from "mode-watcher"
 
 import type { RouteWithName } from "$lib/types"

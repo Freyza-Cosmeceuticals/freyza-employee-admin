@@ -1,5 +1,5 @@
 import { VisitType } from "./constants"
-import type { RouteWithName, Visit } from "./types"
+import type { RouteWithName, Visit, VisitFull } from "./types"
 
 /**
  * Returns the formatted name of the route, based on the source and destination locations.
@@ -12,10 +12,13 @@ export function formatRouteName(route: RouteWithName): string {
 
 /**
  * Returns the name of the visit, based on the visit type and the relevant name field.
+ * @deprecated use {@link VisitFull.poi.name} instead
  * @param visit
  * @returns The name of the visit, or "Unknown" if the visit type is not recognized.
  */
-export function getVisitName(visit: Visit): string {
+export function getVisitName(visit: VisitFull): string {
+  if (visit.poi) return visit.poi.name
+
   switch (visit.visitType) {
     case VisitType.DOCTOR:
       return visit.doctorName ?? "???"

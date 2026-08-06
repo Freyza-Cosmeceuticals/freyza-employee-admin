@@ -1,6 +1,7 @@
 import type {
   dailyReport,
   location,
+  poi,
   route,
   travelPlan,
   travelPlanEntry,
@@ -30,6 +31,11 @@ export type TravelPlanEntry = InferSelectModel<typeof travelPlanEntry>
 
 export type DailyReport = InferSelectModel<typeof dailyReport>
 export type Visit = InferSelectModel<typeof visit>
+export type POI = InferSelectModel<typeof poi>
+
+export type POIWithLocation = POI & {
+  location: Pick<Location, "id" | "name">
+}
 
 export type LocationCreate = InferInsertModel<typeof location>
 export type RouteCreate = InferInsertModel<typeof route>
@@ -86,8 +92,12 @@ export type DailyReportFull = DailyReport & {
   route: RouteWithName | null
   employee: EmployeeWithHQ | null
   travellingWith: EmployeeWithHQ | null
-  visits: Visit[] | null
+  visits: VisitFull[] | null
   numVisits: number | null
 }
 
 export type DailyReportCreate = InferInsertModel<typeof dailyReport>
+
+export type VisitFull = Visit & {
+  poi: POI | null
+}

@@ -15,5 +15,5 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
     error(400, "Invalid date")
   }
 
-  return { tpMonth }
+  return { tpMonth: tpMonth as DateTime<true> }
 }

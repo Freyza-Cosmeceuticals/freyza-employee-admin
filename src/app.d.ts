@@ -4,7 +4,10 @@ import type { JwtPayload, Session, SupabaseClient, User } from "@supabase/supaba
 // for information about these interfaces
 declare global {
   namespace App {
-    // interface Error {}
+    interface Error {
+      message: string,
+      data?: any
+    }
     interface Locals {
       supabase: SupabaseClient
       getAuth: () => Promise<{ session: Session; claims: JwtPayload } | { session: null; claims: null }>

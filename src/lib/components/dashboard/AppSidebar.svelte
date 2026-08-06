@@ -6,6 +6,7 @@ import * as Sidebar from "@ui/sidebar"
 import CalendarDaysIcon from "@lucide/svelte/icons/calendar-days"
 import CalendarPlusIcon from "@lucide/svelte/icons/calendar-plus"
 import MapPinIcon from "@lucide/svelte/icons/map-pin"
+import MapPinnedIcon from "@lucide/svelte/icons/map-pinned"
 import NotebookTabsIcon from "@lucide/svelte/icons/notebook-tabs"
 import RouteIcon from "@lucide/svelte/icons/route"
 import UserRoundIcon from "@lucide/svelte/icons/user-round"
@@ -91,6 +92,16 @@ import UserRoundIcon from "@lucide/svelte/icons/user-round"
                 <a href="/admin/routes" {...props}>
                   <RouteIcon />
                   <span>Routes</span>
+                </a>
+              {/snippet}
+            </Sidebar.MenuButton>
+          </Sidebar.MenuItem>
+          <Sidebar.MenuItem>
+            <Sidebar.MenuButton>
+              {#snippet child({ props })}
+                <a href="/admin/pois" {...props}>
+                  <MapPinnedIcon />
+                  <span>POIs</span>
                 </a>
               {/snippet}
             </Sidebar.MenuButton>
