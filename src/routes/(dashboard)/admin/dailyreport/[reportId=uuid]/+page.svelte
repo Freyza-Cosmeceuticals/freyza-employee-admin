@@ -152,7 +152,7 @@ $inspect(params).with(console.debug)
           </Card.Content>
         </Card.Root>
 
-        <DataTable {columns} data={[...reportVisits].reverse()} />
+        <DataTable {columns} data={reportVisits} />
 
         <div class="mt-8 flex gap-2">
           {@render statsBadge(

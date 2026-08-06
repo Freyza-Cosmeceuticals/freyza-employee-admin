@@ -224,142 +224,6 @@ export const route = pgTable(
   ]
 )
 
-export const visit = pgTable(
-  "visit",
-  {
-    id: text()
-      .primaryKey()
-      .default(sql`gen_random_uuid()`),
-
-    // report this visit is a part of
-    reportId: text().notNull(),
-    // visit done by
-    employeeId: text().notNull(),
-    visitType: visitType().notNull(),
-
-    // GPS coordinates at which visit was marked
-    latitude: doublePrecision().notNull(),
-    longitude: doublePrecision().notNull(),
-    // distance from the point of interest in meters
-    distanceMetersFromPOI: integer().notNull(),
-
-    // target IDs, only one is to be filled according to visitType, others must be NULL
-    // currently name, will upgrade later
-    doctorName: text(),
-    chemistName: text(),
-    stockistName: text(),
-
-    // doctor/chemist specific fields
-    productDetails: jsonb()
-      .$type<{ name: string; rate: number; quantity: number }[]>()
-      .default(sql`'[]'::jsonb`)
-      .notNull(),
-    samplesGiven: jsonb()
-      .$type<string[]>()
-      .default(sql`'[]'::jsonb`)
-      .notNull(),
-    orderTaken: boolean().default(false).notNull(),
-
-    // stockist specific fields
-    billNo: text(),
-    paymentCollected: boolean().default(false).notNull(),
-    amountWithGST: decimal({ precision: 12, scale: 2 }),
-    amountWithoutGST: decimal({ precision: 12, scale: 2 }),
-    outstandingAmount: decimal({ precision: 12, scale: 2 }),
-    orderAmount: decimal({ precision: 12, scale: 2 }),
-    stockChecked: boolean().default(false).notNull(),
-
-    // common
-    additionalNotes: text(),
-
-    ...timestamps
-  },
-  (table) => [
-    index("idx_visit_reportid").on(table.reportId),
-    index("idx_visit_visitType").on(table.visitType),
-    index("idx_visit_reportId_employeeId").on(table.reportId, table.employeeId),
-    index("idx_visit_employeeId").on(table.employeeId),
-    foreignKey({
-      columns: [table.reportId],
-      foreignColumns: [dailyReport.id],
-      name: "visit_reportId_fkey"
-    })
-      .onUpdate("cascade")
-      .onDelete("cascade"),
-
-    foreignKey({
-      columns: [table.employeeId],
-      foreignColumns: [user.id],
-      name: "visit_employeeId_fkey"
-    })
-      .onUpdate("cascade")
-      .onDelete("restrict"),
-
-    pgPolicy("Employees can select their own visits OR Admins can select all visits", {
-      as: "permissive",
-      for: "select",
-      to: authenticatedRole,
-      using: sql`
-        ${authJwtAppRole} = 'ADMIN'
-        OR
-        ${authUid}::text = "employeeId"
-        `
-    }),
-    pgPolicy("Employees can insert their own visits", {
-      as: "permissive",
-      for: "insert",
-      to: authenticatedRole,
-      withCheck: sql`EXISTS (
-          SELECT 1
-          FROM public."dailyReport" dr
-          WHERE dr.id = visit."reportId"
-            AND dr."employeeId" = ${authUid}::text
-            AND dr."locked" = false
-        )`
-    }),
-    pgPolicy(
-      "Employees can update their own visits if report not locked OR Admins can update all visits",
-      {
-        as: "permissive",
-        for: "update",
-        to: authenticatedRole,
-        using: sql`
-            ${authJwtAppRole} = 'ADMIN'
-            OR
-            EXISTS (
-                SELECT 1
-                FROM public."dailyReport" dr
-                WHERE dr.id = visit."reportId"
-                    AND dr."employeeId" = ${authUid}::text
-                    AND dr."locked" = false
-            )`,
-        withCheck: sql`
-            ${authJwtAppRole} = 'ADMIN'
-            OR
-            EXISTS (
-                SELECT 1
-                FROM public."dailyReport" dr
-                WHERE dr.id = visit."reportId"
-                    AND dr."employeeId" = ${authUid}::text
-                    AND dr."locked" = false
-            )`
-      }
-    ),
-    pgPolicy("Employees can delete their own visits if report not locked", {
-      as: "permissive",
-      for: "delete",
-      to: authenticatedRole,
-      using: sql`EXISTS (
-          SELECT 1
-          FROM public."dailyReport" dr
-          WHERE dr.id = visit."reportId"
-            AND dr."employeeId" = ${authUid}::text
-            AND dr."locked" = false
-        )`
-    })
-  ]
-)
-
 export const travelPlan = pgTable(
   "travelPlan",
   {
@@ -613,5 +477,346 @@ export const dailyReport = pgTable(
           `
       }
     )
+  ]
+)
+
+export const visit = pgTable(
+  "visit",
+  {
+    id: text()
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+
+    // report this visit is a part of
+    reportId: text().notNull(),
+    // visit done by
+    employeeId: text().notNull(),
+    visitType: visitType().notNull(),
+
+    // GPS coordinates at which visit was marked
+    latitude: doublePrecision().notNull(),
+    longitude: doublePrecision().notNull(),
+    // distance from the point of interest in meters
+    distanceMetersFromPOI: integer().notNull(),
+
+    // TODO: mark poiId as .notNull() in next prod deploy
+    poiId: text(),
+
+    // target IDs, only one is to be filled according to visitType, others must be NULL
+    // TODO: poiId replaces this, will remove in next prod deploy
+    doctorName: text(),
+    chemistName: text(),
+    stockistName: text(),
+
+    // doctor/chemist specific fields
+    productDetails: jsonb()
+      .$type<{ name: string; rate: number; quantity: number }[]>()
+      .default(sql`'[]'::jsonb`)
+      .notNull(),
+    samplesGiven: jsonb()
+      .$type<string[]>()
+      .default(sql`'[]'::jsonb`)
+      .notNull(),
+    orderTaken: boolean().default(false).notNull(),
+
+    // stockist specific fields
+    billNo: text(),
+    paymentCollected: boolean().default(false).notNull(),
+    amountWithGST: decimal({ precision: 12, scale: 2 }),
+    amountWithoutGST: decimal({ precision: 12, scale: 2 }),
+    outstandingAmount: decimal({ precision: 12, scale: 2 }),
+    orderAmount: decimal({ precision: 12, scale: 2 }),
+    stockChecked: boolean().default(false).notNull(),
+
+    // common
+    additionalNotes: text(),
+
+    ...timestamps
+  },
+  (table) => [
+    index("idx_visit_reportid").on(table.reportId),
+    index("idx_visit_visitType").on(table.visitType),
+    index("idx_visit_reportId_employeeId").on(table.reportId, table.employeeId),
+    index("idx_visit_employeeId").on(table.employeeId),
+    foreignKey({
+      columns: [table.reportId],
+      foreignColumns: [dailyReport.id],
+      name: "visit_reportId_fkey"
+    })
+      .onUpdate("cascade")
+      .onDelete("cascade"),
+
+    foreignKey({
+      columns: [table.employeeId],
+      foreignColumns: [user.id],
+      name: "visit_employeeId_fkey"
+    })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+
+    foreignKey({
+      columns: [table.poiId],
+      foreignColumns: [poi.id],
+      name: "visit_poiId_fkey"
+    })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+
+    pgPolicy("Employees can select their own visits OR Admins can select all visits", {
+      as: "permissive",
+      for: "select",
+      to: authenticatedRole,
+      using: sql`
+        ${authJwtAppRole} = 'ADMIN'
+        OR
+        ${authUid}::text = "employeeId"
+        `
+    }),
+    pgPolicy("Employees can insert their own visits", {
+      as: "permissive",
+      for: "insert",
+      to: authenticatedRole,
+      withCheck: sql`EXISTS (
+          SELECT 1
+          FROM public."dailyReport" dr
+          WHERE dr.id = visit."reportId"
+            AND dr."employeeId" = ${authUid}::text
+            AND dr."locked" = false
+        )`
+    }),
+    pgPolicy(
+      "Employees can update their own visits if report not locked OR Admins can update all visits",
+      {
+        as: "permissive",
+        for: "update",
+        to: authenticatedRole,
+        using: sql`
+            ${authJwtAppRole} = 'ADMIN'
+            OR
+            EXISTS (
+                SELECT 1
+                FROM public."dailyReport" dr
+                WHERE dr.id = visit."reportId"
+                    AND dr."employeeId" = ${authUid}::text
+                    AND dr."locked" = false
+            )`,
+        withCheck: sql`
+            ${authJwtAppRole} = 'ADMIN'
+            OR
+            EXISTS (
+                SELECT 1
+                FROM public."dailyReport" dr
+                WHERE dr.id = visit."reportId"
+                    AND dr."employeeId" = ${authUid}::text
+                    AND dr."locked" = false
+            )`
+      }
+    ),
+    pgPolicy("Employees can delete their own visits if report not locked", {
+      as: "permissive",
+      for: "delete",
+      to: authenticatedRole,
+      using: sql`EXISTS (
+          SELECT 1
+          FROM public."dailyReport" dr
+          WHERE dr.id = visit."reportId"
+            AND dr."employeeId" = ${authUid}::text
+            AND dr."locked" = false
+        )`
+    })
+  ]
+)
+
+export const poi = pgTable(
+  "poi",
+  {
+    id: text()
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+
+    name: varchar({ length: 255 }).notNull(),
+    type: visitType().notNull(),
+
+    // location of the POI
+    locationId: text().notNull(),
+
+    // GPS coordinates of the POI (optional)
+    latitude: doublePrecision(),
+    longitude: doublePrecision(),
+
+    ...timestamps
+  },
+  (table) => [
+    index("idx_poi_locationId").on(table.locationId),
+    index("idx_poi_type").on(table.type),
+    foreignKey({
+      columns: [table.locationId],
+      foreignColumns: [location.id],
+      name: "poi_locationId_fkey"
+    })
+      .onUpdate("cascade")
+      .onDelete("restrict"),
+
+    pgPolicy("Authenticated users can view all pois", {
+      as: "permissive",
+      for: "select",
+      to: authenticatedRole,
+      using: sql`true`
+    }),
+    pgPolicy("Only admins can insert pois", {
+      as: "permissive",
+      for: "insert",
+      to: authenticatedRole,
+      withCheck: sql`${authJwtAppRole} = 'ADMIN'`
+    }),
+    pgPolicy("Only admins can update pois", {
+      as: "permissive",
+      for: "update",
+      to: authenticatedRole,
+      using: sql`${authJwtAppRole} = 'ADMIN'`,
+      withCheck: sql`${authJwtAppRole} = 'ADMIN'`
+    }),
+    pgPolicy("Only admins can delete pois", {
+      as: "permissive",
+      for: "delete",
+      to: authenticatedRole,
+      using: sql`${authJwtAppRole} = 'ADMIN'`
+    })
+  ]
+)
+
+export const doctor = pgTable(
+  "doctor",
+  {
+    // id is pk and fk to poi.id
+    id: text().primaryKey().notNull(),
+
+    specialty: varchar({ length: 100 }),
+    clinicName: varchar({ length: 255 })
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.id],
+      foreignColumns: [poi.id],
+      name: "doctor_id_fkey"
+    })
+      .onUpdate("cascade")
+      // if poi is deleted, cascade
+      .onDelete("cascade"),
+
+    pgPolicy("Authenticated users can view all doctors", {
+      as: "permissive",
+      for: "select",
+      to: authenticatedRole,
+      using: sql`true`
+    }),
+    pgPolicy("Only admins can insert doctors", {
+      as: "permissive",
+      for: "insert",
+      to: authenticatedRole,
+      withCheck: sql`${authJwtAppRole} = 'ADMIN'`
+    }),
+    pgPolicy("Only admins can update doctors", {
+      as: "permissive",
+      for: "update",
+      to: authenticatedRole,
+      using: sql`${authJwtAppRole} = 'ADMIN'`,
+      withCheck: sql`${authJwtAppRole} = 'ADMIN'`
+    }),
+    pgPolicy("Only admins can delete doctors", {
+      as: "permissive",
+      for: "delete",
+      to: authenticatedRole,
+      using: sql`${authJwtAppRole} = 'ADMIN'`
+    })
+  ]
+)
+
+export const chemist = pgTable(
+  "chemist",
+  {
+    // id is pk and fk to poi.id
+    id: text().primaryKey().notNull()
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.id],
+      foreignColumns: [poi.id],
+      name: "chemist_id_fkey"
+    })
+      .onUpdate("cascade")
+      // if poi is deleted, cascade
+      .onDelete("cascade"),
+
+    pgPolicy("Authenticated users can view all chemists", {
+      as: "permissive",
+      for: "select",
+      to: authenticatedRole,
+      using: sql`true`
+    }),
+    pgPolicy("Only admins can insert chemists", {
+      as: "permissive",
+      for: "insert",
+      to: authenticatedRole,
+      withCheck: sql`${authJwtAppRole} = 'ADMIN'`
+    }),
+    pgPolicy("Only admins can update chemists", {
+      as: "permissive",
+      for: "update",
+      to: authenticatedRole,
+      using: sql`${authJwtAppRole} = 'ADMIN'`,
+      withCheck: sql`${authJwtAppRole} = 'ADMIN'`
+    }),
+    pgPolicy("Only admins can delete chemists", {
+      as: "permissive",
+      for: "delete",
+      to: authenticatedRole,
+      using: sql`${authJwtAppRole} = 'ADMIN'`
+    })
+  ]
+)
+
+export const stockist = pgTable(
+  "stockist",
+  {
+    id: text().primaryKey().notNull(),
+
+    gstNumber: varchar({ length: 50 })
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.id],
+      foreignColumns: [poi.id],
+      name: "stockist_poiId_fkey"
+    })
+      .onUpdate("cascade")
+      // if poi is deleted, cascade
+      .onDelete("cascade"),
+
+    pgPolicy("Authenticated users can view all stockists", {
+      as: "permissive",
+      for: "select",
+      to: authenticatedRole,
+      using: sql`true`
+    }),
+    pgPolicy("Only admins can insert stockists", {
+      as: "permissive",
+      for: "insert",
+      to: authenticatedRole,
+      withCheck: sql`${authJwtAppRole} = 'ADMIN'`
+    }),
+    pgPolicy("Only admins can update stockists", {
+      as: "permissive",
+      for: "update",
+      to: authenticatedRole,
+      using: sql`${authJwtAppRole} = 'ADMIN'`,
+      withCheck: sql`${authJwtAppRole} = 'ADMIN'`
+    }),
+    pgPolicy("Only admins can delete stockists", {
+      as: "permissive",
+      for: "delete",
+      to: authenticatedRole,
+      using: sql`${authJwtAppRole} = 'ADMIN'`
+    })
   ]
 )

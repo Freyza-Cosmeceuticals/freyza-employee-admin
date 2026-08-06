@@ -1,4 +1,16 @@
-export { user, location, route, dailyReport, visit, travelPlan, travelPlanEntry } from "./schema"
+export {
+  user,
+  location,
+  route,
+  dailyReport,
+  travelPlan,
+  travelPlanEntry,
+  visit,
+  poi,
+  doctor,
+  stockist,
+  chemist
+} from "./schema"
 export {
   userRelations,
   locationRelations,
@@ -6,5 +18,9 @@ export {
   visitRelations,
   dailyReportRelations,
   travelPlanRelations,
-  travelPlanEntryRelations
+  travelPlanEntryRelations,
+  poiRelations,
+  doctorRelations,
+  stockistRelations,
+  chemistRelations
 } from "./relations"

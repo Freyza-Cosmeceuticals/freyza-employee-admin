@@ -56,7 +56,14 @@ export async function fetchDailyReports(
       with: {
         employee: opts.includeEmployee ? { with: { hq: true } } : undefined,
         route: opts.includeRoute ? { with: { srcLoc: true, destLoc: true } } : undefined,
-        visits: opts.includeVisits ? true : undefined,
+        visits: opts.includeVisits
+          ? {
+              with: {
+                poi: true
+              },
+              orderBy: [desc(s.visit.createdAt)]
+            }
+          : undefined,
         travellingWith: opts.includeTravellingWith ? { with: { hq: true } } : undefined
       }
     })

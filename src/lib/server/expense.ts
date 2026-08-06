@@ -6,7 +6,7 @@ const DA_NON_HQ = 200
 // Travel Allowance per km in HQ
 const TA_HQ_PER_KM = 0
 // Travel Allowance per km in non-HQ
-const TA_NON_HQ_PER_KM = 2.5
+const TA_NON_HQ_PER_KM = 2.75
 
 // Petrol Allowance
 const PA = 90
