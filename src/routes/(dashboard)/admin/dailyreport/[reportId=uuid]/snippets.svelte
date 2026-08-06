@@ -4,9 +4,9 @@ import { Badge } from "@ui/badge"
 import { getVisitName, getVisitTypeLabel } from "@/lib/helpers"
 import { VisitType } from "@/lib/types"
 
-import type { Visit } from "@/lib/types"
+import type { VisitFull } from "@/lib/types"
 
-export { visitTypeCell, visitNameCell, visitTypeLabelCell }
+export { visitNameCell, visitTypeCell, visitTypeLabelCell }
 </script>
 
 {#snippet visitTypeCell({ visitType }: { visitType: VisitType })}
@@ -21,7 +21,7 @@ export { visitTypeCell, visitNameCell, visitTypeLabelCell }
   {/if}
 {/snippet}
 
-{#snippet visitNameCell({ visit }: { visit: Visit })}
+{#snippet visitNameCell({ visit }: { visit: VisitFull })}
   {getVisitName(visit)}
 {/snippet}
 

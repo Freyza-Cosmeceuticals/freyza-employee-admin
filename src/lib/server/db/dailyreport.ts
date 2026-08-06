@@ -9,7 +9,7 @@ import type {
   DailyReportFull,
   EmployeeWithHQ,
   RouteWithName,
-  Visit
+  VisitFull
 } from "$lib/types"
 
 export type GetDailyReportsOptions = {
@@ -95,6 +95,7 @@ export async function fetchDailyReports(
       numVisits: countMap.get(r.id) ?? 0,
       employee: r.employee as EmployeeWithHQ | null,
       route: r.route as RouteWithName | null,
+      visits: r.visits as VisitFull[] | null,
       travellingWith: r.travellingWith as EmployeeWithHQ | null
     }))
 
@@ -133,12 +134,23 @@ export async function createDailyReport(
 export async function getVisitById(
   locals: App.Locals,
   visitId: string
-): Promise<{ data: Visit | null; error: null } | { data: null; error: string }> {
+): Promise<{ data: VisitFull | null; error: null } | { data: null; error: string }> {
   let TAG = `DB: getVisitById(${visitId})`
   console.time(TAG)
 
   try {
-    const [visit] = await db.select().from(s.visit).where(eq(s.visit.id, visitId)).limit(1)
+    const [rawVisit] = await db
+      .select()
+      .from(s.visit)
+      .where(eq(s.visit.id, visitId))
+      .leftJoin(s.poi, eq(s.visit.poiId, s.poi.id))
+      .limit(1)
+
+    const visit = {
+      ...rawVisit.visit,
+      poi: rawVisit?.poi ?? null
+    }
+
     return { data: visit, error: null }
   } catch (e) {
     return handleDbError(e)

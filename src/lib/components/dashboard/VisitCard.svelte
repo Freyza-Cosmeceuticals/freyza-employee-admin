@@ -7,18 +7,17 @@ import { VisitType } from "$lib/types"
 import { getVisitName, getVisitTypeLabel } from "@/lib/helpers"
 import { DateTime } from "luxon"
 
-import type { Visit } from "$lib/types"
+import type { VisitFull } from "$lib/types"
 import type { ClassValue } from "svelte/elements"
 
 interface Props {
-  visit: Visit
+  visit: VisitFull
   class?: ClassValue
 }
 
 let { visit, class: className }: Props = $props()
 
 const visitTypeLabel = $derived(getVisitTypeLabel(visit.visitType))
-const visitName = $derived(getVisitName(visit))
 </script>
 
 <Card.Root class={["w-full", className]}>
@@ -26,7 +25,7 @@ const visitName = $derived(getVisitName(visit))
     <div class="flex items-start justify-between">
       <div class="flex-1 space-y-2">
         <div class="flex items-center gap-2">
-          <Card.Title class="text-lg">{visitName}</Card.Title>
+          <Card.Title class="text-lg">{getVisitName(visit)}</Card.Title>
           <Badge variant="secondary">{visitTypeLabel}</Badge>
         </div>
         <p class="text-sm text-muted-foreground">

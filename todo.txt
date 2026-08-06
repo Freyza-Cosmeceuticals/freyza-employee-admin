@@ -9,8 +9,12 @@ x 2026-07-22 2026-07-22 setup for maps view in visits +dailyreport
 x 2026-07-18 2026-07-17 add reports auto locking using pg_cron +dailyreport
 x 2026-07-29 2026-07-24 travelling with No one or other employee +dailyreport
 (B) 2026-07-24 IMprove data table for reports and visits, show contextual info and timestamps
-(A) 2026-07-27 Doctor, Stockist and Chemist tables, with just names and other details for now
+x 2026-08-07 2026-07-27 Doctor, Stockist and Chemist tables, with just names and other details for now
 x 2026-07-29 2026-07-28 Add seeds for rest of the routes
 x 2026-07-29 2026-07-29 Create report endpoint with expense calculation
 x 2026-07-29 2026-07-29 Simplify auth using .getClaims()
 (A) 2026-08-06 in-app updates
+(A) 2026-08-06 do the migrate and contract phase for visits and POI tables
+(B) 2026-08-07 add POI distance calculation
+x 2026-08-07 2026-08-07 list POI api route
+x 2026-08-07 2026-08-07 create visit api route
