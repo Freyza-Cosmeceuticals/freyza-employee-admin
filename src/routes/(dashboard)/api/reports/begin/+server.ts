@@ -53,7 +53,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
     const { date, dayType, routeId, travellingWithId } = parsed.output
 
-    let expenses = { da: 0, ta: 0, pa: 0, total: 0 }
+    let expenses = { da: 0, ta: 0, total: 0 }
 
     if (dayType === DayType.WORK) {
       if (!routeId) throw error(400, "routeId is required for WORK days")
@@ -87,7 +87,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       travellingWithId: dayType === DayType.WORK ? travellingWithId || null : null,
       da: expenses.da,
       ta: expenses.ta,
-      // PA is combined into total
+      // combined DA + TA
       totalExpense: expenses.total
     }
 
