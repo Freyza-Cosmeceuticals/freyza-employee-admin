@@ -20,7 +20,7 @@ import MarkerContent from "@/lib/components/ui/map/MarkerContent.svelte"
 import MarkerLabel from "@/lib/components/ui/map/MarkerLabel.svelte"
 import MarkerPopup from "@/lib/components/ui/map/MarkerPopup.svelte"
 import { Skeleton } from "@/lib/components/ui/skeleton/index.js"
-import { findVisitsCamera, getVisitName } from "@/lib/helpers.js"
+import { findVisitsCamera } from "@/lib/helpers.js"
 import ArrowLeft from "@lucide/svelte/icons/arrow-left"
 import { DateTime } from "luxon"
 import { mode } from "mode-watcher"
@@ -111,14 +111,14 @@ $inspect(params).with(console.debug)
                       class="size-4 cursor-pointer rounded-full border-3 border-white bg-red-500 shadow-lg transition-transform hover:scale-110">
                     </div>
                     <MarkerLabel position="bottom" class="text-black">
-                      {getVisitName(vt)}
+                      {vt.poi?.name ?? "???"}
                     </MarkerLabel>
                   </MarkerContent>
 
                   <MarkerPopup class="w-62 p-4">
                     <div class="space-y-2">
                       <div class="text-base font-semibold">
-                        {getVisitName(vt)}
+                        {vt.poi?.name ?? "???"}
                       </div>
 
                       <div class="text-sm text-muted-foreground">

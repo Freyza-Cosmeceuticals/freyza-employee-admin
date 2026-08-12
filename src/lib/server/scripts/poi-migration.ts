@@ -76,10 +76,10 @@ async function migratePOIs() {
         const { visit, route } = row
 
         // Extract raw target name
-        let rawName: string | null = null
-        if (visit.visitType === "DOCTOR") rawName = visit.doctorName
-        else if (visit.visitType === "CHEMIST") rawName = visit.chemistName
-        else if (visit.visitType === "STOCKIST") rawName = visit.stockistName
+        let rawName: string | null = ""
+        // if (visit.visitType === "DOCTOR") rawName = visit.doctorName
+        // else if (visit.visitType === "CHEMIST") rawName = visit.chemistName
+        // else if (visit.visitType === "STOCKIST") rawName = visit.stockistName
 
         if (!rawName || !rawName.trim()) {
           console.warn(`⚠️ Visit ${visit.id} has empty name for type ${visit.visitType}. Skipping.`)
