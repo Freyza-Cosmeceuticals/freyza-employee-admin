@@ -18,3 +18,6 @@ x 2026-07-29 2026-07-29 Simplify auth using .getClaims()
 (B) 2026-08-07 add POI distance calculation
 x 2026-08-07 2026-08-07 list POI api route
 x 2026-08-07 2026-08-07 create visit api route
+(A) 2026-08-10 implement per tier expensing
+(A) 2026-08-10 list all employees in travlling with for the meantime
+(A) 2026-08-10 record all amounts recorded in visits into travel plan targets
