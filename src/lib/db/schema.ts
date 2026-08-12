@@ -417,6 +417,7 @@ export const dailyReport = pgTable(
     index("idx_dailyreport_routeid").on(table.routeId),
     uniqueIndex("idx_dailyReport_employeeId_date").on(table.employeeId, table.date),
     index("idx_dailyReport_employeeId_locked").on(table.employeeId, table.locked),
+    index("idx_dailyReport_travellingWithId").on(table.travellingWithId),
     foreignKey({
       columns: [table.employeeId],
       foreignColumns: [user.id],
@@ -499,14 +500,7 @@ export const visit = pgTable(
     // distance from the point of interest in meters
     distanceMetersFromPOI: integer().notNull(),
 
-    // TODO: mark poiId as .notNull() in next prod deploy
-    poiId: text(),
-
-    // target IDs, only one is to be filled according to visitType, others must be NULL
-    // TODO: poiId replaces this, will remove in next prod deploy
-    doctorName: text(),
-    chemistName: text(),
-    stockistName: text(),
+    poiId: text().notNull(),
 
     // doctor/chemist specific fields
     productDetails: jsonb()
@@ -538,6 +532,7 @@ export const visit = pgTable(
     index("idx_visit_visitType").on(table.visitType),
     index("idx_visit_reportId_employeeId").on(table.reportId, table.employeeId),
     index("idx_visit_employeeId").on(table.employeeId),
+    index("idx_visit_poiId").on(table.poiId),
     foreignKey({
       columns: [table.reportId],
       foreignColumns: [dailyReport.id],

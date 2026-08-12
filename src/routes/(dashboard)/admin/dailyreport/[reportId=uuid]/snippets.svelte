@@ -1,7 +1,7 @@
 <script module lang="ts">
 import { Badge } from "@ui/badge"
 
-import { getVisitName, getVisitTypeLabel } from "@/lib/helpers"
+import { getVisitTypeLabel } from "@/lib/helpers"
 import { VisitType } from "@/lib/types"
 
 import type { VisitFull } from "@/lib/types"
@@ -22,7 +22,7 @@ export { visitNameCell, visitTypeCell, visitTypeLabelCell }
 {/snippet}
 
 {#snippet visitNameCell({ visit }: { visit: VisitFull })}
-  {getVisitName(visit)}
+  {visit.poi?.name ?? "???"}
 {/snippet}
 
 {#snippet visitTypeLabelCell({ visitType }: { visitType: VisitType })}

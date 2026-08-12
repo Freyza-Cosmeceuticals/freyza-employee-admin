@@ -11,27 +11,6 @@ export function formatRouteName(route: RouteWithName): string {
 }
 
 /**
- * Returns the name of the visit, based on the visit type and the relevant name field.
- * @deprecated use {@link VisitFull.poi.name} instead
- * @param visit
- * @returns The name of the visit, or "Unknown" if the visit type is not recognized.
- */
-export function getVisitName(visit: VisitFull): string {
-  if (visit.poi) return visit.poi.name
-
-  switch (visit.visitType) {
-    case VisitType.DOCTOR:
-      return visit.doctorName ?? "???"
-    case VisitType.STOCKIST:
-      return visit.stockistName ?? "???"
-    case VisitType.CHEMIST:
-      return visit.chemistName ?? "???"
-    default:
-      return "Unknown"
-  }
-}
-
-/**
  * Returns the label for the visit type, based on the visit type.
  * @param visitType
  * @returns The label for the visit type, or "Unknown" if the visit type is not recognized.

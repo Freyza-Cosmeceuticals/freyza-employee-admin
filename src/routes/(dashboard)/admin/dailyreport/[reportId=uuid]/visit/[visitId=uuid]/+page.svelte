@@ -15,7 +15,6 @@ import MapMarker from "@/lib/components/ui/map/MapMarker.svelte"
 import MarkerContent from "@/lib/components/ui/map/MarkerContent.svelte"
 import MarkerTooltip from "@/lib/components/ui/map/MarkerTooltip.svelte"
 import { Skeleton } from "@/lib/components/ui/skeleton/index.js"
-import { getVisitName } from "@/lib/helpers.js"
 import ArrowLeft from "@lucide/svelte/icons/arrow-left"
 import { mode } from "mode-watcher"
 
@@ -53,7 +52,7 @@ $inspect(params).with(console.debug)
     {const report = $derived(await getDailyReportById(params.reportId))}
 
     {#if visit && visitTimestamp}
-      <PageHeader title="Visit to {getVisitName(visit)}" {subheader} />
+      <PageHeader title="Visit to {visit.poi?.name ?? '???'}" {subheader} />
 
       <Card.Root class="m-4 h-80 overflow-clip rounded-none border-0 p-0 shadow-none ring-0">
         <!-- Map.center expect longitude, latitude -->

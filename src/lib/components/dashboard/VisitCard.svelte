@@ -4,7 +4,7 @@ import * as Card from "@ui/card"
 
 import { VisitType } from "$lib/types"
 
-import { getVisitName, getVisitTypeLabel } from "@/lib/helpers"
+import { getVisitTypeLabel } from "@/lib/helpers"
 import { DateTime } from "luxon"
 
 import type { VisitFull } from "$lib/types"
@@ -25,7 +25,7 @@ const visitTypeLabel = $derived(getVisitTypeLabel(visit.visitType))
     <div class="flex items-start justify-between">
       <div class="flex-1 space-y-2">
         <div class="flex items-center gap-2">
-          <Card.Title class="text-lg">{getVisitName(visit)}</Card.Title>
+          <Card.Title class="text-lg">{visit.poi?.name ?? "???"}</Card.Title>
           <Badge variant="secondary">{visitTypeLabel}</Badge>
         </div>
         <p class="text-sm text-muted-foreground">
