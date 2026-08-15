@@ -37,7 +37,7 @@ export const reportStatus = pgEnum("ReportStatus", enumToPgEnum(ReportStatus))
 export const visitType = pgEnum("VisitType", enumToPgEnum(VisitType))
 
 const authUid = sql`(select auth.uid())`
-const authJwtAppRole = sql`(select auth.jwt() -> 'app_metadata' ->> 'app_role'::text)`
+const authJwtAppRole = sql`(select auth.jwt()) -> 'app_metadata' ->> 'app_role'::text`
 
 export const luxonTimestamp = customType<{
   data: DateTime
