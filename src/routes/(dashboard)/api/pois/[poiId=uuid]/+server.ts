@@ -16,7 +16,7 @@ export const GET: RequestHandler = async ({ request, locals, params }) => {
   console.time(TAG)
 
   try {
-    const user = await requireApiAuth(request, locals.supabase)
+    const { user, apiSupabase } = await requireApiAuth(request, locals.supabase)
 
     const poiId = params.poiId
     if (!poiId) throw error(400, "Invalid POI ID")

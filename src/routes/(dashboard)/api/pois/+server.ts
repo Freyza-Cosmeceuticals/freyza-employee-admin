@@ -25,7 +25,7 @@ export const GET: RequestHandler = async ({ request, url, locals }) => {
   console.time(TAG)
 
   try {
-    const user = await requireApiAuth(request, locals.supabase)
+    const { user, apiSupabase } = await requireApiAuth(request, locals.supabase)
 
     const params = Object.fromEntries(url.searchParams.entries())
     const parsed = v.safeParse(getPoiSchema, params)

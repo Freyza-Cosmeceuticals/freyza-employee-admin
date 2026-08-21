@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm/relations"
 
 import {
+  appRelease,
   chemist,
   dailyReport,
   doctor,
@@ -146,3 +147,5 @@ export const stockistRelations = relations(stockist, ({ one }) => ({
     references: [poi.id]
   })
 }))
+
+export const appReleaseRelations = relations(appRelease, ({ one, many }) => ({}))

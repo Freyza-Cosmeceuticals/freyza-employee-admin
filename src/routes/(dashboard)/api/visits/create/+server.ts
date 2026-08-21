@@ -72,7 +72,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   console.time(TAG)
 
   try {
-    const user = await requireApiAuth(request, locals.supabase)
+    const { user, apiSupabase } = await requireApiAuth(request, locals.supabase)
     const employeeId = user.id
 
     const body = await request.json()

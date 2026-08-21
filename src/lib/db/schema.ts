@@ -815,3 +815,49 @@ export const stockist = pgTable(
     })
   ]
 )
+
+export const appRelease = pgTable(
+  "app_release",
+  {
+    id: text()
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+
+    versionName: varchar({ length: 50 }).notNull(),
+    buildNumber: integer().notNull().unique(),
+    releaseNotes: text().notNull(),
+    isMandatory: boolean().default(false).notNull(),
+
+    apkStoragePath: text().notNull(),
+
+    ...timestamps
+  },
+  (table) => [
+    index("idx_app_release_buildNumber").on(table.buildNumber),
+
+    pgPolicy("Authenticated users can view all app releases", {
+      as: "permissive",
+      for: "select",
+      to: authenticatedRole,
+      using: sql`true`
+    }),
+    pgPolicy("Only admins can insert app releases", {
+      as: "permissive",
+      for: "insert",
+      to: authenticatedRole,
+      withCheck: sql`${authJwtAppRole} = 'ADMIN'`
+    }),
+    pgPolicy("Only admins can update app releases", {
+      as: "permissive",
+      for: "update",
+      to: authenticatedRole,
+      using: sql`${authJwtAppRole} = 'ADMIN'`
+    }),
+    pgPolicy("Only admins can delete app releases", {
+      as: "permissive",
+      for: "delete",
+      to: authenticatedRole,
+      using: sql`${authJwtAppRole} = 'ADMIN'`
+    })
+  ]
+)

@@ -9,6 +9,7 @@ import MapPinIcon from "@lucide/svelte/icons/map-pin"
 import MapPinnedIcon from "@lucide/svelte/icons/map-pinned"
 import NotebookTabsIcon from "@lucide/svelte/icons/notebook-tabs"
 import RouteIcon from "@lucide/svelte/icons/route"
+import MobileAppIcon from "@lucide/svelte/icons/smartphone"
 import UserRoundIcon from "@lucide/svelte/icons/user-round"
 </script>
 
@@ -102,6 +103,16 @@ import UserRoundIcon from "@lucide/svelte/icons/user-round"
                 <a href="/admin/pois" {...props}>
                   <MapPinnedIcon />
                   <span>POIs</span>
+                </a>
+              {/snippet}
+            </Sidebar.MenuButton>
+          </Sidebar.MenuItem>
+          <Sidebar.MenuItem>
+            <Sidebar.MenuButton>
+              {#snippet child({ props })}
+                <a href="/admin/releases" {...props}>
+                  <MobileAppIcon />
+                  <span>App Releases</span>
                 </a>
               {/snippet}
             </Sidebar.MenuButton>

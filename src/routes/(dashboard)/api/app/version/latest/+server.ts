@@ -1,0 +1,78 @@
+import { error, json } from "@sveltejs/kit"
+
+import * as s from "@/lib/db/schema"
+import { handleApiError, requireApiAuth } from "@/lib/server/api"
+import { db } from "@/lib/server/db"
+import { desc } from "drizzle-orm"
+
+import type { RequestHandler } from "./$types"
+
+export const GET: RequestHandler = async ({ request, url, locals }) => {
+  const TAG = "GET /api/app/version/latest"
+  console.time(TAG)
+
+  const DOWNLOAD_EXPIRY_SECONDS = 60 * 30
+
+  try {
+    const { user, apiSupabase } = await requireApiAuth(request, locals.supabase)
+
+    const [latest] = await db
+      .select()
+      .from(s.appRelease)
+      .orderBy(desc(s.appRelease.buildNumber))
+      .limit(1)
+
+    if (!latest) {
+      return json({ success: true, data: null })
+    }
+
+    console.log(
+      `Found latest app version (${latest.id}) ${latest.versionName}-${latest.buildNumber}`
+    )
+
+    const { data: signedData, error: signError } = await apiSupabase.storage
+      .from("apk_releases")
+      .createSignedUrl(latest.apkStoragePath, DOWNLOAD_EXPIRY_SECONDS)
+
+    if (signError || !signedData) {
+      console.error("Failed to sign URL", signError)
+      throw error(500, "Could not generate download link")
+    }
+
+    // localhost remap
+    const downloadUrl = signedData.signedUrl.replace(
+      /^http:\/\/(localhost|127\.0\.0\.1):/,
+      `http://${url.hostname}:`
+    )
+
+    const { data: fileInfo, error: fileInfoError } = await apiSupabase.storage
+      .from("apk_releases")
+      .info(latest.apkStoragePath)
+
+    if (fileInfoError || !fileInfo) {
+      console.error("Failed to get file info", fileInfoError, "\nStill returning signed URL")
+    }
+
+    let fileSizeMb = fileInfo?.size
+    if (fileSizeMb !== undefined) {
+      fileSizeMb /= 1024 * 1024
+    }
+
+    return json({
+      success: true,
+      data: {
+        versionName: latest.versionName,
+        buildNumber: latest.buildNumber,
+        releaseNotes: latest.releaseNotes,
+        isMandatory: latest.isMandatory,
+        downloadUrl,
+        expiresIn: DOWNLOAD_EXPIRY_SECONDS,
+        fileSizeMb
+      }
+    })
+  } catch (e) {
+    throw handleApiError(e)
+  } finally {
+    console.timeEnd(TAG)
+  }
+}

@@ -9,7 +9,8 @@ export {
   poi,
   doctor,
   stockist,
-  chemist
+  chemist,
+  appRelease
 } from "./schema"
 export {
   userRelations,
@@ -22,5 +23,6 @@ export {
   poiRelations,
   doctorRelations,
   stockistRelations,
-  chemistRelations
+  chemistRelations,
+  appReleaseRelations
 } from "./relations"
