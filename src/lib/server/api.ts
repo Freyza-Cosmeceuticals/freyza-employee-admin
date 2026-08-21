@@ -1,7 +1,9 @@
+import { PUBLIC_SUPABASE_PUBLISHABLE_KEY, PUBLIC_SUPABASE_URL } from "$env/static/public"
 import { error } from "@sveltejs/kit"
 
 import { UserRole, UserStatus } from "$lib/types"
 
+import { createClient } from "@supabase/supabase-js"
 import { DrizzleQueryError } from "drizzle-orm"
 
 import type { SupabaseClient } from "@supabase/supabase-js"
@@ -20,7 +22,7 @@ export async function requireApiAuth(
   admin: boolean = false
 ) {
   const authHeader = request.headers.get("Authorization")
-  const token = authHeader?.replace("Bearer ", "")
+  const token = authHeader?.replace(/^Bearer\s+/i, "")
 
   if (!token) {
     console.error("API Auth: No token provided")
@@ -47,7 +49,15 @@ export async function requireApiAuth(
     throw error(403, "Forbidden: Requires Admin privileges")
   }
 
-  return user
+  const apiSupabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
+    global: {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  })
+
+  return { user, apiSupabase }
 }
 
 export function handleApiError(e: any) {

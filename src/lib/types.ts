@@ -1,4 +1,5 @@
 import type {
+  appRelease,
   dailyReport,
   location,
   poi,
@@ -32,6 +33,8 @@ export type TravelPlanEntry = InferSelectModel<typeof travelPlanEntry>
 export type DailyReport = InferSelectModel<typeof dailyReport>
 export type Visit = InferSelectModel<typeof visit>
 export type POI = InferSelectModel<typeof poi>
+
+export type AppRelease = InferSelectModel<typeof appRelease>
 
 export type POIWithLocation = POI & {
   location: Pick<Location, "id" | "name">

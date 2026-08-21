@@ -14,7 +14,7 @@ x 2026-07-29 2026-07-28 Add seeds for rest of the routes
 x 2026-07-29 2026-07-29 Create report endpoint with expense calculation
 x 2026-07-29 2026-07-29 Simplify auth using .getClaims()
 (A) 2026-08-06 in-app updates
-(A) 2026-08-06 do the migrate and contract phase for visits and POI tables
+x 2026-08-19 2026-08-06 do the migrate and contract phase for visits and POI tables
 (B) 2026-08-07 add POI distance calculation
 x 2026-08-07 2026-08-07 list POI api route
 x 2026-08-07 2026-08-07 create visit api route
