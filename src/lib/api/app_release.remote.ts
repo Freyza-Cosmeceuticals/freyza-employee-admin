@@ -16,7 +16,7 @@ const CreateAppReleaseSchema = v.object({
   releaseNotes: v.string(),
   isMandatory: v.pipe(
     v.optional(v.string(), ""),
-    v.transform((value) => value === "on")
+    v.transform((value) => value === "on" || value === "true")
   ),
   apkFile: v.file()
 })
@@ -55,37 +55,41 @@ export const createAppRelease = form(CreateAppReleaseSchema, async (data, issue)
     invalid(issue.apkFile("Uploaded file must be an .apk"))
   }
 
-  try {
-    const filePath = `${versionName}-${buildNumber}/${apkFile.name}`
+  const filePath = `${versionName}-${buildNumber}/${apkFile.name}`
+  const { error: uploadError } = await supabase.storage
+    .from("apk_releases")
+    .upload(filePath, apkFile, { cacheControl: "3600", upsert: false })
 
-    const { error: uploadError } = await supabase.storage
-      .from("apk_releases")
-      .upload(filePath, apkFile, { cacheControl: "3600", upsert: false })
-
-    if (uploadError !== null) {
-      console.error("Failed to upload APK", uploadError)
-      throw error(500, "Failed to upload APK")
-    }
-
-    const { data: newRelease, error: dbError } = await createAppReleaseDb(
-      locals,
-      versionName,
-      buildNumber,
-      releaseNotes,
-      isMandatory,
-      filePath
-    )
-
-    if (dbError !== null) {
-      console.error("Failed to create app release", dbError)
-      throw error(500, "Failed to create app release")
-    }
-
-    return { success: true, data: newRelease }
-  } catch (e) {
-    console.log("Error creating app release", e)
-    return { success: false, data: null }
-  } finally {
+  if (uploadError !== null) {
+    console.error("Failed to upload APK", uploadError)
     console.timeEnd(TAG)
+    return { success: false, data: null, message: "Failed to upload APK", status: 500 }
   }
+
+  const newReleaseResult = await createAppReleaseDb(
+    locals,
+    versionName,
+    buildNumber,
+    releaseNotes,
+    isMandatory,
+    filePath
+  )
+
+  if (newReleaseResult.error !== null) {
+    console.error("Failed to create app release", newReleaseResult.error)
+
+    console.log("Removing stale uploaded apk")
+    await supabase.storage.from("apk_releases").remove([filePath])
+
+    if (newReleaseResult.constraintName === "app_release_buildNumber_unique") {
+      console.timeEnd(TAG)
+      invalid(issue.buildNumber("Build number must be unique"))
+    }
+
+    console.timeEnd(TAG)
+    return { success: false, data: null, message: "Failed to create app release", status: 500 }
+  }
+
+  console.timeEnd(TAG)
+  return { success: true, data: newReleaseResult.data, status: 201 }
 })
