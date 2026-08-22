@@ -32,7 +32,9 @@ export async function createAppRelease(
   releaseNotes: string,
   isMandatory: boolean,
   filePath: string
-): Promise<{ data: AppRelease; error: null } | { data: null; error: string }> {
+): Promise<
+  { data: AppRelease; error: null } | { data: null; error: string; constraintName?: string }
+> {
   const TAG = "DB: createAppRelease()"
   console.time(TAG)
 

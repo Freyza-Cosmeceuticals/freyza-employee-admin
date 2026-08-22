@@ -39,12 +39,14 @@ export const GET: RequestHandler = async ({ request, url, locals }) => {
       throw error(500, "Could not generate download link")
     }
 
-    // localhost remap
-    const downloadUrl = signedData.signedUrl.replace(
-      /^http:\/\/(localhost|127\.0\.0\.1):/,
-      `http://${url.hostname}:`
-    )
+    // Only rewrite in local/dev environments when targeting localhost
+    const parsed = new URL(signedData.signedUrl)
+    if (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") {
+      parsed.hostname = url.hostname
+    }
 
+    // FIXME: eliminate this and store size in table itself
+    // it will remove this double call
     const { data: fileInfo, error: fileInfoError } = await apiSupabase.storage
       .from("apk_releases")
       .info(latest.apkStoragePath)
@@ -65,7 +67,7 @@ export const GET: RequestHandler = async ({ request, url, locals }) => {
         buildNumber: latest.buildNumber,
         releaseNotes: latest.releaseNotes,
         isMandatory: latest.isMandatory,
-        downloadUrl,
+        downloadUrl: parsed.toString(),
         expiresIn: DOWNLOAD_EXPIRY_SECONDS,
         fileSizeMb
       }
