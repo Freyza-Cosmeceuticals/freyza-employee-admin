@@ -54,7 +54,8 @@ export const GET: RequestHandler = async ({ request, url, locals }) => {
 
     const pois = await db.query.poi.findMany({
       where: and(...conditions),
-      orderBy: [asc(s.poi.name)]
+      orderBy: [asc(s.poi.name)],
+      with: { location: { columns: { id: true, name: true } } }
     })
 
     return json({ success: true, data: pois })
