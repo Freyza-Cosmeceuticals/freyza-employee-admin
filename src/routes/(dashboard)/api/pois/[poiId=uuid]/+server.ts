@@ -25,7 +25,7 @@ export const GET: RequestHandler = async ({ request, locals, params }) => {
       where: eq(s.poi.id, poiId)
     })
 
-    return json({ success: true, data: poi })
+    return json({ success: true, data: poi ?? null })
   } catch (err: any) {
     throw handleApiError(err)
   } finally {

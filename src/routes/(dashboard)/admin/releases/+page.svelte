@@ -6,7 +6,7 @@ import { Button } from "@/lib/components/ui/button"
 import { Skeleton } from "@/lib/components/ui/skeleton"
 
 import { columns } from "./columns"
-import ReleaseUploadDialog from "./UploadReleaseButton.svelte"
+import UploadReleaseButton from "./UploadReleaseButton.svelte"
 </script>
 
 <svelte:head>
@@ -17,7 +17,7 @@ import ReleaseUploadDialog from "./UploadReleaseButton.svelte"
 <div class="h-auto space-y-8 px-4 py-8">
   <PageHeader title="App Releases" description="Keep employees app updated">
     {#snippet action()}
-      <ReleaseUploadDialog />
+      <UploadReleaseButton />
     {/snippet}
   </PageHeader>
 

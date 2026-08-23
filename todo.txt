@@ -18,6 +18,7 @@ x 2026-08-19 2026-08-06 do the migrate and contract phase for visits and POI tab
 (B) 2026-08-07 add POI distance calculation
 x 2026-08-07 2026-08-07 list POI api route
 x 2026-08-07 2026-08-07 create visit api route
-(A) 2026-08-10 implement per tier expensing
+(B) 2026-08-10 implement per tier expensing
 x 2026-08-22 2026-08-10 list all employees in travlling with for the meantime
 (A) 2026-08-10 record all amounts recorded in visits into travel plan targets
+x 2026-08-23 2026-08-22 use presigned URL upload instead of transferring file with remote form
