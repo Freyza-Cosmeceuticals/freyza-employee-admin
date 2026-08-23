@@ -10,6 +10,15 @@ import * as v from "valibot"
 
 import { requireAuthMaybeAdmin } from "./common"
 
+const PrepareApkUploadSchema = v.object({
+  versionName: v.pipe(v.string(), v.minLength(1, "Version Name is required")),
+  buildNumber: v.pipe(v.string(), v.toNumber()),
+  filename: v.pipe(
+    v.string(),
+    v.check((val) => val.endsWith(".apk"), "Uploaded file must be an .apk")
+  )
+})
+
 const CreateAppReleaseSchema = v.object({
   versionName: v.pipe(v.string(), v.minLength(1, "Version Name is required")),
   buildNumber: v.pipe(v.string(), v.toNumber()),
@@ -18,8 +27,12 @@ const CreateAppReleaseSchema = v.object({
     v.optional(v.string(), ""),
     v.transform((value) => value === "on" || value === "true")
   ),
-  apkFile: v.file()
+  apkFilePath: v.pipe(v.string(), v.minLength(1, "File path is required"))
 })
+
+const buildApkFileName = (versionName: string, buildNumber: number, filename: string): string => {
+  return `${versionName}-${buildNumber}/${filename}`
+}
 
 /**
  * Fetch all app releases
@@ -39,32 +52,53 @@ export const fetchAppReleases = query(async () => {
 })
 
 /**
- * Creates a new app release
+ * Step 1: Validates metadata & creates signed upload URL
+ * Required ADMIN
+ */
+export const prepareApkUpload = query(PrepareApkUploadSchema, async (data) => {
+  let TAG = `Remote: prepareApkUpload(${data.versionName}-${data.buildNumber})`
+  console.time(TAG)
+
+  const { locals } = getRequestEvent()
+  const { supabase } = await requireAuthMaybeAdmin(locals, true)
+  const { versionName, buildNumber, filename } = data
+
+  const filePath = buildApkFileName(versionName, buildNumber, filename)
+
+  const { data: uploadData, error: uploadError } = await supabase.storage
+    .from("apk_releases")
+    .createSignedUploadUrl(filePath, { upsert: false })
+
+  console.timeEnd(TAG)
+
+  if (uploadError !== null) {
+    console.error("Failed to create signed upload URL", uploadError)
+    return { success: false, data: null, message: "Failed to generate upload URL", status: 500 }
+  }
+
+  return {
+    success: true,
+    data: {
+      signedUrl: uploadData.signedUrl,
+      token: uploadData.token,
+      filePath
+    },
+    status: 200
+  }
+})
+
+/**
+ * Step 2: Creates a new app release after upload is done
  * Requires ADMIN
  */
 export const createAppRelease = form(CreateAppReleaseSchema, async (data, issue) => {
-  let TAG = `Remote: createAppRelease(${data})`
+  let TAG = `Remote: createAppRelease(${data.versionName}-${data.buildNumber})`
   console.time(TAG)
 
   const { locals } = getRequestEvent()
   const { claims, supabase } = await requireAuthMaybeAdmin(locals, true)
 
-  const { versionName, buildNumber, releaseNotes, isMandatory, apkFile } = data
-
-  if (!apkFile.name.endsWith(".apk")) {
-    invalid(issue.apkFile("Uploaded file must be an .apk"))
-  }
-
-  const filePath = `${versionName}-${buildNumber}/${apkFile.name}`
-  const { error: uploadError } = await supabase.storage
-    .from("apk_releases")
-    .upload(filePath, apkFile, { cacheControl: "3600", upsert: false })
-
-  if (uploadError !== null) {
-    console.error("Failed to upload APK", uploadError)
-    console.timeEnd(TAG)
-    return { success: false, data: null, message: "Failed to upload APK", status: 500 }
-  }
+  const { versionName, buildNumber, releaseNotes, isMandatory, apkFilePath } = data
 
   const newReleaseResult = await createAppReleaseDb(
     locals,
@@ -72,14 +106,13 @@ export const createAppRelease = form(CreateAppReleaseSchema, async (data, issue)
     buildNumber,
     releaseNotes,
     isMandatory,
-    filePath
+    apkFilePath
   )
 
   if (newReleaseResult.error !== null) {
     console.error("Failed to create app release", newReleaseResult.error)
-
     console.log("Removing stale uploaded apk")
-    await supabase.storage.from("apk_releases").remove([filePath])
+    await supabase.storage.from("apk_releases").remove([apkFilePath])
 
     if (newReleaseResult.constraintName === "app_release_buildNumber_unique") {
       console.timeEnd(TAG)
@@ -89,6 +122,8 @@ export const createAppRelease = form(CreateAppReleaseSchema, async (data, issue)
     console.timeEnd(TAG)
     return { success: false, data: null, message: "Failed to create app release", status: 500 }
   }
+
+  fetchAppReleases().refresh()
 
   console.timeEnd(TAG)
   return { success: true, data: newReleaseResult.data, status: 201 }

@@ -1,4 +1,3 @@
-<!-- src/routes/admin/releases/components/release-upload-dialog.svelte -->
 <script lang="ts">
 import { type RemoteFormIssue } from "@sveltejs/kit"
 
@@ -9,18 +8,30 @@ import * as Field from "@ui/field"
 import { Input } from "@ui/input"
 import { Textarea } from "@ui/textarea"
 
-import { createAppRelease } from "$lib/api/app_release.remote"
+import { createAppRelease, prepareApkUpload } from "$lib/api/app_release.remote"
 
 import LoaderCircle from "@lucide/svelte/icons/loader-circle"
 import UploadCloudIcon from "@lucide/svelte/icons/upload-cloud"
+import { tick } from "svelte"
 import { toast } from "svelte-sonner"
 
 let dialogOpen = $state(false)
+let selectedFile = $state<File | null>(null)
+let isUploading = $state(false)
+
+function handleFileChange(event: Event) {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files.length > 0) {
+    selectedFile = target.files[0]
+  } else {
+    selectedFile = null
+  }
+}
 </script>
 
 {#snippet errorListSnippet(issues: RemoteFormIssue[])}
   {#if issues.length > 0}
-    <ul>
+    <ul class="list-inside list-disc text-xs text-destructive">
       {#each issues as issue}
         <li>{issue.message}</li>
       {/each}
@@ -46,31 +57,77 @@ let dialogOpen = $state(false)
 
     <form
       {...createAppRelease.enhance(async (form) => {
+        if (!selectedFile) {
+          toast.error("Please select an APK file")
+          return
+        }
+
+        if (!selectedFile.name.endsWith(".apk")) {
+          toast.error("Uploaded file must be an .apk")
+          return
+        }
+
         const toastId = toast.loading("Uploading release...")
-        console.debug("Submitting data", {
-          ...form.fields.value()
-        })
+        isUploading = true
 
         try {
+          // 1. Request presigned  upload URL
+          const values = form.fields.value()
+          const prepareResult = await prepareApkUpload({
+            versionName: values.versionName ?? "",
+            buildNumber: values.buildNumber ?? "0",
+            filename: selectedFile.name
+          })
+
+          if (!prepareResult.success || !prepareResult.data) {
+            throw new Error(prepareResult.message || "Failed to initialize upload ticket")
+          }
+
+          console.log("Upload Prepare result", prepareResult)
+          const { signedUrl, filePath } = prepareResult.data
+
+          // 2. Direct binary transfer from browser to Supabase Storage
+          toast.loading("Uploading APK file...", { id: toastId })
+          const uploadResponse = await fetch(signedUrl, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/vnd.android.package-archive"
+            },
+            body: selectedFile
+          })
+
+          if (!uploadResponse.ok) {
+            throw new Error(`Direct storage upload failed: ${uploadResponse.statusText}`)
+          }
+
+          console.log("Upload response", uploadResponse)
+
+          // 3. Set the verified filePath in the form payload
+          form.fields.apkFilePath.set(filePath)
+          createAppRelease.fields.apkFilePath.set(filePath)
+
+          // // wait for svelte to flush the updates to DOM
+          await tick()
+
+          // 4. Submit form
+          toast.loading("Publishing release...", { id: toastId })
+          console.debug("Submitting data", {
+            ...form.fields.value()
+          })
+
           if (await form.submit()) {
             const result = form.result
-            if (!result) {
-              toast.error("Unexpected Error", { id: toastId })
-              console.error("Unexpected Error: result is null even when submit succeeded", result)
-              return
-            }
-
-            // handle unsuccess
-            if (result && (!result.data || !result.success)) {
-              throw result.message
+            if (!result || !result.data || !result.success) {
+              throw new Error(result?.message || "Failed to finalize release")
             }
 
             form.element.reset()
+            selectedFile = null
             dialogOpen = false
 
             toast.success("Release uploaded successfully", {
               id: toastId,
-              description: `Version ${result.data.versionName} (${result.data.buildNumber}) has been published`
+              description: `Version ${result.data.versionName}-${result.data.buildNumber} has been published`
             })
             console.debug("Release uploaded", result.data)
           } else {
@@ -83,9 +140,14 @@ let dialogOpen = $state(false)
             id: toastId
           })
           console.error(error)
+        } finally {
+          isUploading = false
         }
-      })}
-      enctype="multipart/form-data">
+      })}>
+      {let apkFilePath = $derived(createAppRelease.fields.apkFilePath.value() ?? "")}
+      <!-- Hidden field carrying storage location to avoid binary payload -->
+      <input hidden {...createAppRelease.fields.apkFilePath.as("text")} value={apkFilePath} />
+
       <Field.Group>
         <Field.Set>
           <Field.Group>
@@ -100,7 +162,7 @@ let dialogOpen = $state(false)
                 <Input
                   placeholder="e.g. 1.2.0"
                   required
-                  disabled={createAppRelease.pending > 0}
+                  disabled={isUploading || createAppRelease.pending > 0}
                   {...createAppRelease.fields.versionName.as("text")} />
               </Field.Field>
 
@@ -114,7 +176,7 @@ let dialogOpen = $state(false)
                 <Input
                   placeholder="e.g. 15"
                   required
-                  disabled={createAppRelease.pending > 0}
+                  disabled={isUploading || createAppRelease.pending > 0}
                   {...createAppRelease.fields.buildNumber.as("text")}
                   type="number" />
               </Field.Field>
@@ -130,7 +192,7 @@ let dialogOpen = $state(false)
               {const releaseNotesField = createAppRelease.fields.releaseNotes.as("text")}
               <Textarea
                 rows={3}
-                disabled={createAppRelease.pending > 0}
+                disabled={isUploading || createAppRelease.pending > 0}
                 name={releaseNotesField.name}
                 aria-invalid={releaseNotesField["aria-invalid"]} />
             </Field.Field>
@@ -139,23 +201,22 @@ let dialogOpen = $state(false)
               <Field.Content>
                 <Field.Label for="apkFile">APK File</Field.Label>
                 <Field.Error>
-                  {@render errorListSnippet(createAppRelease.fields.apkFile.issues() ?? [])}
+                  {@render errorListSnippet(createAppRelease.fields.apkFilePath.issues() ?? [])}
                 </Field.Error>
               </Field.Content>
-              {const apkFileField = createAppRelease.fields.apkFile.as("file")}
               <Input
                 type="file"
-                name={apkFileField.name}
-                aria-invalid={apkFileField["aria-invalid"]}
+                id="apkFile"
                 accept=".apk"
                 required
-                disabled={createAppRelease.pending > 0} />
+                disabled={isUploading || createAppRelease.pending > 0}
+                onchange={handleFileChange} />
             </Field.Field>
 
             <Field.Field orientation="horizontal" class="items-center gap-2">
               {const isMandatoryField = createAppRelease.fields.isMandatory.as("text")}
               <Checkbox
-                disabled={createAppRelease.pending > 0}
+                disabled={isUploading || createAppRelease.pending > 0}
                 name={isMandatoryField.name}
                 aria-invalid={isMandatoryField["aria-invalid"]} />
               <Field.Label for="isMandatory">Mandatory Update</Field.Label>
@@ -171,13 +232,13 @@ let dialogOpen = $state(false)
             variant="outline"
             type="button"
             onclick={() => (dialogOpen = false)}
-            disabled={createAppRelease.pending > 0}>
+            disabled={isUploading || createAppRelease.pending > 0}>
             Cancel
           </Button>
-          <Button disabled={createAppRelease.pending > 0} type="submit">
-            {#if createAppRelease.pending > 0}
-              <LoaderCircle class="animate-spin" />
-              Uploading...
+          <Button disabled={isUploading || createAppRelease.pending > 0} type="submit">
+            {#if isUploading || createAppRelease.pending > 0}
+              <LoaderCircle class="mr-2 h-4 w-4 animate-spin" />
+              Processing...
             {:else}
               Deploy Release
             {/if}
