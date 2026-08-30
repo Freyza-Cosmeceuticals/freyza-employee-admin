@@ -644,6 +644,11 @@ export const poi = pgTable(
   (table) => [
     index("idx_poi_locationId").on(table.locationId),
     index("idx_poi_type").on(table.type),
+    uniqueIndex("poi_locationId_type_name_key").on(
+      table.locationId,
+      table.type,
+      sql`lower(${table.name})`
+    ),
     foreignKey({
       columns: [table.locationId],
       foreignColumns: [location.id],

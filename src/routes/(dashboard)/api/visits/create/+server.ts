@@ -189,12 +189,12 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
           // create sub-POI entry accordingly
           console.debug("Inserting sub-POI", { poiId: finalPoiId, visitType: data.visitType })
-          if (data.visitType === "DOCTOR") {
-            await tx.insert(s.doctor).values({ id: finalPoiId })
-          } else if (data.visitType === "CHEMIST") {
-            await tx.insert(s.chemist).values({ id: finalPoiId })
-          } else if (data.visitType === "STOCKIST") {
-            await tx.insert(s.stockist).values({ id: finalPoiId })
+          if (data.visitType === VisitType.DOCTOR) {
+            await tx.insert(s.doctor).values({ id: finalPoiId }).onConflictDoNothing()
+          } else if (data.visitType === VisitType.CHEMIST) {
+            await tx.insert(s.chemist).values({ id: finalPoiId }).onConflictDoNothing()
+          } else if (data.visitType === VisitType.STOCKIST) {
+            await tx.insert(s.stockist).values({ id: finalPoiId }).onConflictDoNothing()
           }
         }
       }
