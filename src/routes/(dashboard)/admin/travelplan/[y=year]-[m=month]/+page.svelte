@@ -104,7 +104,7 @@ function changeEmployee(newId: string) {
   <!-- main content -->
   <main class="flex-1 overflow-y-auto bg-muted/5 p-8">
     <div class="mx-auto max-w-5xl">
-      {#if travelPlan}
+      {#if travelPlan && travelPlan.employee && travelPlan.planEntries}
         <Card.Root>
           <Card.Header class="flex flex-row items-center justify-between space-y-0">
             <div class="flex flex-col gap-1">

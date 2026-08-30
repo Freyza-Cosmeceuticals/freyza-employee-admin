@@ -66,11 +66,6 @@ export type TravelPlanEntryCreate = Omit<InferInsertModel<typeof travelPlanEntry
   tpId?: string | undefined
 }
 
-export type TravelPlanWithEmployee = TravelPlan & {
-  employee: EmployeeWithHQ
-  stats?: TravelPlanStats
-}
-
 export type TravelPlanStats = {
   workDays: number
   leaveDays: number
@@ -86,9 +81,10 @@ export type TravelPlanEntryWithRoute = TravelPlanEntry & {
     | null
 }
 
-export type TravelPlanWithEmployeeWithEntries = TravelPlan & {
-  employee: EmployeeWithHQ
-  planEntries: TravelPlanEntryWithRoute[]
+export type TravelPlanFull = TravelPlan & {
+  employee: EmployeeWithHQ | null
+  planEntries: TravelPlanEntryWithRoute[] | null
+  stats: TravelPlanStats | null
 }
 
 export type DailyReportFull = DailyReport & {

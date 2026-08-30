@@ -1,6 +1,6 @@
 import { TIMEZONE } from "$lib/constants"
 import { getAllRoutes } from "$lib/server/db/route"
-import { getTravelPlansForMonth } from "$lib/server/db/travelplan"
+import { fetchTravelPlans } from "$lib/server/db/travelplan"
 import { getAllEmployees } from "$lib/server/db/user"
 
 import { DateTime } from "luxon"
@@ -24,7 +24,9 @@ export const load: PageServerLoad = async ({ depends, locals, url }) => {
 
   const nextMonthForDB = nextMonth.setZone("UTC", { keepLocalTime: true }).toJSDate()
 
-  const travelPlansForMonth = await getTravelPlansForMonth(locals, nextMonthForDB)
+  const travelPlansForMonth = await fetchTravelPlans(locals, {
+    months: [nextMonthForDB]
+  })
   if (travelPlansForMonth.error !== null) {
     console.error("Error fetching travel plans for filtering employees:", travelPlansForMonth.error)
   }

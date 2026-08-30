@@ -3,10 +3,7 @@ import { error, invalid } from "@sveltejs/kit"
 
 import {
   createTravelPlan as createTravelPlanDb,
-  getTravelPlansWithEmployeeForMonths as getTravelPlansWithEmployeeForMonthsDb,
-  getTravelPlansWithEmployeeWithEntriesForMonths as getTravelPlansWithEmployeeWithEntriesForMonthsDb,
-  getTravelPlanWithEmployeeForEmployeeAndMonth as getTravelPlanWithEmployeeForEmployeeAndMonthDb,
-  getTravelPlanWithEmployeeOptionalEntriesById as getTravelPlanWithEmployeeOptionalEntriesByIdDb
+  fetchTravelPlans as fetchTravelPlansDb
 } from "$lib/server/db/travelplan"
 import { DayType } from "$lib/types"
 
@@ -18,7 +15,7 @@ import {
 import { DateTime } from "luxon"
 
 import { requireAuthMaybeAdmin } from "./common"
-import type { TravelPlanWithEmployeeWithEntries } from "$lib/types"
+import type { TravelPlanFull } from "$lib/types"
 
 /**
  * Remote form function to add a new Travel Plan given the travel plan data
@@ -47,17 +44,15 @@ export const addTravelPlan = form(addTravelPlanSchema, async (travelPlan, issue)
   }
 
   // check if a plan already exists for the employee for this month
-  const { data: potentialPlan, error: dbError } =
-    await getTravelPlanWithEmployeeForEmployeeAndMonthDb(
-      locals,
-      travelPlan.employeeId,
-      travelPlan.month
-    )
+  const { data: potentialPlans, error: dbError } = await fetchTravelPlansDb(locals, {
+    employeeId: travelPlan.employeeId,
+    months: [travelPlan.month]
+  })
 
   // if a plan already exists return error, or continue creation if this query failed for some reason
-  if (potentialPlan !== null && !dbError) {
+  if (potentialPlans && potentialPlans.length > 0 && !dbError) {
     console.error("A Travel plan already exists for this employee.")
-    const monthName = DateTime.fromISO(potentialPlan.month.toISOString()).monthLong
+    const monthName = DateTime.fromISO(potentialPlans[0].month.toISOString()).monthLong
     return {
       success: false,
       data: null,
@@ -93,10 +88,10 @@ export const getTravelPlanById = query(getTravelPlanByIdSchema, async (tpId) => 
   const { locals } = getRequestEvent()
   const { claims, supabase } = await requireAuthMaybeAdmin(locals, false)
 
-  const { data: travelPlan, error: dbError } = await getTravelPlanWithEmployeeOptionalEntriesByIdDb(
-    locals,
-    tpId
-  )
+  const { data: travelPlans, error: dbError } = await fetchTravelPlansDb(locals, {
+    planId: tpId,
+    includeEmployee: true
+  })
 
   if (dbError !== null) {
     console.error("Failed to fetch travel plan", dbError)
@@ -104,7 +99,7 @@ export const getTravelPlanById = query(getTravelPlanByIdSchema, async (tpId) => 
   }
 
   console.timeEnd(TAG)
-  return travelPlan
+  return travelPlans?.[0] ?? null
 })
 
 /**
@@ -117,11 +112,11 @@ export const getTravelPlanByIdWithEntries = query(getTravelPlanByIdSchema, async
   const { locals } = getRequestEvent()
   const { claims, supabase } = await requireAuthMaybeAdmin(locals, false)
 
-  const { data: travelPlan, error: dbError } = await getTravelPlanWithEmployeeOptionalEntriesByIdDb(
-    locals,
-    tpId,
-    true
-  )
+  const { data: travelPlans, error: dbError } = await fetchTravelPlansDb(locals, {
+    planId: tpId,
+    includeEmployee: true,
+    includeEntries: true
+  })
 
   if (dbError !== null) {
     console.error("Failed to fetch travel plan", dbError)
@@ -129,7 +124,7 @@ export const getTravelPlanByIdWithEntries = query(getTravelPlanByIdSchema, async
   }
 
   console.timeEnd(TAG)
-  return travelPlan as TravelPlanWithEmployeeWithEntries | null
+  return travelPlans?.[0] ?? null
 })
 
 /**
@@ -147,21 +142,29 @@ export const getTravelPlansForMonth = query.batch(getTravelPlanForMonthsSchema, 
     error(400, "No months provided")
   }
 
-  const { data: travelPlans, error: dbError } = await getTravelPlansWithEmployeeForMonthsDb(
-    locals,
+  const { data: travelPlans, error: dbError } = await fetchTravelPlansDb(locals, {
     months,
-    true
-  )
+    includeEmployee: true,
+    includeStats: true
+  })
 
   if (dbError !== null) {
     console.error("Failed to fetch travel plans", dbError)
     error(500, dbError)
   }
 
+  const grouped = new Map<string, TravelPlanFull[]>()
+  for (const tp of travelPlans ?? []) {
+    const key = tp.month.toISOString().split("T", 1)[0]
+    const bucket = grouped.get(key) ?? []
+    bucket.push(tp)
+    grouped.set(key, bucket)
+  }
+
   console.timeEnd(TAG)
   return (month) => {
     // TODO: Convert this to luxon DateTime so that I can use .toISODate({precision: "month"})
-    return travelPlans.get(month.toISOString().split("T", 1)[0])
+    return grouped.get(month.toISOString().split("T", 1)[0])
   }
 })
 
@@ -182,18 +185,29 @@ export const getTravelPlansWithEntriesForMonth = query.batch(
       error(400, "No months provided")
     }
 
-    const { data: travelPlans, error: dbError } =
-      await getTravelPlansWithEmployeeWithEntriesForMonthsDb(locals, months)
+    const { data: travelPlans, error: dbError } = await fetchTravelPlansDb(locals, {
+      months,
+      includeEmployee: true,
+      includeEntries: true
+    })
 
     if (dbError !== null) {
       console.error("Failed to fetch travel plans", dbError)
       error(500, dbError)
     }
 
+    const grouped = new Map<string, TravelPlanFull[]>()
+    for (const tp of travelPlans ?? []) {
+      const key = tp.month.toISOString().split("T", 1)[0]
+      const bucket = grouped.get(key) ?? []
+      bucket.push(tp)
+      grouped.set(key, bucket)
+    }
+
     console.timeEnd(TAG)
     return (month) => {
       // TODO: Convert this to luxon DateTime so that I can use .toISODate({precision: "month"})
-      return travelPlans.get(month.toISOString().split("T", 1)[0])
+      return grouped.get(month.toISOString().split("T", 1)[0])
     }
   }
 )

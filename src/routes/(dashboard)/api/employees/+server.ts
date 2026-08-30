@@ -12,7 +12,9 @@ const getEmployeesSchema = v.object({
 })
 
 /**
- * Returns a list of employees based on the passed parameters
+ * GET /api/employees
+ * @param hqId The ID of the HQ to filter employees by
+ * @returns A list of employees based on the passed parameters
  */
 export const GET: RequestHandler = async ({ request, url, locals }) => {
   const TAG = "GET: /api/employees"

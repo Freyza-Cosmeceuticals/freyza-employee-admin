@@ -7,6 +7,10 @@ import { desc } from "drizzle-orm"
 
 import type { RequestHandler } from "./$types"
 
+/**
+ * GET /api/app/version/latest
+ * @returns The latest app version from the database
+ */
 export const GET: RequestHandler = async ({ request, url, locals }) => {
   const TAG = "GET /api/app/version/latest"
   console.time(TAG)

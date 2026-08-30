@@ -9,12 +9,12 @@ import { getTravelPlansForMonth } from "$lib/api/travelplan.remote.js"
 
 import { getAllEmployeesCount } from "@/lib/api/employee.remote.js"
 
-import type { TravelPlanWithEmployee } from "$lib/types"
+import type { TravelPlanFull } from "$lib/types"
 
 let { data } = $props()
 let { today, nextMonth, months } = $derived(data)
 
-function isAnyEmployeeLeft(travelPlans: TravelPlanWithEmployee[] | undefined, empCount: number) {
+function isAnyEmployeeLeft(travelPlans: TravelPlanFull[] | undefined, empCount: number) {
   return (travelPlans ?? []).length < empCount
 }
 </script>

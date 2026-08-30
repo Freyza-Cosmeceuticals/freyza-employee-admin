@@ -33,7 +33,7 @@ $inspect(tpId).with(console.log)
 </svelte:head>
 
 <div class="h-auto w-full space-y-8 px-4 py-8">
-  {#if travelPlan && month}
+  {#if travelPlan && month && travelPlan.employee && travelPlan.planEntries}
     {#snippet subheader()}
       <a
         href={resolve("/admin/travelplan")}
