@@ -115,7 +115,11 @@ export async function createDailyReport(
   console.time(TAG)
 
   try {
-    const [report] = await db.insert(s.dailyReport).values(reportData).returning()
+    const [report] = await db
+      .insert(s.dailyReport)
+      .values(reportData)
+      .onConflictDoNothing()
+      .returning()
 
     return { data: report, error: null }
   } catch (e) {
