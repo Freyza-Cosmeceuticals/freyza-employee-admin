@@ -20,7 +20,7 @@ x 2026-08-07 2026-08-07 list POI api route
 x 2026-08-07 2026-08-07 create visit api route
 (B) 2026-08-10 implement per tier expensing
 x 2026-08-22 2026-08-10 list all employees in travlling with for the meantime
-(A) 2026-08-10 record all amounts recorded in visits into travel plan targets + metrics endpoint
+x 2026-09-02 2026-08-10 record all amounts recorded in visits into travel plan targets + metrics endpoint
 x 2026-08-23 2026-08-22 use presigned URL upload instead of transferring file with remote form
 x 2026-08-23 2026-08-23 support for multiple locationIds in listing POIs
 (C) 2026-08-23 Better Travel Plan creation tools

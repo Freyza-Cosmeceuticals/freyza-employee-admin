@@ -10,6 +10,7 @@ import type {
   TravelPlanCreate,
   TravelPlanEntryWithRoute,
   TravelPlanFull,
+  TravelPlanMetrics,
   TravelPlanStats
 } from "$lib/types"
 
@@ -163,6 +164,57 @@ export async function createTravelPlan(
     })
 
     return { data: travelPlanObject, error: null }
+  } catch (e) {
+    return handleDbError(e)
+  } finally {
+    console.timeEnd(TAG)
+  }
+}
+
+export async function getPlanMetrics(
+  id: string
+): Promise<{ data: TravelPlanMetrics; error: null } | { data: null; error: string }> {
+  const TAG = `DB: getPlanMetrics(${id})`
+  console.time(TAG)
+
+  try {
+    const [result] = await db
+      .select({
+        targetAmount: s.travelPlan.salesTarget,
+        employeeId: s.travelPlan.employeeId,
+        totalOrderAmount: sql<number>`COALESCE(SUM(${s.visit.orderAmount}::numeric), 0)::int`,
+        totalAmountWithoutGST: sql<number>`COALESCE(SUM(${s.visit.amountWithoutGST}::numeric), 0)::int`,
+        numReports: sql<number>`COALESCE(COUNT(DISTINCT ${s.dailyReport.id}), 0)::int`,
+        numVisits: sql<number>`COALESCE(COUNT(DISTINCT ${s.visit.id}), 0)::int`
+      })
+      .from(s.travelPlan)
+      .leftJoin(
+        s.dailyReport,
+        and(
+          eq(s.dailyReport.employeeId, s.travelPlan.employeeId),
+          sql`EXTRACT(MONTH FROM ${s.dailyReport.date}) = EXTRACT(MONTH FROM ${s.travelPlan.month})`,
+          sql`EXTRACT(YEAR FROM ${s.dailyReport.date}) = EXTRACT(YEAR FROM ${s.travelPlan.month})`
+        )
+      )
+      .leftJoin(s.visit, eq(s.visit.reportId, s.dailyReport.id))
+      .where(eq(s.travelPlan.id, id))
+      .groupBy(s.travelPlan.id, s.travelPlan.salesTarget, s.travelPlan.employeeId)
+
+    if (!result) {
+      return { data: null, error: "Travel plan not found" }
+    }
+
+    return {
+      data: {
+        targetAmount: result.targetAmount,
+        employeeId: result.employeeId,
+        totalOrderAmount: result.totalOrderAmount,
+        totalAmountWithoutGST: result.totalAmountWithoutGST,
+        numReports: result.numReports,
+        numVisits: result.numVisits
+      },
+      error: null
+    }
   } catch (e) {
     return handleDbError(e)
   } finally {

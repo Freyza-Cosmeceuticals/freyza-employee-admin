@@ -72,6 +72,15 @@ export type TravelPlanStats = {
   holidayDays: number
 }
 
+export type TravelPlanMetrics = {
+  targetAmount: number
+  employeeId: string
+  totalOrderAmount: number
+  totalAmountWithoutGST: number
+  numReports: number
+  numVisits: number
+}
+
 export type TravelPlanEntryWithRoute = TravelPlanEntry & {
   route:
     | (Route & {

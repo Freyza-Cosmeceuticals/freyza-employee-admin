@@ -233,10 +233,10 @@ export const travelPlan = pgTable(
 
     // employee is particular TP is for
     employeeId: text().notNull(),
-
     // DateTime as 1st of that month/year
     month: date({ mode: "date" }).notNull(),
 
+    salesTarget: integer().default(15000).notNull(),
     // which ADMIN created this TP
     createdById: text().notNull(),
 

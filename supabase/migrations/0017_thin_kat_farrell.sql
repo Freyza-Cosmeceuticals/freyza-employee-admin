@@ -1,0 +1,2 @@
+ALTER TABLE "travelPlan" ADD COLUMN "salesTarget" integer DEFAULT 15000 NOT NULL;--> statement-breakpoint
+CREATE UNIQUE INDEX "poi_locationId_type_name_key" ON "poi" USING btree ("locationId","type",lower("name"));
