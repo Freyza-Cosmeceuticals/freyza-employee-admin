@@ -49,19 +49,9 @@ export const GET: RequestHandler = async ({ request, url, locals }) => {
       parsed.hostname = url.hostname
     }
 
-    // FIXME: eliminate this and store size in table itself
-    // it will remove this double call
-    const { data: fileInfo, error: fileInfoError } = await apiSupabase.storage
-      .from("apk_releases")
-      .info(latest.apkStoragePath)
-
-    if (fileInfoError || !fileInfo) {
-      console.error("Failed to get file info", fileInfoError, "\nStill returning signed URL")
-    }
-
-    let fileSizeMb = fileInfo?.size
-    if (fileSizeMb !== undefined) {
-      fileSizeMb /= 1024 * 1024
+    let fileSizeMb = 0
+    if (latest.fileSizeBytes) {
+      fileSizeMb = latest.fileSizeBytes / 1024 / 1024
     }
 
     return json({

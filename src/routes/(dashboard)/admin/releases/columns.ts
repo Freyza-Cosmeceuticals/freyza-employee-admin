@@ -36,6 +36,13 @@ export const columns: ColumnDef<AppRelease>[] = [
     }
   },
   {
+    accessorKey: "fileSizeBytes",
+    header: "APK Size",
+    cell: ({ row }) => {
+      return ((row.original.fileSizeBytes ?? 0) / (1024 * 1024)).toFixed(2) + " MiB"
+    }
+  },
+  {
     accessorKey: "createdAt",
     header: "Created At",
     cell: ({ row }) => {

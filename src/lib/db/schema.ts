@@ -244,8 +244,8 @@ export const travelPlan = pgTable(
   },
   (table) => [
     index("idx_travelplan_createdbyid").on(table.createdById),
-    index("idx_employeeId").on(table.employeeId),
     uniqueIndex("travelPlan_employeeId_month_key").on(table.employeeId, table.month),
+    index("idx_travelplan_month").on(table.month),
     foreignKey({
       columns: [table.createdById],
       foreignColumns: [user.id],
@@ -413,9 +413,9 @@ export const dailyReport = pgTable(
     ...timestamps
   },
   (table) => [
-    index("idx_dailyreport_employeeid").on(table.employeeId),
     index("idx_dailyreport_routeid").on(table.routeId),
     uniqueIndex("idx_dailyReport_employeeId_date").on(table.employeeId, table.date),
+    index("idx_dailyreport_date").on(table.date),
     index("idx_dailyReport_employeeId_locked").on(table.employeeId, table.locked),
     index("idx_dailyReport_travellingWithId").on(table.travellingWithId),
     foreignKey({
@@ -530,7 +530,6 @@ export const visit = pgTable(
   (table) => [
     index("idx_visit_reportid").on(table.reportId),
     index("idx_visit_visitType").on(table.visitType),
-    index("idx_visit_reportId_employeeId").on(table.reportId, table.employeeId),
     index("idx_visit_employeeId").on(table.employeeId),
     index("idx_visit_poiId").on(table.poiId),
     foreignKey({
@@ -644,6 +643,7 @@ export const poi = pgTable(
   (table) => [
     index("idx_poi_locationId").on(table.locationId),
     index("idx_poi_type").on(table.type),
+    index("idx_poi_name").on(table.name),
     uniqueIndex("poi_locationId_type_name_key").on(
       table.locationId,
       table.type,
@@ -828,17 +828,18 @@ export const appRelease = pgTable(
       .primaryKey()
       .default(sql`gen_random_uuid()`),
 
-    versionName: varchar({ length: 50 }).notNull(),
-    buildNumber: integer().notNull().unique(),
+    versionName: varchar({ length: 51 }).notNull(),
+    buildNumber: integer().notNull(),
     releaseNotes: text().notNull(),
     isMandatory: boolean().default(false).notNull(),
 
     apkStoragePath: text().notNull(),
+    fileSizeBytes: integer(),
 
     ...timestamps
   },
   (table) => [
-    index("idx_app_release_buildNumber").on(table.buildNumber),
+    uniqueIndex("idx_app_release_buildNumber").on(table.buildNumber),
 
     pgPolicy("Authenticated users can view all app releases", {
       as: "permissive",

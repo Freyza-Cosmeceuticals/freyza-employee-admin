@@ -1,9 +1,12 @@
 <script lang="ts">
+import * as Alert from "@ui/alert"
+import { Button } from "@ui/button"
+import { Skeleton } from "@ui/skeleton"
+
 import { fetchAppReleases } from "@/lib/api/app_release.remote"
 import PageHeader from "@/lib/components/dashboard/PageHeader.svelte"
 import DataTable from "@/lib/components/dashboard/table/data-table.svelte"
-import { Button } from "@/lib/components/ui/button"
-import { Skeleton } from "@/lib/components/ui/skeleton"
+import CircleAlertIcon from "@lucide/svelte/icons/circle-alert"
 
 import { columns } from "./columns"
 import UploadReleaseButton from "./UploadReleaseButton.svelte"
@@ -33,9 +36,16 @@ import UploadReleaseButton from "./UploadReleaseButton.svelte"
 
       {#snippet failed(error, reset)}
         {@debug error}
-        <div class="rounded-md border border-destructive bg-destructive/10 p-4 text-destructive">
-          Failed to load releases <Button variant="outline" onclick={reset}>Retry</Button>
-        </div>
+        <Alert.Root variant="destructive">
+          <CircleAlertIcon class="size-4" />
+          <Alert.Title>Error</Alert.Title>
+          <Alert.Description>
+            Something went wrong while listing releases. Please try again.
+          </Alert.Description>
+          <Alert.Action>
+            <Button variant="ghost" onclick={reset}>Retry</Button>
+          </Alert.Action>
+        </Alert.Root>
       {/snippet}
     </svelte:boundary>
   </div>

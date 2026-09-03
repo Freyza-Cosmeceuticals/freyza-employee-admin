@@ -127,6 +127,13 @@
       "when": 1788118552372,
       "tag": "0017_thin_kat_farrell",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1788503728783,
+      "tag": "0018_spotty_blazing_skull",
+      "breakpoints": true
     }
   ]
 }

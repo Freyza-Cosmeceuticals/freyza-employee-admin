@@ -19,6 +19,9 @@ let dialogOpen = $state(false)
 let selectedFile = $state<File | null>(null)
 let isUploading = $state(false)
 
+let uploadedApkPath = $state("")
+let uploadedApkSize = $state("")
+
 function handleFileChange(event: Event) {
   const target = event.target as HTMLInputElement
   if (target.files && target.files.length > 0) {
@@ -102,18 +105,27 @@ function handleFileChange(event: Event) {
 
           console.log("Upload response", uploadResponse)
 
-          // 3. Set the verified filePath in the form payload
-          form.fields.apkFilePath.set(filePath)
-          createAppRelease.fields.apkFilePath.set(filePath)
+          // 3. Set the verified filePath
+          uploadedApkPath = filePath
+          uploadedApkSize = String(selectedFile.size)
+
+          // createAppRelease.fields.apkFilePath.set(filePath)
+          // createAppRelease.fields.fileSizeBytes.set(selectedFile.size.toString())
 
           // // wait for svelte to flush the updates to DOM
-          await tick()
+          // await tick()
 
           // 4. Submit form
           toast.loading("Publishing release...", { id: toastId })
-          console.debug("Submitting data", {
-            ...form.fields.value()
-          })
+          console.debug(
+            "Submitting data",
+            {
+              ...form.fields.value()
+            },
+            {
+              ...createAppRelease.fields.value()
+            }
+          )
 
           if (await form.submit()) {
             const result = form.result
@@ -144,9 +156,17 @@ function handleFileChange(event: Event) {
           isUploading = false
         }
       })}>
-      {let apkFilePath = $derived(createAppRelease.fields.apkFilePath.value() ?? "")}
+      <!-- {let apkFilePath = $derived(createAppRelease.fields.apkFilePath.value() ?? "")} -->
       <!-- Hidden field carrying storage location to avoid binary payload -->
-      <input hidden {...createAppRelease.fields.apkFilePath.as("text")} value={apkFilePath} />
+      <input
+        type="hidden"
+        {...createAppRelease.fields.apkFilePath.as("text")}
+        value={uploadedApkPath} />
+
+      <input
+        type="hidden"
+        {...createAppRelease.fields.fileSizeBytes.as("text")}
+        value={uploadedApkSize} />
 
       <Field.Group>
         <Field.Set>

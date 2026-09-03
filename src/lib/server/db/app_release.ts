@@ -31,7 +31,8 @@ export async function createAppRelease(
   buildNumber: number,
   releaseNotes: string,
   isMandatory: boolean,
-  filePath: string
+  filePath: string,
+  fileSizeBytes?: number
 ): Promise<
   { data: AppRelease; error: null } | { data: null; error: string; constraintName?: string }
 > {
@@ -46,7 +47,8 @@ export async function createAppRelease(
         buildNumber,
         releaseNotes,
         isMandatory,
-        apkStoragePath: filePath
+        apkStoragePath: filePath,
+        fileSizeBytes
       })
       .returning()
 

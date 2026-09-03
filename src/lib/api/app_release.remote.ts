@@ -27,7 +27,8 @@ const CreateAppReleaseSchema = v.object({
     v.optional(v.string(), ""),
     v.transform((value) => value === "on" || value === "true")
   ),
-  apkFilePath: v.pipe(v.string(), v.minLength(1, "File path is required"))
+  apkFilePath: v.pipe(v.string(), v.minLength(1, "File path is required")),
+  fileSizeBytes: v.optional(v.pipe(v.string(), v.toNumber()))
 })
 
 const buildApkFileName = (versionName: string, buildNumber: number, filename: string): string => {
@@ -56,7 +57,7 @@ export const fetchAppReleases = query(async () => {
  * Required ADMIN
  */
 export const prepareApkUpload = query(PrepareApkUploadSchema, async (data) => {
-  let TAG = `Remote: prepareApkUpload(${data.versionName}-${data.buildNumber})`
+  let TAG = `Remote: prepareApkUpload(${data.versionName}-${data.buildNumber}, ${data.filename})`
   console.time(TAG)
 
   const { locals } = getRequestEvent()
@@ -92,13 +93,13 @@ export const prepareApkUpload = query(PrepareApkUploadSchema, async (data) => {
  * Requires ADMIN
  */
 export const createAppRelease = form(CreateAppReleaseSchema, async (data, issue) => {
-  let TAG = `Remote: createAppRelease(${data.versionName}-${data.buildNumber})`
+  let TAG = `Remote: createAppRelease(${data.versionName}-${data.buildNumber}, ${data.apkFilePath} (${data.fileSizeBytes}))`
   console.time(TAG)
 
   const { locals } = getRequestEvent()
   const { claims, supabase } = await requireAuthMaybeAdmin(locals, true)
 
-  const { versionName, buildNumber, releaseNotes, isMandatory, apkFilePath } = data
+  const { versionName, buildNumber, releaseNotes, isMandatory, apkFilePath, fileSizeBytes } = data
 
   const newReleaseResult = await createAppReleaseDb(
     locals,
@@ -106,7 +107,8 @@ export const createAppRelease = form(CreateAppReleaseSchema, async (data, issue)
     buildNumber,
     releaseNotes,
     isMandatory,
-    apkFilePath
+    apkFilePath,
+    fileSizeBytes
   )
 
   if (newReleaseResult.error !== null) {
