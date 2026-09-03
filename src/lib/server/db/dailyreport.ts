@@ -1,6 +1,6 @@
 import * as s from "$lib/db/schema"
 
-import { and, count, desc, eq, inArray } from "drizzle-orm"
+import { and, count, desc, eq, inArray, sql } from "drizzle-orm"
 
 import { db, handleDbError } from "./common"
 import type {
@@ -72,32 +72,51 @@ export async function fetchDailyReports(
       return { data: [], error: null }
     }
 
-    const countMap = new Map<string, number>()
+    const visitStatsMap = new Map<
+      string,
+      {
+        count: number
+        totalOrderAmount: number
+        totalAmountWithoutGST: number
+      }
+    >()
     if (opts.includeNumVisits) {
       const reportIds = rawReports.map((r) => r.id)
 
-      const visitCounts = await db
+      const visitStats = await db
         .select({
           reportId: s.visit.reportId,
-          count: count()
+          count: count(),
+          totalOrderAmount: sql<number>`COALESCE(SUM(${s.visit.orderAmount}::numeric), 0)::int`,
+          totalAmountWithoutGST: sql<number>`COALESCE(SUM(${s.visit.amountWithoutGST}::numeric), 0)::int`
         })
         .from(s.visit)
         .where(inArray(s.visit.reportId, reportIds))
         .groupBy(s.visit.reportId)
 
-      for (const vc of visitCounts) {
-        countMap.set(vc.reportId, vc.count)
+      for (const vs of visitStats) {
+        visitStatsMap.set(vs.reportId, {
+          count: vs.count,
+          totalOrderAmount: vs.totalOrderAmount,
+          totalAmountWithoutGST: vs.totalAmountWithoutGST
+        })
       }
     }
 
-    const reports = rawReports.map((r) => ({
-      ...r,
-      numVisits: countMap.get(r.id) ?? 0,
-      employee: r.employee as EmployeeWithHQ | null,
-      route: r.route as RouteWithName | null,
-      visits: r.visits as VisitFull[] | null,
-      travellingWith: r.travellingWith as EmployeeWithHQ | null
-    }))
+    const reports = rawReports.map((r) => {
+      const stats = visitStatsMap.get(r.id)
+      return {
+        ...r,
+        numVisits: stats?.count ?? 0,
+        employee: r.employee as EmployeeWithHQ | null,
+        route: r.route as RouteWithName | null,
+        visits: r.visits as VisitFull[] | null,
+        travellingWith: r.travellingWith as EmployeeWithHQ | null,
+        totalOrderAmount: stats?.totalOrderAmount ?? 0,
+        totalAmountWithoutGST: stats?.totalAmountWithoutGST ?? 0,
+        totalAmount: (stats?.totalOrderAmount ?? 0) + (stats?.totalAmountWithoutGST ?? 0)
+      }
+    })
 
     return { data: reports, error: null }
   } catch (e) {

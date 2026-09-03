@@ -2,10 +2,10 @@ import { renderComponent, renderSnippet } from "@ui/data-table"
 
 import { DateTime } from "luxon"
 
+import type { VisitFull } from "@/lib/types"
+import type { ColumnDef } from "@tanstack/table-core"
 import DataTableActions from "./data-table-actions.svelte"
 import { visitNameCell, visitTypeCell } from "./snippets.svelte"
-import type { Visit, VisitFull } from "@/lib/types"
-import type { ColumnDef } from "@tanstack/table-core"
 
 export const columns: ColumnDef<VisitFull>[] = [
   {
@@ -42,6 +42,13 @@ export const columns: ColumnDef<VisitFull>[] = [
     }
   },
   {
+    id: "products",
+    header: "Products",
+    cell: ({ row }) => {
+      return row.original.productDetails.length > 0 ? row.original.productDetails.length : "—"
+    }
+  },
+  {
     accessorKey: "orderTaken",
     header: "Order Taken",
     cell: ({ row }) => {
@@ -49,18 +56,13 @@ export const columns: ColumnDef<VisitFull>[] = [
     }
   },
   {
-    id: "products",
-    header: "Products",
+    accessorKey: "orderAmount",
+    header: "Order Amount",
     cell: ({ row }) => {
-      if (row.original.productDetails.length === 0) return "0"
-
-      return `${row.original.productDetails.length} (total ${
-        row.original.orderAmount
-          ? Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(
-              parseFloat(row.original.orderAmount)
-            )
-          : "—"
-      })`
+      const amt = row.original.orderAmount ? parseFloat(row.original.orderAmount) : 0
+      return amt > 0
+        ? Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amt)
+        : "—"
     }
   },
   {
@@ -71,21 +73,31 @@ export const columns: ColumnDef<VisitFull>[] = [
     }
   },
   {
-    accessorKey: "stockChecked",
-    header: "Stock Checked",
+    accessorKey: "amountWithoutGST",
+    header: "Collected (w/o GST)",
     cell: ({ row }) => {
-      return row.original.stockChecked ? "Yes" : "No"
+      const amt = row.original.amountWithoutGST ? parseFloat(row.original.amountWithoutGST) : 0
+      return amt > 0
+        ? Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amt)
+        : "—"
     }
   },
   {
     accessorKey: "outstandingAmount",
-    header: "Outstanding Amount",
+    header: "Outstanding",
     cell: ({ row }) => {
       return row.original.outstandingAmount
         ? Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(
             parseFloat(row.original.outstandingAmount)
           )
         : "—"
+    }
+  },
+  {
+    accessorKey: "stockChecked",
+    header: "Stock Checked",
+    cell: ({ row }) => {
+      return row.original.stockChecked ? "Yes" : "No"
     }
   },
   {

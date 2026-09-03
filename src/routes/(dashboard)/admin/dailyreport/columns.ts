@@ -8,9 +8,17 @@ import { DayType } from "@/lib/types"
 import { DateTime } from "luxon"
 import { createRawSnippet } from "svelte"
 
-import { actionCell, dayTypeCell, statusCell } from "./snippets.svelte"
 import type { DailyReportFull, EmployeeWithHQ, RouteWithName } from "@/lib/types"
 import type { ColumnDef } from "@tanstack/table-core"
+import { actionCell, dayTypeCell, statusCell } from "./snippets.svelte"
+
+const formatCurrency = (amount: number) => {
+  return Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0
+  }).format(amount)
+}
 
 const employeeLinkSnippet = createRawSnippet<[{ employee: EmployeeWithHQ }]>((getEmployee) => {
   const emp = getEmployee()
@@ -24,7 +32,7 @@ const employeeLinkSnippet = createRawSnippet<[{ employee: EmployeeWithHQ }]>((ge
 export const columns: ColumnDef<DailyReportFull>[] = [
   // {
   //   accessorKey: "id",
-  //   header: "ID"
+  //   header: "ID",
   // },
   {
     accessorKey: "date",
@@ -76,24 +84,35 @@ export const columns: ColumnDef<DailyReportFull>[] = [
       return "N/A"
     }
   },
+  // TODO: Show order and collection amount as tooltip in totalAmount
   {
-    accessorKey: "ta",
-    header: "TA",
+    id: "totalAmount",
+    header: "Total Amount",
     cell: ({ row }) => {
-      return row.original.ta
-        ? `${Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(row.original.ta)}`
-        : "N/A"
+      if (row.original.dayType !== DayType.WORK) return "N/A"
+      const sales = row.original.totalAmount ?? 0
+      return sales > 0 ? formatCurrency(sales) : "—"
     }
   },
-  {
-    accessorKey: "da",
-    header: "DA",
-    cell: ({ row }) => {
-      return row.original.da
-        ? `${Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(row.original.da)}`
-        : "N/A"
-    }
-  },
+  // TODO: Show these as tooltip in totalExpense
+  // {
+  //   accessorKey: "ta",
+  //   header: "TA",
+  //   cell: ({ row }) => {
+  //     return row.original.ta
+  //       ? `${Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(row.original.ta)}`
+  //       : "N/A"
+  //   }
+  // },
+  // {
+  //   accessorKey: "da",
+  //   header: "DA",
+  //   cell: ({ row }) => {
+  //     return row.original.da
+  //       ? `${Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(row.original.da)}`
+  //       : "N/A"
+  //   }
+  // },
   {
     accessorKey: "totalExpense",
     header: "Total Expense",

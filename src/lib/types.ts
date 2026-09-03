@@ -113,6 +113,9 @@ export type DailyReportFull = DailyReport & {
   travellingWith: EmployeeWithHQ | null
   visits: VisitFull[] | null
   numVisits: number | null
+  totalOrderAmount: number | null
+  totalAmountWithoutGST: number | null
+  totalAmount: number | null
 }
 
 export type DailyReportCreate = InferInsertModel<typeof dailyReport>

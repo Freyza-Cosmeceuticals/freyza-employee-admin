@@ -22,6 +22,11 @@ import MarkerPopup from "@/lib/components/ui/map/MarkerPopup.svelte"
 import { Skeleton } from "@/lib/components/ui/skeleton/index.js"
 import { findVisitsCamera } from "@/lib/helpers.js"
 import ArrowLeft from "@lucide/svelte/icons/arrow-left"
+import DollarSignIcon from "@lucide/svelte/icons/circle-dollar-sign"
+import PackageCheckIcon from "@lucide/svelte/icons/package-check"
+import ReceiptIcon from "@lucide/svelte/icons/receipt"
+import ShoppingBagIcon from "@lucide/svelte/icons/shopping-bag"
+import WalletIcon from "@lucide/svelte/icons/wallet"
 import { DateTime } from "luxon"
 import { mode } from "mode-watcher"
 
@@ -33,6 +38,15 @@ let { claims } = $derived(data)
 
 let routes = $state<RouteWithName[] | null>(null)
 routes = await fetchRoutes()
+
+// TODO: Make these common utils, currently scattered
+const formatCurrency = (amount: number) => {
+  return Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0
+  }).format(amount)
+}
 
 $inspect(params).with(console.debug)
 </script>
@@ -60,10 +74,36 @@ $inspect(params).with(console.debug)
     {const reportDate = $derived(report ? DateTime.fromJSDate(report.date) : null)}
 
     {#if report && reportDate}
-      {const reportVisits = report.visits ?? []}
+      {const reportVisits = $derived(report.visits ?? [])}
+      {const totalOrderSales = $derived(
+        reportVisits.reduce((sum, v) => sum + (v.orderAmount ? parseFloat(v.orderAmount) : 0), 0)
+      )}
+      {const totalCollections = $derived(
+        reportVisits.reduce(
+          (sum, v) => sum + (v.amountWithoutGST ? parseFloat(v.amountWithoutGST) : 0),
+          0
+        )
+      )}
+      {const totalExpense = $derived(report.totalExpense ?? 0)}
+      {const totalOutstanding = $derived(
+        reportVisits.reduce(
+          (sum, v) => sum + (v.outstandingAmount ? parseFloat(v.outstandingAmount) : 0),
+          0
+        )
+      )}
+      {const ordersCount = $derived(reportVisits.filter((v) => v.orderTaken).length)}
+      {const totalSamples = $derived(
+        reportVisits.reduce((sum, v) => sum + (v.samplesGiven?.length ?? 0), 0)
+      )}
+
+      {const orderConversionRate = $derived(
+        reportVisits.length > 0 ? ((ordersCount / reportVisits.length) * 100).toFixed(0) : 0
+      )}
+
       <PageHeader title="Daily Report" {subheader} />
 
-      <div class="space-y-4">
+      <div class="space-y-6">
+        <!-- Main Card with Details and Map -->
         <Card.Root class="w-full border-0 bg-transparent shadow-none ring-0">
           <Card.Header>
             <Card.Title class="text-xl font-bold">
@@ -90,6 +130,76 @@ $inspect(params).with(console.debug)
               </div>
             </Card.Action>
           </Card.Header>
+
+          <!-- Report Financial & Performance Summary Banner -->
+          <div class="my-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
+            <!-- Order Sales -->
+            <Card.Root>
+              <Card.Header class="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <DollarSignIcon class="size-3.5" />
+                <span>Total Order Sales</span>
+              </Card.Header>
+              <Card.Content class="text-xl font-bold">
+                {formatCurrency(totalOrderSales)}
+              </Card.Content>
+              <Card.Footer class="text-sm text-muted-foreground">
+                {ordersCount}
+                {ordersCount === 1 ? "order" : "orders"} placed
+              </Card.Footer>
+            </Card.Root>
+
+            <!-- Collections -->
+            <Card.Root>
+              <Card.Header class="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <ReceiptIcon class="size-3.5" />
+                <span>Collections</span>
+              </Card.Header>
+              <Card.Content class="text-xl font-bold">
+                {formatCurrency(totalCollections)}
+              </Card.Content>
+              <Card.Footer class="text-sm text-muted-foreground">W/O GST</Card.Footer>
+            </Card.Root>
+
+            <!-- Daily Expenses -->
+            <Card.Root>
+              <Card.Header class="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <WalletIcon class="size-3.5 " />
+                <span>Total Daily Expense</span>
+              </Card.Header>
+              <Card.Content class="text-xl font-bold">
+                {formatCurrency(totalExpense)}
+              </Card.Content>
+              <Card.Footer class="text-sm text-muted-foreground">
+                TA: {formatCurrency(report.ta ?? 0)}
+                &CenterDot; DA: {formatCurrency(report.da ?? 0)}
+              </Card.Footer>
+            </Card.Root>
+
+            <!-- Orders Taken / Visits -->
+            <Card.Root>
+              <Card.Header class="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <ShoppingBagIcon class="size-3.5" />
+                <span>Order Conversion</span>
+              </Card.Header>
+              <Card.Content class="text-xl font-bold">
+                {orderConversionRate}%
+              </Card.Content>
+              <Card.Footer class="text-sm text-muted-foreground">
+                {totalSamples} samples shown
+              </Card.Footer>
+            </Card.Root>
+
+            <!-- Samples Given / Outstanding -->
+            <Card.Root>
+              <Card.Header class="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <PackageCheckIcon class="size-3.5" />
+                <span>Outstanding</span>
+              </Card.Header>
+              <Card.Content class="text-lg font-bold">
+                {formatCurrency(totalOutstanding)}
+              </Card.Content>
+            </Card.Root>
+          </div>
 
           <Card.Content class="h-105 p-0">
             {const camera = findVisitsCamera(reportVisits)}
@@ -133,8 +243,10 @@ $inspect(params).with(console.debug)
                       </div>
 
                       {#if vt.orderTaken}
-                        <div class="rounded bg-green-100 px-2 py-1 text-xs text-green-700">
-                          Order taken
+                        <div>
+                          Order taken ({formatCurrency(
+                            vt.orderAmount ? parseFloat(vt.orderAmount) : 0
+                          )})
                         </div>
                       {/if}
 
