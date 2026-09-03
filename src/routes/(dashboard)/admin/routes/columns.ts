@@ -14,7 +14,8 @@ export const columns: ColumnDef<RouteWithName>[] = [
   },
   {
     accessorKey: "distanceKm",
-    header: "Distance (km)",
-    id: "distance"
+    header: "Distance",
+    id: "distance",
+    cell: ({ row }) => `${row.original.distanceKm} km`
   }
 ]

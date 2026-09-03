@@ -3,7 +3,7 @@ import PageHeader from "$lib/components/dashboard/PageHeader.svelte"
 import * as Alert from "@ui/alert"
 import { Skeleton } from "@ui/skeleton"
 
-import { fetchPois } from "$lib/api/poi.remote"
+import { fetchPoisWithDetails } from "$lib/api/poi.remote"
 
 import DataTable from "@/lib/components/dashboard/table/data-table.svelte"
 import { Button } from "@/lib/components/ui/button"
@@ -22,7 +22,7 @@ import { columns } from "./columns"
 
   <div class="mx-auto px-8">
     <svelte:boundary>
-      {const pois = $derived(await fetchPois())}
+      {const pois = $derived(await fetchPoisWithDetails())}
       <DataTable {columns} data={pois} />
 
       {#snippet pending()}

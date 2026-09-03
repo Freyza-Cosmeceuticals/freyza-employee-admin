@@ -40,6 +40,17 @@ export type POIWithLocation = POI & {
   location: Pick<Location, "id" | "name">
 }
 
+export type POIWithDetails = POI & {
+  location: Pick<Location, "id" | "name">
+  doctor: { specialty: string | null; clinicName: string | null } | null
+  stockist: { gstNumber: string | null } | null
+  numVisits: number
+  totalSales: number
+  totalCollections: number
+  outstandingAmount: number
+  lastVisitedDate: Date | null
+}
+
 export type LocationCreate = InferInsertModel<typeof location>
 export type RouteCreate = InferInsertModel<typeof route>
 
