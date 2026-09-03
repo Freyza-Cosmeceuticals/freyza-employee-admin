@@ -3,7 +3,8 @@ import { error, invalid } from "@sveltejs/kit"
 
 import {
   createTravelPlan as createTravelPlanDb,
-  fetchTravelPlans as fetchTravelPlansDb
+  fetchTravelPlans as fetchTravelPlansDb,
+  getPlanMetrics as getPlanMetricsDb
 } from "$lib/server/db/travelplan"
 import { DayType } from "$lib/types"
 
@@ -90,7 +91,9 @@ export const getTravelPlanById = query(getTravelPlanByIdSchema, async (tpId) => 
 
   const { data: travelPlans, error: dbError } = await fetchTravelPlansDb(locals, {
     planId: tpId,
-    includeEmployee: true
+    includeEmployee: true,
+    includeMetrics: true,
+    includeStats: true
   })
 
   if (dbError !== null) {
@@ -103,7 +106,7 @@ export const getTravelPlanById = query(getTravelPlanByIdSchema, async (tpId) => 
 })
 
 /**
- * Remote query function to get a travel plan by Id with Entries
+ * Remote query function to get a travel plan by Id with Entries and Stats
  */
 export const getTravelPlanByIdWithEntries = query(getTravelPlanByIdSchema, async (tpId) => {
   let TAG = `Remote: getTravelPlanByIdWithEntries(${tpId})`
@@ -115,7 +118,9 @@ export const getTravelPlanByIdWithEntries = query(getTravelPlanByIdSchema, async
   const { data: travelPlans, error: dbError } = await fetchTravelPlansDb(locals, {
     planId: tpId,
     includeEmployee: true,
-    includeEntries: true
+    includeEntries: true,
+    includeStats: true,
+    includeMetrics: true
   })
 
   if (dbError !== null) {
@@ -125,6 +130,27 @@ export const getTravelPlanByIdWithEntries = query(getTravelPlanByIdSchema, async
 
   console.timeEnd(TAG)
   return travelPlans?.[0] ?? null
+})
+
+/**
+ * Remote query function to get travel plan metrics
+ */
+export const getTravelPlanMetrics = query(getTravelPlanByIdSchema, async (tpId) => {
+  let TAG = `Remote: getTravelPlanMetrics(${tpId})`
+  console.time(TAG)
+
+  const { locals } = getRequestEvent()
+  await requireAuthMaybeAdmin(locals, false)
+
+  const { data, error: dbError } = await getPlanMetricsDb(tpId)
+
+  if (dbError !== null || !data) {
+    console.error("Failed to fetch travel plan metrics", dbError)
+    error(500, dbError ?? "Failed to fetch travel plan metrics")
+  }
+
+  console.timeEnd(TAG)
+  return data
 })
 
 /**
@@ -145,7 +171,8 @@ export const getTravelPlansForMonth = query.batch(getTravelPlanForMonthsSchema, 
   const { data: travelPlans, error: dbError } = await fetchTravelPlansDb(locals, {
     months,
     includeEmployee: true,
-    includeStats: true
+    includeStats: true,
+    includeMetrics: true
   })
 
   if (dbError !== null) {
@@ -188,7 +215,9 @@ export const getTravelPlansWithEntriesForMonth = query.batch(
     const { data: travelPlans, error: dbError } = await fetchTravelPlansDb(locals, {
       months,
       includeEmployee: true,
-      includeEntries: true
+      includeEntries: true,
+      includeStats: true,
+      includeMetrics: true
     })
 
     if (dbError !== null) {

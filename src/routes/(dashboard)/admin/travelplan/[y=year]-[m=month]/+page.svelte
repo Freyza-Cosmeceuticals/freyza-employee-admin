@@ -3,6 +3,7 @@ import { replaceState } from "$app/navigation"
 import { resolve } from "$app/paths"
 import { page } from "$app/state"
 
+import TravelPlanMetricsCard from "$lib/components/dashboard/travelplan/TravelPlanMetricsCard.svelte"
 import ViewPlanCalendar from "$lib/components/dashboard/travelplan/ViewPlanCalendar.svelte"
 import * as Card from "@ui/card"
 import * as ScrollArea from "@ui/scroll-area"
@@ -103,8 +104,12 @@ function changeEmployee(newId: string) {
 
   <!-- main content -->
   <main class="flex-1 overflow-y-auto bg-muted/5 p-8">
-    <div class="mx-auto max-w-5xl">
+    <div class="mx-auto max-w-5xl space-y-6">
       {#if travelPlan && travelPlan.employee && travelPlan.planEntries}
+        {#if travelPlan.metrics}
+          <TravelPlanMetricsCard metrics={travelPlan.metrics} stats={travelPlan.stats} />
+        {/if}
+
         <Card.Root>
           <Card.Header class="flex flex-row items-center justify-between space-y-0">
             <div class="flex flex-col gap-1">

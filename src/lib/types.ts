@@ -88,6 +88,7 @@ export type TravelPlanMetrics = {
   employeeId: string
   totalOrderAmount: number
   totalAmountWithoutGST: number
+  totalAmount: number
   numReports: number
   numVisits: number
 }
@@ -105,6 +106,7 @@ export type TravelPlanFull = TravelPlan & {
   employee: EmployeeWithHQ | null
   planEntries: TravelPlanEntryWithRoute[] | null
   stats: TravelPlanStats | null
+  metrics: TravelPlanMetrics | null
 }
 
 export type DailyReportFull = DailyReport & {

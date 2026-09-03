@@ -2,12 +2,13 @@
 import { resolve } from "$app/paths"
 import { page } from "$app/state"
 
+import TravelPlanMetricsCard from "$lib/components/dashboard/travelplan/TravelPlanMetricsCard.svelte"
 import ViewPlanCalendar from "$lib/components/dashboard/travelplan/ViewPlanCalendar.svelte"
 import * as Avatar from "@ui/avatar"
 import { Badge } from "@ui/badge"
 import * as Card from "@ui/card"
 
-import { getTravelPlanByIdWithEntries } from "$lib/api/travelplan.remote"
+import { getTravelPlanByIdWithEntries, getTravelPlanMetrics } from "$lib/api/travelplan.remote"
 import { DayType } from "$lib/types"
 
 import PageHeader from "@/lib/components/dashboard/PageHeader.svelte"
@@ -22,9 +23,8 @@ const tpId = $derived(page.params.tpId!)
 const dayTypes = [DayType.WORK, DayType.LEAVE, DayType.HOLIDAY]
 
 const travelPlan = $derived(await getTravelPlanByIdWithEntries(tpId))
+const metrics = $derived(await getTravelPlanMetrics(tpId))
 const month = $derived(travelPlan ? DateTime.fromJSDate(travelPlan.month) : null)
-
-$inspect(tpId).with(console.log)
 </script>
 
 <svelte:head>
@@ -46,7 +46,11 @@ $inspect(tpId).with(console.log)
     {/snippet}
 
     <PageHeader title="Travel Plan" description="" {subheader} />
-    <div class="mx-auto max-w-5xl">
+    <div class="mx-auto max-w-5xl space-y-6">
+      {#if metrics}
+        <TravelPlanMetricsCard {metrics} stats={travelPlan.stats} />
+      {/if}
+
       <Card.Root class="w-full">
         <Card.Header>
           <Card.Title class="text-xl font-bold">
@@ -90,7 +94,6 @@ $inspect(tpId).with(console.log)
         <Card.Content class="space-y-4">
           <ViewPlanCalendar {month} {dayTypes} planEntries={travelPlan.planEntries} />
         </Card.Content>
-        <Card.Footer></Card.Footer>
       </Card.Root>
     </div>
   {:else}
