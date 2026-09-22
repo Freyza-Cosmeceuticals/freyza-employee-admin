@@ -1,5 +1,5 @@
 <script lang="ts">
-import RouteSelectComboBox from "$lib/components/dashboard/RouteSelectComboBox.svelte"
+import LocationSelectComboBox from "$lib/components/dashboard/LocationSelectComboBox.svelte"
 import Calendar from "@ui/calendar/calendar.svelte"
 import PopoverContent from "@ui/popover/popover-content.svelte"
 import PopoverTrigger from "@ui/popover/popover-trigger.svelte"
@@ -10,13 +10,14 @@ import { TIMEZONE } from "$lib/constants"
 import { DayType } from "$lib/types"
 
 import { isWeekend, parseDate } from "@internationalized/date"
+import ArrowRight from "@lucide/svelte/icons/arrow-right"
 import Holidays from "date-holidays"
 import { DateTime } from "luxon"
 
 import { dayTypeBadge, routeBadge, statsBadge } from "../snippets.svelte"
 import type { DateValue } from "@internationalized/date"
 import type { addTravelPlan } from "$lib/api/travelplan.remote"
-import type { RouteWithName } from "$lib/types"
+import type { LocationWithName, RouteWithName } from "$lib/types"
 import type { ClassValue } from "svelte/elements"
 
 interface Props {
@@ -25,13 +26,24 @@ interface Props {
   days: DateTime<true>[]
   dayTypes: DayType[]
   routes: RouteWithName[]
+  locations: LocationWithName[]
   planEntries: typeof addTravelPlan.fields.planEntries
   disabled: boolean
   onInput: () => void
 }
 
-let { className, month, days, dayTypes, routes, planEntries, disabled, onInput, ...rest }: Props =
-  $props()
+let {
+  className,
+  month,
+  days,
+  dayTypes,
+  routes,
+  locations,
+  planEntries,
+  disabled,
+  onInput,
+  ...rest
+}: Props = $props()
 
 let selectedMonth = $derived(parseDate(month.toISODate()!))
 
@@ -52,6 +64,35 @@ const setInitialDays = () => {
 }
 
 setInitialDays()
+
+/**
+ * Handles updating the location for a given day in the plan.
+ * Updates the routeId if a matching route exists
+ * @param idx - The index of the day in the plan.
+ * @param newSrcId - The new source location ID.
+ * @param newDestId - The new destination location ID.
+ */
+function handleLocationUpdate(idx: number, newSrcId?: string, newDestId?: string) {
+  const currentSrc = newSrcId !== undefined ? newSrcId : (planEntries[idx].srcLocId.value() ?? "")
+  const currentDest =
+    newDestId !== undefined ? newDestId : (planEntries[idx].destLocId.value() ?? "")
+
+  if (newSrcId !== undefined) {
+    planEntries[idx].srcLocId.set(newSrcId)
+  }
+  if (newDestId !== undefined) {
+    planEntries[idx].destLocId.set(newDestId)
+  }
+
+  if (currentSrc && currentDest) {
+    const matched = routes.find((r) => r.srcLoc.id === currentSrc && r.destLoc.id === currentDest)
+    planEntries[idx].routeId.set(matched ? matched.id : "")
+  } else {
+    planEntries[idx].routeId.set("")
+  }
+
+  onInput()
+}
 
 let workDaysCount = $derived(
   planEntries.value()?.reduce((acc, entry) => {
@@ -98,7 +139,7 @@ const formatDateDisplay = (date: DateValue): string =>
     type="single"
     value={undefined}
     placeholder={selectedMonth}
-    class="mx-auto  w-min rounded-lg border border-border bg-card shadow-sm [--cell-size:--spacing(32)]"
+    class="mx-auto w-min rounded-lg border border-border bg-card shadow-sm [--cell-size:--spacing(32)]"
     initialFocus={false}
     disableDaysOutsideMonth={true}
     preventDeselect={true}
@@ -111,13 +152,48 @@ const formatDateDisplay = (date: DateValue): string =>
       {const i = days.findIndex((d) => d.day === day.day && !outsideMonth)}
       {const thisDayType = $derived(planEntries[i].dayType.value() ?? DayType.WORK)}
       {const thisRouteId = $derived(planEntries[i].routeId.value() ?? null)}
-      {const thisRoute = $derived(routes.find((r) => r.id === thisRouteId) ?? null)}
-      {const hasErrors = $derived(planEntries[i].allIssues()?.length ?? 0 > 0)}
+      {const thisSrcLocId = $derived(planEntries[i].srcLocId.value() ?? null)}
+      {const thisDestLocId = $derived(planEntries[i].destLocId.value() ?? null)}
+
+      {const resolvedExistingRoute = $derived.by(() => {
+        if (!thisSrcLocId || !thisDestLocId) return null
+        return (
+          routes.find((r) => r.srcLoc.id === thisSrcLocId && r.destLoc.id === thisDestLocId) ?? null
+        )
+      })}
+
+      {const thisRoute = $derived.by<RouteWithName | null>(() => {
+        if (resolvedExistingRoute) return resolvedExistingRoute
+        if (thisRouteId) {
+          const r = routes.find((r) => r.id === thisRouteId)
+          if (r) return r
+        }
+        if (thisSrcLocId && thisDestLocId) {
+          const src = locations.find((l) => l.id === thisSrcLocId)
+          const dest = locations.find((l) => l.id === thisDestLocId)
+          if (src && dest) {
+            return {
+              id: "",
+              distanceKm: 0,
+              srcLoc: { id: src.id, name: src.name },
+              destLoc: { id: dest.id, name: dest.name }
+            }
+          }
+        }
+        return null
+      })}
+
+      {const isNewRoute = $derived(
+        Boolean(thisSrcLocId && thisDestLocId && !resolvedExistingRoute)
+      )}
+      {const hasErrors = $derived((planEntries[i].allIssues()?.length ?? 0) > 0)}
 
       {#if !outsideMonth}
         <input {...planEntries[i].date.as("hidden", days[i].toISODate())} />
         <input {...planEntries[i].dayType.as("hidden", thisDayType)} />
-        <input hidden {...planEntries[i].routeId.as("text")} value={thisRouteId} />
+        <input hidden {...planEntries[i].routeId.as("text")} value={thisRouteId ?? ""} />
+        <input hidden {...planEntries[i].srcLocId.as("text")} value={thisSrcLocId ?? ""} />
+        <input hidden {...planEntries[i].destLocId.as("text")} value={thisDestLocId ?? ""} />
       {/if}
 
       <Popover
@@ -175,7 +251,7 @@ const formatDateDisplay = (date: DateValue): string =>
               {/if}
             </div>
 
-            <div class="space-y-4 p-4">
+            <div class="space-y-4 p-4 pt-0">
               <Select.Root
                 type="single"
                 onValueChange={() => onInput()}
@@ -185,6 +261,8 @@ const formatDateDisplay = (date: DateValue): string =>
                     planEntries[i].dayType.set(value)
                     if (value !== DayType.WORK) {
                       planEntries[i].routeId.set("")
+                      planEntries[i].srcLocId.set("")
+                      planEntries[i].destLocId.set("")
                     }
                   }
                 }
@@ -201,22 +279,71 @@ const formatDateDisplay = (date: DateValue): string =>
               </Select.Root>
 
               {#if thisDayType === DayType.WORK}
-                {#each planEntries[i].routeId.issues() as issue}
+                {#each [...(planEntries[i].routeId.issues() ?? []), ...(planEntries[i].srcLocId.issues() ?? []), ...(planEntries[i].destLocId.issues() ?? [])] as issue}
                   <p class="ms-2 text-sm text-destructive">
                     {issue.message}
                   </p>
                 {/each}
 
-                <RouteSelectComboBox
-                  {routes}
-                  bind:value={
-                    () => thisRouteId ?? undefined,
-                    (value) => {
-                      planEntries[i].routeId.set(value ?? "")
-                    }
-                  }
-                  {disabled}
-                  onValueChange={() => onInput()} />
+                <div class="space-y-3">
+                  <div class="space-y-1">
+                    <span
+                      class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                      From
+                    </span>
+                    <LocationSelectComboBox
+                      {locations}
+                      placeholder="Select source..."
+                      value={thisSrcLocId ?? undefined}
+                      onValueChange={(val) => handleLocationUpdate(i, val, undefined)}
+                      {disabled} />
+                  </div>
+
+                  <div class="space-y-1">
+                    <span
+                      class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                      To
+                    </span>
+                    <LocationSelectComboBox
+                      {locations}
+                      placeholder="Select destination..."
+                      value={thisDestLocId ?? undefined}
+                      onValueChange={(val) => handleLocationUpdate(i, undefined, val)}
+                      {disabled} />
+                  </div>
+
+                  {#key [thisSrcLocId, thisDestLocId, resolvedExistingRoute, isNewRoute]}
+                    {#if resolvedExistingRoute}
+                      <div class="p-2.5">
+                        <div class="flex items-center gap-1.5 font-medium text-foreground">
+                          <span>{resolvedExistingRoute.srcLoc.name}</span>
+                          <ArrowRight class="size-3.5 text-muted-foreground" />
+                          <span>{resolvedExistingRoute.destLoc.name}</span>
+                        </div>
+                        {#if resolvedExistingRoute.distanceKm > 0}
+                          <div class="mt-1 text-muted-foreground">
+                            Distance: <span class="font-semibold text-foreground">
+                              {resolvedExistingRoute.distanceKm} km
+                            </span>
+                          </div>
+                        {/if}
+                      </div>
+                    {:else if isNewRoute}
+                      {const srcLocObj = locations.find((l) => l.id === thisSrcLocId)}
+                      {const destLocObj = locations.find((l) => l.id === thisDestLocId)}
+                      <div class="p-2.5">
+                        <div class="flex items-center gap-1.5 font-medium">
+                          <span>{srcLocObj?.name ?? "Source"}</span>
+                          <ArrowRight class="size-3.5 opacity-70" />
+                          <span>{destLocObj?.name ?? "Destination"}</span>
+                        </div>
+                        <p class="mt-1 text-sm text-muted-foreground">
+                          A <b>new</b> route will be created
+                        </p>
+                      </div>
+                    {/if}
+                  {/key}
+                </div>
               {:else}
                 <p class="text-sm text-muted-foreground">No Route to be selected</p>
               {/if}

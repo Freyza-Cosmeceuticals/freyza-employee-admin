@@ -37,20 +37,39 @@ const addTravelPlanEntrySchema = v.pipe(
         v.pipe(v.string(), v.trim(), v.empty()),
         v.pipe(v.string(), v.trim(), v.uuid("Invalid Route ID"))
       ])
+    ),
+    srcLocId: v.optional(
+      v.union([
+        v.pipe(v.string(), v.trim(), v.empty()),
+        v.pipe(v.string(), v.trim(), v.uuid("Invalid Source Location ID"))
+      ])
+    ),
+    destLocId: v.optional(
+      v.union([
+        v.pipe(v.string(), v.trim(), v.empty()),
+        v.pipe(v.string(), v.trim(), v.uuid("Invalid Destination Location ID"))
+      ])
     )
   }),
-  v.transform((input) => ({ ...input, routeId: input.routeId || null })),
+  v.transform((input) => ({
+    ...input,
+    routeId: input.routeId || null,
+    srcLocId: input.srcLocId || null,
+    destLocId: input.destLocId || null
+  })),
   v.forward(
     v.partialCheck(
-      [["dayType"], ["routeId"]],
+      [["dayType"], ["routeId"], ["srcLocId"], ["destLocId"]],
       (data) => {
-        if (data.dayType === DayType.WORK && !data.routeId) {
-          return false
+        if (data.dayType === DayType.WORK) {
+          if (!data.routeId && (!data.srcLocId || !data.destLocId)) {
+            return false
+          }
         }
 
         return true
       },
-      "Route ID is required for working days"
+      "Both From and To locations are required for working days"
     ),
     ["routeId"]
   )

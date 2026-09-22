@@ -7,26 +7,33 @@ import CheckIcon from "@lucide/svelte/icons/check"
 import ChevronsUpDownIcon from "@lucide/svelte/icons/chevrons-up-down"
 import { tick } from "svelte"
 
-import type { RouteWithName } from "$lib/types"
+import type { LocationWithName } from "$lib/types"
+import type { ClassValue } from "svelte/elements"
 
 interface Props {
-  routes: RouteWithName[]
-  value: string | undefined
-  disabled: boolean
+  locations: LocationWithName[]
+  value?: string | undefined
+  placeholder?: string
+  disabled?: boolean
+  error?: boolean
+  className?: ClassValue
   onValueChange?: (value: string) => void
 }
 
-let { routes, value = $bindable(undefined), disabled, onValueChange }: Props = $props()
+let {
+  locations,
+  value = $bindable(undefined),
+  placeholder = "Select location...",
+  disabled = false,
+  error = false,
+  className,
+  onValueChange
+}: Props = $props()
 
 let open = $state(false)
 let triggerRef = $state<HTMLButtonElement>(null!)
 
-const selectedValue = $derived.by(() => {
-  const route = routes.find((r) => r.id === value)
-  if (!route) return "Select a route..."
-
-  return `${route.srcLoc.name} → ${route.destLoc.name} (${route.distanceKm}km)`
-})
+const selectedLocation = $derived(locations.find((l) => l.id === value))
 
 // We want to refocus the trigger button when the user selects
 // an item from the list so users can continue navigating the
@@ -34,7 +41,7 @@ const selectedValue = $derived.by(() => {
 function closeAndFocusTrigger() {
   open = false
   tick().then(() => {
-    triggerRef.focus()
+    triggerRef?.focus()
   })
 }
 </script>
@@ -44,34 +51,37 @@ function closeAndFocusTrigger() {
     {#snippet child({ props })}
       <Button
         variant="outline"
-        class="w-50 justify-between"
+        class={[
+          "w-full justify-between font-normal",
+          !value && "text-muted-foreground",
+          error && "border-destructive text-destructive",
+          className
+        ]}
         {...props}
         role="combobox"
         aria-expanded={open}>
-        {selectedValue || "Select a route..."}
+        <span class="truncate">{selectedLocation?.name || placeholder}</span>
         <ChevronsUpDownIcon class="ms-2 size-4 shrink-0 opacity-50" />
       </Button>
     {/snippet}
   </Popover.Trigger>
-  <Popover.Content class="w-75 p-0">
+  <Popover.Content class="w-72 p-0" align="start">
     <Command.Root>
-      <Command.Input placeholder="Search route..." />
+      <Command.Input placeholder="Search location..." />
       <Command.List>
-        <Command.Empty>No route found.</Command.Empty>
+        <Command.Empty>No location found.</Command.Empty>
         <Command.Group>
-          {#each routes as r}
+          {#each locations as loc (loc.id)}
             <Command.Item
-              value={r.id}
-              keywords={[r.srcLoc.name, r.destLoc.name]}
+              value={loc.id}
+              keywords={[loc.name]}
               onSelect={() => {
-                value = r.id
+                value = loc.id
                 closeAndFocusTrigger()
-                onValueChange?.(value)
+                onValueChange?.(loc.id)
               }}>
-              <CheckIcon class={["my-2 me-2 size-4", value !== r.id && "text-transparent"]} />
-              <span>
-                {r.srcLoc.name} &RightArrow; {r.destLoc.name} ({r.distanceKm}km)
-              </span>
+              <CheckIcon class={["me-2 size-4", value !== loc.id && "text-transparent"]} />
+              <span class="truncate">{loc.name}</span>
             </Command.Item>
           {/each}
         </Command.Group>

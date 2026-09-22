@@ -75,6 +75,8 @@ export type TravelPlanCreate = InferInsertModel<typeof travelPlan> & {
 
 export type TravelPlanEntryCreate = Omit<InferInsertModel<typeof travelPlanEntry>, "tpId"> & {
   tpId?: string | undefined
+  srcLocId?: string | null
+  destLocId?: string | null
 }
 
 export type TravelPlanStats = {

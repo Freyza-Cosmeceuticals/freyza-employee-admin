@@ -1,7 +1,7 @@
 import * as s from "$lib/db/schema"
 import { DayType } from "$lib/types"
 
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm"
+import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm"
 
 import { db, handleDbError } from "./common"
 import type {
@@ -148,6 +148,7 @@ export async function createTravelPlan(
 
   try {
     const travelPlanObject = await db.transaction(async (tx) => {
+      // insert Travel Plan header
       const [insertedPlan] = await tx
         .insert(s.travelPlan)
         .values({
@@ -157,14 +158,77 @@ export async function createTravelPlan(
         })
         .returning()
 
-      const newPlanId = insertedPlan.id
+      // collect unique (srcLocId, destLocId) pairs that need route resolution
+      const unresolvedPairs = new Map<string, { srcLocId: string; destLocId: string }>()
+      for (const entry of travelPlan.planEntries) {
+        if (entry.dayType === DayType.WORK && !entry.routeId && entry.srcLocId && entry.destLocId) {
+          const key = `${entry.srcLocId}:${entry.destLocId}`
+          unresolvedPairs.set(key, { srcLocId: entry.srcLocId, destLocId: entry.destLocId })
+        }
+      }
 
+      // batch resolve or create routes
+      const routeMap = new Map<string, string>()
+
+      if (unresolvedPairs.size > 0) {
+        const pairs = Array.from(unresolvedPairs.values())
+
+        const existingRoutes = await tx
+          .select({ id: s.route.id, srcLocId: s.route.srcLocId, destLocId: s.route.destLocId })
+          .from(s.route)
+          .where(
+            pairs.length === 1
+              ? and(
+                  eq(s.route.srcLocId, pairs[0].srcLocId),
+                  eq(s.route.destLocId, pairs[0].destLocId)
+                )
+              : or(
+                  ...pairs.map((p) =>
+                    and(eq(s.route.srcLocId, p.srcLocId), eq(s.route.destLocId, p.destLocId))
+                  )
+                )
+          )
+
+        for (const r of existingRoutes) {
+          routeMap.set(`${r.srcLocId}:${r.destLocId}`, r.id)
+        }
+
+        // bulk insert only routes that don't exist yet
+        const routesToCreate = pairs
+          .filter((p) => !routeMap.has(`${p.srcLocId}:${p.destLocId}`))
+          .map((p) => ({
+            srcLocId: p.srcLocId,
+            destLocId: p.destLocId,
+            distanceKm: 0
+          }))
+
+        if (routesToCreate.length > 0) {
+          const createdRoutes = await tx
+            .insert(s.route)
+            .values(routesToCreate)
+            .onConflictDoUpdate({
+              target: [s.route.srcLocId, s.route.destLocId],
+              set: { distanceKm: sql`${s.route.distanceKm}` }
+            })
+            .returning({ id: s.route.id, srcLocId: s.route.srcLocId, destLocId: s.route.destLocId })
+
+          for (const r of createdRoutes) {
+            routeMap.set(`${r.srcLocId}:${r.destLocId}`, r.id)
+          }
+        }
+      }
+
+      // batch insert all plan entries
       await tx.insert(s.travelPlanEntry).values(
         travelPlan.planEntries.map((entry) => ({
-          tpId: newPlanId,
+          tpId: insertedPlan.id,
           date: entry.date,
           dayType: entry.dayType,
-          routeId: entry.routeId
+          routeId:
+            entry.routeId ??
+            (entry.srcLocId && entry.destLocId
+              ? (routeMap.get(`${entry.srcLocId}:${entry.destLocId}`) ?? null)
+              : null)
         }))
       )
 
