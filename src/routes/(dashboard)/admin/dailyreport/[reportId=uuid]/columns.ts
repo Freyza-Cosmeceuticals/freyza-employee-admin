@@ -1,4 +1,5 @@
 import { renderComponent, renderSnippet } from "@/lib/components/reusable/data-table"
+import { formatCurrency } from "@/lib/helpers"
 import { DateTime } from "luxon"
 
 import DataTableActions from "./data-table-actions.svelte"
@@ -59,9 +60,7 @@ export const columns: ColumnDef<VisitFull>[] = [
     header: "Order Amount",
     cell: ({ row }) => {
       const amt = row.original.orderAmount ? parseFloat(row.original.orderAmount) : 0
-      return amt > 0
-        ? Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amt)
-        : "—"
+      return amt > 0 ? formatCurrency(amt) : "—"
     }
   },
   {
@@ -76,9 +75,7 @@ export const columns: ColumnDef<VisitFull>[] = [
     header: "Collected (w/o GST)",
     cell: ({ row }) => {
       const amt = row.original.amountWithoutGST ? parseFloat(row.original.amountWithoutGST) : 0
-      return amt > 0
-        ? Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amt)
-        : "—"
+      return amt > 0 ? formatCurrency(amt) : "—"
     }
   },
   {
@@ -86,9 +83,7 @@ export const columns: ColumnDef<VisitFull>[] = [
     header: "Outstanding",
     cell: ({ row }) => {
       return row.original.outstandingAmount
-        ? Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(
-            parseFloat(row.original.outstandingAmount)
-          )
+        ? formatCurrency(parseFloat(row.original.outstandingAmount))
         : "—"
     }
   },

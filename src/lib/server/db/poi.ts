@@ -56,9 +56,9 @@ export async function getAllPois(
         .select({
           poiId: s.visit.poiId,
           numVisits: sql<number>`COALESCE(COUNT(${s.visit.id}), 0)::int`,
-          totalSales: sql<number>`COALESCE(SUM(${s.visit.orderAmount}::numeric), 0)::int`,
-          totalCollections: sql<number>`COALESCE(SUM(${s.visit.amountWithoutGST}::numeric), 0)::int`,
-          outstandingAmount: sql<number>`COALESCE(SUM(${s.visit.outstandingAmount}::numeric), 0)::int`,
+          totalSales: sql<number>`COALESCE(SUM(${s.visit.orderAmount}::numeric), 0)::float`,
+          totalCollections: sql<number>`COALESCE(SUM(${s.visit.amountWithoutGST}::numeric), 0)::float`,
+          outstandingAmount: sql<number>`COALESCE(SUM(${s.visit.outstandingAmount}::numeric), 0)::float`,
           lastVisitedDate: sql<Date | null>`MAX(${s.dailyReport.date})`
         })
         .from(s.visit)

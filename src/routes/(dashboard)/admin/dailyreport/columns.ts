@@ -2,7 +2,7 @@ import { resolve } from "$app/paths"
 
 import { renderSnippet } from "@/lib/components/reusable/data-table"
 import { buttonVariants } from "@/lib/components/ui/button"
-import { formatRouteName } from "@/lib/helpers"
+import { formatCurrency, formatRouteName } from "@/lib/helpers"
 import { DayType } from "@/lib/types"
 import { DateTime } from "luxon"
 import { createRawSnippet } from "svelte"
@@ -10,14 +10,6 @@ import { createRawSnippet } from "svelte"
 import { actionCell, dayTypeCell, statusCell } from "./snippets.svelte"
 import type { DailyReportFull, EmployeeWithHQ, RouteWithName } from "@/lib/types"
 import type { ColumnDef } from "@tanstack/table-core"
-
-const formatCurrency = (amount: number) => {
-  return Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0
-  }).format(amount)
-}
 
 const employeeLinkSnippet = createRawSnippet<[{ employee: EmployeeWithHQ }]>((getEmployee) => {
   const emp = getEmployee()
@@ -99,7 +91,7 @@ export const columns: ColumnDef<DailyReportFull>[] = [
   //   header: "TA",
   //   cell: ({ row }) => {
   //     return row.original.ta
-  //       ? `${Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(row.original.ta)}`
+  //       ? `$${formatCurrency(row.original.ta)}`
   //       : "N/A"
   //   }
   // },
@@ -108,7 +100,7 @@ export const columns: ColumnDef<DailyReportFull>[] = [
   //   header: "DA",
   //   cell: ({ row }) => {
   //     return row.original.da
-  //       ? `${Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(row.original.da)}`
+  //       ? `${formatCurrency(row.original.da)}`
   //       : "N/A"
   //   }
   // },
@@ -116,9 +108,7 @@ export const columns: ColumnDef<DailyReportFull>[] = [
     accessorKey: "totalExpense",
     header: "Total Expense",
     cell: ({ row }) => {
-      return row.original.totalExpense
-        ? `${Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(row.original.totalExpense)}`
-        : "N/A"
+      return row.original.totalExpense ? `${formatCurrency(row.original.totalExpense)}` : "N/A"
     }
   },
   {

@@ -256,8 +256,8 @@ export async function getPlansMetricsMap(
       tpId: s.travelPlan.id,
       targetAmount: s.travelPlan.salesTarget,
       employeeId: s.travelPlan.employeeId,
-      totalOrderAmount: sql<number>`COALESCE(SUM(${s.visit.orderAmount}::numeric), 0)::int`,
-      totalAmountWithoutGST: sql<number>`COALESCE(SUM(${s.visit.amountWithoutGST}::numeric), 0)::int`,
+      totalOrderAmount: sql<number>`COALESCE(SUM(${s.visit.orderAmount}::numeric), 0)::float`,
+      totalAmountWithoutGST: sql<number>`COALESCE(SUM(${s.visit.amountWithoutGST}::numeric), 0)::float`,
       numReports: sql<number>`COALESCE(COUNT(DISTINCT ${s.dailyReport.id}), 0)::int`,
       numVisits: sql<number>`COALESCE(COUNT(DISTINCT ${s.visit.id}), 0)::int`
     })
