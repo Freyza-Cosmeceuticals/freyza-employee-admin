@@ -1,4 +1,4 @@
-import { renderSnippet } from "@/lib/components/ui/data-table"
+import { renderSnippet } from "@/lib/components/reusable/data-table"
 import { DateTime } from "luxon"
 import { createRawSnippet } from "svelte"
 

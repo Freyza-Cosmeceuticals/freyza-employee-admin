@@ -1,11 +1,10 @@
-import { renderComponent, renderSnippet } from "@ui/data-table"
-
+import { renderComponent, renderSnippet } from "@/lib/components/reusable/data-table"
 import { DateTime } from "luxon"
 
-import type { VisitFull } from "@/lib/types"
-import type { ColumnDef } from "@tanstack/table-core"
 import DataTableActions from "./data-table-actions.svelte"
 import { visitNameCell, visitTypeCell } from "./snippets.svelte"
+import type { VisitFull } from "@/lib/types"
+import type { ColumnDef } from "@tanstack/table-core"
 
 export const columns: ColumnDef<VisitFull>[] = [
   {

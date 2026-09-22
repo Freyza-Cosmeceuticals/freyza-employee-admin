@@ -17,7 +17,7 @@ let props: Props = $props()
 <a
   href={resolve(`/admin/travelplan/create?month=${props.month.toISODate({ precision: "month" })}`)}>
   <Card.Root class="h-full w-64 cursor-pointer p-4">
-    <Card.Content class="grid place-items-center gap-2 p-2">
+    <Card.Content class="grid h-full place-items-center content-center gap-2 p-2">
       <CalendarPlusIcon class="size-10 rounded-full bg-secondary p-2" />
       <p class="text-muted-foreground">Add new travel plan</p>
     </Card.Content>

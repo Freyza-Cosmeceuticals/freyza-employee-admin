@@ -1,6 +1,5 @@
-import { renderComponent, renderSnippet } from "@ui/data-table"
-
 import { employeeStatus, employeeTier } from "@/lib/components/dashboard/employee/snippets.svelte"
+import { renderComponent, renderSnippet } from "@/lib/components/reusable/data-table"
 import { DateTime } from "luxon"
 
 import DataTableActions from "./data-table-actions.svelte"

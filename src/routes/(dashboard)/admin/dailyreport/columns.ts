@@ -1,16 +1,15 @@
 import { resolve } from "$app/paths"
 
-import { renderSnippet } from "@ui/data-table"
-
+import { renderSnippet } from "@/lib/components/reusable/data-table"
 import { buttonVariants } from "@/lib/components/ui/button"
 import { formatRouteName } from "@/lib/helpers"
 import { DayType } from "@/lib/types"
 import { DateTime } from "luxon"
 import { createRawSnippet } from "svelte"
 
+import { actionCell, dayTypeCell, statusCell } from "./snippets.svelte"
 import type { DailyReportFull, EmployeeWithHQ, RouteWithName } from "@/lib/types"
 import type { ColumnDef } from "@tanstack/table-core"
-import { actionCell, dayTypeCell, statusCell } from "./snippets.svelte"
 
 const formatCurrency = (amount: number) => {
   return Intl.NumberFormat("en-IN", {

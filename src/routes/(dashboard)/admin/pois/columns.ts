@@ -1,5 +1,4 @@
-import { renderSnippet } from "@ui/data-table"
-
+import { renderSnippet } from "@/lib/components/reusable/data-table"
 import { VisitType } from "@/lib/constants"
 import { DateTime } from "luxon"
 import { createRawSnippet } from "svelte"
