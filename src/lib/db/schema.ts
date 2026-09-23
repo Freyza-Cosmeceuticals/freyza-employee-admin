@@ -317,6 +317,8 @@ export const travelPlanEntry = pgTable(
   },
   (table) => [
     index("idx_travelplanentry_routeid").on(table.routeId),
+    index("idx_travelplanentry_tpid").on(table.tpId),
+    index("idx_travelplanentry_date").on(table.date),
     uniqueIndex("travelPlanEntry_tpId_date_key").on(table.tpId, table.date),
     foreignKey({
       columns: [table.routeId],
