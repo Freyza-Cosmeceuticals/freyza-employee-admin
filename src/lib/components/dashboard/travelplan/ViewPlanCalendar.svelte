@@ -124,7 +124,7 @@ const formatDateDisplay = (date: DateValue): string =>
               {/if}
             </div>
 
-            <div class="space-y-4 p-4">
+            <div class="space-y-4 p-4 pt-0">
               {@render dayTypeBadge(thisDayType)}
 
               {#if thisDayType === DayType.WORK}

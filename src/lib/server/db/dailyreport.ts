@@ -87,8 +87,8 @@ export async function fetchDailyReports(
         .select({
           reportId: s.visit.reportId,
           count: count(),
-          totalOrderAmount: sql<number>`COALESCE(SUM(${s.visit.orderAmount}::numeric), 0)::int`,
-          totalAmountWithoutGST: sql<number>`COALESCE(SUM(${s.visit.amountWithoutGST}::numeric), 0)::int`
+          totalOrderAmount: sql<number>`COALESCE(SUM(${s.visit.orderAmount}::numeric), 0)::float`,
+          totalAmountWithoutGST: sql<number>`COALESCE(SUM(${s.visit.amountWithoutGST}::numeric), 0)::float`
         })
         .from(s.visit)
         .where(inArray(s.visit.reportId, reportIds))

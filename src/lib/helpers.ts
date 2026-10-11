@@ -11,6 +11,19 @@ export function formatRouteName(route: RouteWithName): string {
 }
 
 /**
+ * Returns the formatted currency string for the given amount.
+ * @param amount
+ * @returns The formatted currency string.
+ */
+export function formatCurrency(amount: number) {
+  return Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 2
+  }).format(amount)
+}
+
+/**
  * Returns the label for the visit type, based on the visit type.
  * @param visitType
  * @returns The label for the visit type, or "Unknown" if the visit type is not recognized.

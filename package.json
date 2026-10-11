@@ -61,10 +61,12 @@
     "@supabase/supabase-js": "^2.116.0",
     "@sveltejs/adapter-vercel": "^6.3.4",
     "date-holidays": "^3.37.0",
+    "fuzzball": "^2.2.6",
     "luxon": "^3.7.2",
     "maplibre-gl": "^6.10.0",
     "mode-watcher": "^1.1.0",
     "postgres": "^3.4.9",
-    "valibot": "^1.5.0"
+    "valibot": "^1.5.0",
+    "xlsx": "^0.18.5"
   }
 }

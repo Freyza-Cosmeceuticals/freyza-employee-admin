@@ -16,13 +16,20 @@ import { DayType } from "$lib/types"
 
 import PageHeader from "@/lib/components/dashboard/PageHeader.svelte"
 import InfoIcon from "@lucide/svelte/icons/info"
+import UploadIcon from "@lucide/svelte/icons/upload"
 import { DateTime, Interval } from "luxon"
 import { toast } from "svelte-sonner"
 
+import { parseTravelPlanExcel } from "./upload-parse.js"
 import type { RemoteFormIssue } from "@sveltejs/kit"
 
 let { data } = $props()
-let { claims, employees, routes, today, nextMonth } = $derived(data)
+let { claims, employees, routes, locations, today, nextMonth } = $derived(data)
+
+const selectedEmp = $derived(
+  employees.find((e) => e.id === addTravelPlan.fields.employeeId.value())
+)
+let employeeSelectError = $state<string | null>(null)
 
 const days = $derived(
   Interval.fromDateTimes(nextMonth.startOf("month"), nextMonth.endOf("month"))
@@ -32,24 +39,64 @@ const days = $derived(
 
 const dayTypes = [DayType.WORK, DayType.LEAVE, DayType.HOLIDAY]
 
+let fileInput = $state<HTMLInputElement | null>(null)
+
+async function handleFileUpload(event: Event) {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+
+  if (!selectedEmp) {
+    toast.error("Select an Employee before upload TP file")
+    return
+  }
+
+  const hqId = selectedEmp.hqId
+  if (!hqId) {
+    toast.error("Employee not found")
+    return
+  }
+
+  const toastId = toast.loading("Parsing Excel file...")
+
+  // Pass current state array and route dictionary to the parser
+  const currentEntries = addTravelPlan.fields.planEntries.value()
+  const result = await parseTravelPlanExcel(file, currentEntries, locations, routes, hqId)
+
+  if (result.success && result.data) {
+    addTravelPlan.fields.planEntries.set(result.data)
+    addTravelPlan.validate({ includeUntouched: true })
+
+    toast.success(result.message, { id: toastId })
+  } else {
+    toast.error(result.message, { id: toastId })
+  }
+
+  if (fileInput) fileInput.value = ""
+}
+
 function debugFill() {
   addTravelPlan.fields.planEntries.set(
     days.map((d) => {
       const dayType = dayTypes[Math.floor(Math.random() * dayTypes.length)]
-      const routeId =
-        dayType === DayType.WORK ? routes[Math.floor(Math.random() * routes.length)].id : undefined
+      const route =
+        dayType === DayType.WORK ? routes[Math.floor(Math.random() * routes.length)] : undefined
       return {
         date: d.toISODate(),
         dayType,
-        routeId: routeId
+        routeId: route?.id ?? undefined,
+        srcLocId: route
+          ? route.srcLoc.id
+          : dayType === DayType.WORK
+            ? (selectedEmp?.id ?? undefined)
+            : undefined,
+        destLocId: route ? route.destLoc.id : undefined
       }
     })
   )
   addTravelPlan.validate()
   toast.success("Debug Fill successful")
 }
-
-let employeeSelectError = $state<string | null>(null)
 
 // $inspect(nextMonth, days)
 </script>
@@ -143,7 +190,7 @@ let employeeSelectError = $state<string | null>(null)
               <input {...addTravelPlan.fields.month.as("hidden", days[0].toISODate())} />
               <input {...addTravelPlan.fields.createdById.as("hidden", claims.sub)} />
             </Card.Title>
-            <Card.Action>
+            <Card.Action class="flex flex-row gap-2">
               <div class="flex flex-col items-end justify-center gap-2">
                 <EmployeeSelectComboBox
                   {employees}
@@ -172,6 +219,23 @@ let employeeSelectError = $state<string | null>(null)
                   <p class="text-end text-sm text-destructive">{issue.message}</p>
                 {/each}
               </div>
+
+              <div class="items-end-justify-center flex flex-col gap-2">
+                <input
+                  accept=".xlsx, .xls"
+                  type="file"
+                  class="hidden"
+                  bind:this={fileInput}
+                  onchange={handleFileUpload}
+                  disabled={!addTravelPlan.fields.employeeId.value()} />
+                <Button
+                  variant="default"
+                  onclick={() => fileInput?.click()}
+                  disabled={!addTravelPlan.fields.employeeId.value()}>
+                  <UploadIcon class="h-4 w-4" />
+                  Upload XLSX
+                </Button>
+              </div>
             </Card.Action>
           </Card.Header>
           <Card.Content class="space-y-4">
@@ -186,6 +250,7 @@ let employeeSelectError = $state<string | null>(null)
               {days}
               {dayTypes}
               {routes}
+              {locations}
               planEntries={addTravelPlan.fields.planEntries}
               disabled={addTravelPlan.pending > 0}
               onInput={() => addTravelPlan.validate()} />

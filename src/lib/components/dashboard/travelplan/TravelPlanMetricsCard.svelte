@@ -3,6 +3,7 @@ import { Badge } from "@ui/badge"
 import * as Card from "@ui/card"
 import { Separator } from "@ui/separator"
 
+import { formatCurrency } from "@/lib/helpers"
 import DollarSignIcon from "@lucide/svelte/icons/circle-dollar-sign"
 import FileTextIcon from "@lucide/svelte/icons/file-text"
 import MapPinIcon from "@lucide/svelte/icons/map-pin"
@@ -18,14 +19,6 @@ interface Props {
 }
 
 const { metrics, stats }: Props = $props()
-
-const formatCurrency = (amount: number) => {
-  return Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0
-  }).format(amount)
-}
 
 const percent = $derived.by(() => {
   if (!metrics.targetAmount || metrics.targetAmount <= 0) return 0

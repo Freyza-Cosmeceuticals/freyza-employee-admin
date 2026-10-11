@@ -6,6 +6,8 @@ import { Skeleton } from "@ui/skeleton"
 
 import { DayType } from "$lib/types"
 
+import { formatCurrency } from "@/lib/helpers"
+
 import { statsBadge } from "../snippets.svelte"
 import UserCard from "../UserCard.svelte"
 import type { TravelPlanFull } from "$lib/types"
@@ -21,14 +23,6 @@ let travelPlanUrl = $derived.by(() => {
   if (!travelPlan.employee) return resolve(`/admin/travelplan/${travelPlan.id}`)
   return resolve(`/admin/travelplan/${dt}?employeeId=${travelPlan.employee?.id}`)
 })
-
-const formatCurrency = (amount: number) => {
-  return Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0
-  }).format(amount)
-}
 
 const percent = $derived.by(() => {
   if (!travelPlan.metrics?.targetAmount || travelPlan.metrics.targetAmount <= 0) return 0
@@ -66,6 +60,7 @@ const statusColor = $derived.by(() => {
         <span class="font-mono">
           <strong class="text-xl">
             {formatCurrency(travelPlan.metrics.totalAmount)}
+            {console.log(travelPlan.metrics)}
           </strong>
           <span class="text-sm text-muted-foreground">
             / {formatCurrency(travelPlan.metrics.targetAmount)}

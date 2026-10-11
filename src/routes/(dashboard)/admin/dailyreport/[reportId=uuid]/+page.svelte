@@ -20,7 +20,7 @@ import MarkerContent from "@/lib/components/ui/map/MarkerContent.svelte"
 import MarkerLabel from "@/lib/components/ui/map/MarkerLabel.svelte"
 import MarkerPopup from "@/lib/components/ui/map/MarkerPopup.svelte"
 import { Skeleton } from "@/lib/components/ui/skeleton/index.js"
-import { findVisitsCamera } from "@/lib/helpers.js"
+import { findVisitsCamera, formatCurrency } from "@/lib/helpers"
 import ArrowLeft from "@lucide/svelte/icons/arrow-left"
 import DollarSignIcon from "@lucide/svelte/icons/circle-dollar-sign"
 import PackageCheckIcon from "@lucide/svelte/icons/package-check"
@@ -38,15 +38,6 @@ let { claims } = $derived(data)
 
 let routes = $state<RouteWithName[] | null>(null)
 routes = await fetchRoutes()
-
-// TODO: Make these common utils, currently scattered
-const formatCurrency = (amount: number) => {
-  return Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0
-  }).format(amount)
-}
 
 $inspect(params).with(console.debug)
 </script>

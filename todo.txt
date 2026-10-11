@@ -1,11 +1,11 @@
-(C) better report and visits display +dailyreport
-(B) creating and editing locations and routes +loc/route
+(C) 2026-09-06 fix returning 500 ISE when travel plan not found in metrics (due to dbError)
+(B) 2026-09-06 break update check into fast latest version and then signed url process
 2026-06-24 Sentry logging and tracing (needed really?)
 x 2026-07-22 2026-07-22 setup for maps view in visits +dailyreport
 2026-06-24 update employee details +employee
-(C) App-centric api routes +api
+(C) better report and visits display +dailyreport
 2026-06-26 add snapshots to forms on pages
-(B) money calculation abstractions
+(B) 2026-08-10 implement per tier expensing
 x 2026-07-18 2026-07-17 add reports auto locking using pg_cron +dailyreport
 x 2026-07-29 2026-07-24 travelling with No one or other employee +dailyreport
 x 2026-08-22 2026-07-24 IMprove data table for reports and visits, show contextual info and timestamps
@@ -15,13 +15,20 @@ x 2026-07-29 2026-07-29 Create report endpoint with expense calculation
 x 2026-07-29 2026-07-29 Simplify auth using .getClaims()
 x 2026-08-22 2026-08-06 in-app updates
 x 2026-08-19 2026-08-06 do the migrate and contract phase for visits and POI tables
-(B) 2026-08-07 add POI distance calculation
+(B) creating and editing locations and routes +loc/route
 x 2026-08-07 2026-08-07 list POI api route
 x 2026-08-07 2026-08-07 create visit api route
-(B) 2026-08-10 implement per tier expensing
+(B) money calculation abstractions
 x 2026-08-22 2026-08-10 list all employees in travlling with for the meantime
 x 2026-09-02 2026-08-10 record all amounts recorded in visits into travel plan targets + metrics endpoint
 x 2026-08-23 2026-08-22 use presigned URL upload instead of transferring file with remote form
 x 2026-08-23 2026-08-23 support for multiple locationIds in listing POIs
+(C) App-centric api routes +api
 (C) 2026-08-23 Better Travel Plan creation tools
+(A) 2026-09-05 upload tp via excel
+(A) 2026-09-05 export expense via excel
+(A) 2026-09-07 export visit frequency and visit stats
+(A) 2026-09-05 increase accuracy of amounts shown in metrics
 (C) 2026-08-23 Editing and Deleting App Releases
+(B) 2026-08-07 add POI distance calculation
+(A) 2026-09-05 new index on tpEntry on date ande tpid

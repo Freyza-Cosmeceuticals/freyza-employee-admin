@@ -3,6 +3,7 @@ import { getAllRoutes } from "$lib/server/db/route"
 import { fetchTravelPlans } from "$lib/server/db/travelplan"
 import { getAllEmployees } from "$lib/server/db/user"
 
+import { getAllLocations } from "@/lib/server/db/location"
 import { DateTime } from "luxon"
 
 import type { PageServerLoad } from "./$types"
@@ -32,10 +33,11 @@ export const load: PageServerLoad = async ({ depends, locals, url }) => {
   }
 
   const employeesDone = travelPlansForMonth.data?.map((plan) => plan.employeeId) ?? []
-  const [employees, routes] = await Promise.all([
+  const [employees, routes, locations] = await Promise.all([
     getAllEmployees(locals, undefined, employeesDone),
-    getAllRoutes(locals)
+    getAllRoutes(locals),
+    getAllLocations(locals)
   ])
 
-  return { employees, routes, today, nextMonth }
+  return { employees, routes, locations, today, nextMonth }
 }

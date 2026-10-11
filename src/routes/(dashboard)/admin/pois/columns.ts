@@ -1,18 +1,11 @@
 import { renderSnippet } from "@/lib/components/reusable/data-table"
 import { VisitType } from "@/lib/constants"
+import { formatCurrency } from "@/lib/helpers"
 import { DateTime } from "luxon"
 import { createRawSnippet } from "svelte"
 
 import type { POIWithDetails } from "@/lib/types"
 import type { ColumnDef } from "@tanstack/table-core"
-
-const formatCurrency = (amount: number) => {
-  return Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0
-  }).format(amount)
-}
 
 const nameCellSnippet = createRawSnippet<[{ poi: POIWithDetails }]>((getProps) => {
   const { poi } = getProps()

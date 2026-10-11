@@ -31,12 +31,17 @@ export const addTravelPlan = form(addTravelPlanSchema, async (travelPlan, issue)
   const { locals } = getRequestEvent()
   const { claims, supabase } = await requireAuthMaybeAdmin(locals)
 
-  // sanity check for all work days have routeId
+  // sanity check for all work days have routeId or both srcLocId and destLocId
   const invalidIdx = travelPlan.planEntries.findIndex(
-    (entry) => entry.dayType === DayType.WORK && !entry.routeId
+    (entry) =>
+      entry.dayType === DayType.WORK && !entry.routeId && (!entry.srcLocId || !entry.destLocId)
   )
   if (invalidIdx !== -1) {
-    invalid(issue.planEntries[invalidIdx].routeId("Route ID is required for working days"))
+    invalid(
+      issue.planEntries[invalidIdx].routeId(
+        "Both From and To locations are required for working days"
+      )
+    )
   }
 
   // just check the creator userId
