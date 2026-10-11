@@ -35,6 +35,7 @@ export type Visit = InferSelectModel<typeof visit>
 export type POI = InferSelectModel<typeof poi>
 
 export type AppRelease = InferSelectModel<typeof appRelease>
+export type AppReleaseData = Omit<AppRelease, "id" | "createdAt" | "updatedAt">
 
 export type POIWithLocation = POI & {
   location: Pick<Location, "id" | "name">
